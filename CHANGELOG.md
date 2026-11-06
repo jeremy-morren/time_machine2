@@ -3,10 +3,11 @@
 ## 0.15.0
 - Find the local time zone as Noda Time and .NET do. Fixes Windows, which detected UTC on most systems, including non-English Windows. `TZ` is honoured on Windows as Python's tzlocal and Node.js do (IANA or Windows zone IDs).
 - Expose the CLDR Windows time zone mapping on `TzdbDateTimeZoneSource` (`windowsMapping`, `windowsToTzdbIds`, `tzdbToWindowsIds`, `canonicalIdMap`, `aliases`, `validate()`), and export `TzdbDateTimeZoneSource`, `MapZone` and `WindowsZones`.
+- Update TZDB to 2026f.
 - Require `archive` ^4.6.0.
 
 ## 0.14.0
-- Update TZDB to 2026a
+- Update TZDB to 2026f
 
 ## 0.13.1
 - Fix Dart web-only deployments by @kingwill101 in https://github.com/evoleen/time_machine2/pull/59
