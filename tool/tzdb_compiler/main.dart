@@ -23,7 +23,7 @@ Future<void> main(List<String> args) async {
   // https://data.iana.org/time-zones/releases/tzdata2018g.tar.gz
   var tzdbCompiler = TzdbZoneInfoCompiler();
   var tzdb = await tzdbCompiler
-      .compile('https://data.iana.org/time-zones/releases/tzdata2026a.tar.gz');
+      .compile('https://data.iana.org/time-zones/releases/tzdata2026f.tar.gz');
   tzdb.logCounts();
 
   var windowsZones = LoadWindowsZones(options, tzdb.version);
