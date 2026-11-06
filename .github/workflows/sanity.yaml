@@ -5,7 +5,35 @@ on:
 
 jobs:
   Sanity:
-    runs-on: ubuntu-latest
+    name: Sanity (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Local time zone from the /etc/localtime symlink (UTC on runners)
+          - name: Ubuntu
+            os: ubuntu-latest
+          # Local time zone from the TZ environment variable, with DST
+          - name: Ubuntu, TZ=Australia/Sydney
+            os: ubuntu-latest
+            tz: Australia/Sydney
+          # macOS links /etc/localtime into /var/db/timezone/zoneinfo.
+          # Paused: GitHub-hosted macOS arm64 runners are at capacity, so jobs
+          # were cancelled before starting ("not acquired by Runner").
+          # - name: macOS
+          #   os: macos-latest
+          # Windows zone ID mapped with CLDR, with DST
+          - name: Windows (English)
+            os: windows-latest
+            windows_time_zone: AUS Eastern Standard Time
+          # As on German Windows: localized display names, English zone ID.
+          # The tests fail if the display names aren't actually localized.
+          - name: Windows (non-English)
+            os: windows-latest
+            windows_time_zone: W. Europe Standard Time
+            windows_standard_name: Mitteleuropäische Zeit
+            windows_daylight_name: Mitteleuropäische Sommerzeit
+    runs-on: ${{ matrix.os }}
     steps:
       - name: 📚 Checkout
         uses: actions/checkout@v4
@@ -16,9 +44,30 @@ jobs:
       - name: 🏗️ Install packages
         run: dart pub get
 
+      - name: 🕐 Set Windows time zone
+        if: matrix.windows_time_zone
+        shell: pwsh
+        run: tzutil /s "${{ matrix.windows_time_zone }}"
+
+      - name: 🌐 Use localized Windows time zone names
+        if: matrix.windows_standard_name
+        shell: pwsh
+        run: >
+          ./.github/scripts/set-windows-time-zone-names.ps1
+          -Standard "${{ matrix.windows_standard_name }}"
+          -Daylight "${{ matrix.windows_daylight_name }}"
+
       - name: 📘 Run unit & integration tests
+        shell: bash
+        env:
+          TIME_MACHINE_EXPECT_LOCALIZED_WINDOWS: ${{ matrix.windows_standard_name && '1' || '' }}
         run: |
+          # Only set TZ when asked: an empty TZ means UTC.
+          if [ -n "${{ matrix.tz }}" ]; then export TZ="${{ matrix.tz }}"; fi
           dart test
+
+      - name: 🧰 Run TZDB compiler tests
+        run: dart test tool/tzdb_compiler/test
 
       - name: Validate package
         run: dart pub publish --dry-run
