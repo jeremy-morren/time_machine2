@@ -1,0 +1,397 @@
+# Sanity check for local time zone detection on Windows (and Linux/macOS),
+# run across many time zones. Not part of the upstream PRs.
+#
+# Every job runs the full test suite, the TZDB compiler tests, and
+# .azure-pipelines/check_local_zone.dart, which prints the detected zone and
+# fails if it isn't `expected` or disagrees with the system's UTC offset.
+
+trigger:
+  branches:
+    include:
+      - azure-windows-sanity
+pr: none
+
+jobs:
+  - job: Windows
+    displayName: 'Windows:'
+    timeoutInMinutes: 30
+    strategy:
+      matrix:
+        # Direct Windows ID -> CLDR mappings
+        UTC_2022:
+          image: windows-2022
+          tz: UTC
+          expected: Etc/UTC
+          standardName: ''
+          daylightName: ''
+          knownOffsetDifference: ''
+          excludeTests: ''
+        AUS_Eastern_DST_2025:
+          image: windows-2025
+          tz: AUS Eastern Standard Time
+          expected: Australia/Sydney
+          standardName: ''
+          daylightName: ''
+          knownOffsetDifference: ''
+          excludeTests: ''
+        India_HalfHour_Alias:
+          image: windows-2022
+          tz: India Standard Time
+          expected: Asia/Calcutta       # CLDR's ID as written, as in Noda Time
+          standardName: ''
+          daylightName: ''
+          knownOffsetDifference: ''
+          excludeTests: ''
+        Nepal_45Minutes:
+          image: windows-2022
+          tz: Nepal Standard Time
+          expected: Asia/Katmandu
+          standardName: ''
+          daylightName: ''
+          knownOffsetDifference: ''
+          excludeTests: ''
+        Russia_TZ3_NameDiffersFromId:
+          image: windows-2022
+          tz: Russia Time Zone 3        # standard name "Russia TZ 3 Standard Time"
+          expected: Europe/Samara
+          standardName: ''
+          daylightName: ''
+          knownOffsetDifference: ''
+          excludeTests: ToDateTimeLocal   # Dart's DateTime on Windows applies today's rules to 2011
+        LordHowe_HalfHourDST:
+          image: windows-2022
+          tz: Lord Howe Standard Time
+          expected: Australia/Lord_Howe
+          standardName: ''
+          daylightName: ''
+          knownOffsetDifference: ''
+          excludeTests: LocalZoneMatchesSystemOffset|SystemDateTimeZoneSource the system default zone matches.*   # Dart's DateTime can't represent a 30-minute DST shift (it reports +10:30; Windows and Time Machine have +11)
+        Chatham_Plus1245:
+          image: windows-2022
+          tz: Chatham Islands Standard Time
+          expected: Pacific/Chatham
+          standardName: ''
+          daylightName: ''
+          knownOffsetDifference: ''
+          excludeTests: ''
+        LineIslands_Plus14:
+          image: windows-2022
+          tz: Line Islands Standard Time
+          expected: Pacific/Kiritimati
+          standardName: ''
+          daylightName: ''
+          knownOffsetDifference: ''
+          excludeTests: ''
+        Dateline_Minus12:
+          image: windows-2022
+          tz: Dateline Standard Time
+          expected: Etc/GMT+12
+          standardName: ''
+          daylightName: ''
+          knownOffsetDifference: ''
+          excludeTests: ''
+        Morocco:
+          image: windows-2025
+          tz: Morocco Standard Time
+          expected: Africa/Casablanca
+          standardName: ''
+          daylightName: ''
+          knownOffsetDifference: "Windows' data has Morocco at UTC+0 outside Ramadan; TZDB (and Morocco) use UTC+1"
+          excludeTests: LocalZoneMatchesSystemOffset   # same Windows/TZDB data difference
+        # Guess by transitions. (Mid-Atlantic, which CLDR doesn't map, can't be
+        # tested: Windows has retired it and tzutil refuses to set it.)
+        Pacific_DstDisabled:
+          image: windows-2022
+          tz: Pacific Standard Time_dstoff   # "adjust for DST automatically" off
+          expected: Etc/GMT+8                # constant -8: first matching ID
+          standardName: ''
+          daylightName: ''
+          knownOffsetDifference: ''
+          excludeTests: SystemDateTimeZoneSource the system default zone matches.*   # DST adjustment off: the clock ignores the zone's DST rules
+        # Localized display names (as on non-English Windows); the zone ID stays English
+        German_WEurope:
+          image: windows-2022
+          tz: W. Europe Standard Time
+          expected: Europe/Berlin
+          standardName: Mitteleuropäische Zeit
+          daylightName: Mitteleuropäische Sommerzeit
+          knownOffsetDifference: ''
+          excludeTests: ''
+        Japanese_Tokyo_2025:
+          image: windows-2025
+          tz: Tokyo Standard Time
+          expected: Asia/Tokyo
+          standardName: 東京 (標準時)
+          daylightName: 東京 (夏時間)
+          knownOffsetDifference: ''
+          excludeTests: ''
+    pool:
+      vmImage: $(image)
+    steps:
+      - pwsh: |
+          $zip = "$env:AGENT_TEMPDIRECTORY\dart-sdk.zip"
+          Invoke-WebRequest https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-windows-x64-release.zip -OutFile $zip
+          Expand-Archive $zip -DestinationPath $env:AGENT_TOOLSDIRECTORY -Force
+          Write-Host "##vso[task.prependpath]$env:AGENT_TOOLSDIRECTORY\dart-sdk\bin"
+        displayName: Install Dart
+
+      - pwsh: |
+          tzutil /s "$(tz)"
+          if ($LASTEXITCODE -ne 0) { throw "tzutil failed" }
+          tzutil /g; ""
+        displayName: Set time zone ($(tz))
+
+      - pwsh: >
+          ./.github/scripts/set-windows-time-zone-names.ps1
+          -Standard $env:STANDARD_NAME -Daylight $env:DAYLIGHT_NAME
+        displayName: Use localized display names
+        condition: ne(variables['standardName'], '')
+        env:
+          STANDARD_NAME: $(standardName)
+          DAYLIGHT_NAME: $(daylightName)
+
+      - pwsh: dart --version; dart pub get
+        displayName: dart pub get
+
+      # Azure agents set TZ. Windows (and .NET, so Noda Time) ignore it, but
+      # the C runtime under Dart's DateTime applies it, so DateTime would
+      # disagree with the system's real zone. Remove it for these steps.
+      # Compare against Windows' own offset (.NET's TimeZoneInfo uses Windows'
+      # per-year rules); Dart's DateTime applies today's rules to every year.
+      - pwsh: |
+          Write-Host "Agent TZ=$env:TZ"
+          Remove-Item Env:TZ -ErrorAction SilentlyContinue
+          $env:SYSTEM_OFFSET_SECONDS = [int][TimeZoneInfo]::Local.GetUtcOffset([DateTimeOffset]::UtcNow).TotalSeconds
+          dart run .azure-pipelines/check_local_zone.dart "$(expected)"
+        displayName: Check detected zone (expected '$(expected)')
+        env:
+          KNOWN_OFFSET_DIFFERENCE: $(knownOffsetDifference)
+
+      # excludeTests names tests that fail in this zone for known reasons
+      # outside Time Machine (see the matrix); they're skipped by name.
+      - pwsh: |
+          Remove-Item Env:TZ -ErrorAction SilentlyContinue
+          if ("$(standardName)" -ne "") { $env:TIME_MACHINE_EXPECT_LOCALIZED_WINDOWS = '1' }
+          # SystemDateTimeZoneSource's default is the Windows zone ID tzutil set.
+          $env:TIME_MACHINE_EXPECT_SYSTEM_TIME_ZONE = "$(tz)" -replace '_dstoff$', ''
+          $exclude = $env:EXCLUDE_TESTS.Split('#')[0].Trim()
+          if ($exclude) {
+            Write-Host "Excluding known failures in this zone: $exclude"
+            dart test --name "^(?!(?:$exclude)$)"
+          } else {
+            dart test
+          }
+        displayName: dart test
+        condition: succeededOrFailed()
+        env:
+          EXCLUDE_TESTS: $(excludeTests)
+
+      - pwsh: dart test tool/tzdb_compiler/test
+        displayName: TZDB compiler tests
+        condition: succeededOrFailed()
+
+  - job: Unix
+    displayName: 'Unix:'
+    timeoutInMinutes: 30
+    strategy:
+      matrix:
+        Ubuntu_EtcLocaltime_Default:
+          image: ubuntu-latest
+          setup: ''
+          tzSet: 'false'
+          tz: ''
+          expected: Etc/UTC
+        Ubuntu_EtcLocaltime_Symlink_Sydney:
+          image: ubuntu-latest
+          setup: sudo ln -sf /usr/share/zoneinfo/Australia/Sydney /etc/localtime
+          tzSet: 'false'
+          tz: ''
+          expected: Australia/Sydney
+        Ubuntu_EtcLocaltime_Copy_NewYork:
+          image: ubuntu-latest
+          setup: sudo rm /etc/localtime && sudo cp /usr/share/zoneinfo/America/New_York /etc/localtime
+          tzSet: 'false'
+          tz: ''
+          expected: America/New_York    # found by comparing file contents
+        Ubuntu_TZ_Kolkata:
+          image: ubuntu-latest
+          setup: ''
+          tzSet: 'true'
+          tz: Asia/Kolkata
+          expected: Asia/Kolkata
+        Ubuntu_TZ_ColonPrefix:
+          image: ubuntu-latest
+          setup: ''
+          tzSet: 'true'
+          tz: ':Europe/London'
+          expected: Europe/London
+        Ubuntu_TZ_Empty_IsUTC:
+          image: ubuntu-latest
+          setup: ''
+          tzSet: 'true'
+          tz: ''
+          expected: Etc/UTC        # as in Noda Time: 'UTC' maps as the Windows ID UTC
+        macOS_Default:
+          image: macOS-latest
+          setup: ''
+          tzSet: 'false'
+          tz: ''
+          expected: ''
+        macOS_Sydney:
+          image: macOS-latest
+          setup: sudo ln -sf /var/db/timezone/zoneinfo/Australia/Sydney /etc/localtime
+          tzSet: 'false'
+          tz: ''
+          expected: Australia/Sydney
+    pool:
+      vmImage: $(image)
+    steps:
+      - bash: |
+          set -e
+          case "$(uname -s)-$(uname -m)" in
+            Linux-x86_64)  platform=linux-x64 ;;
+            Linux-aarch64) platform=linux-arm64 ;;
+            Darwin-arm64)  platform=macos-arm64 ;;
+            Darwin-x86_64) platform=macos-x64 ;;
+          esac
+          curl -sSfL -o "$AGENT_TEMPDIRECTORY/dart-sdk.zip" \
+            "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-$platform-release.zip"
+          unzip -q -o "$AGENT_TEMPDIRECTORY/dart-sdk.zip" -d "$AGENT_TOOLSDIRECTORY"
+          echo "##vso[task.prependpath]$AGENT_TOOLSDIRECTORY/dart-sdk/bin"
+        displayName: Install Dart
+
+      - bash: |
+          set -e
+          echo "Agent TZ=${TZ-<unset>}"
+          $(setup)
+          ls -l /etc/localtime || true
+        displayName: Configure time zone
+        condition: ne(variables['setup'], '')
+
+      - bash: dart --version && dart pub get
+        displayName: dart pub get
+
+      - bash: |
+          # Azure agents set TZ, which overrides /etc/localtime: only keep it if asked.
+          if [ "$TZ_SET" = "true" ]; then export TZ="$TZ_VALUE"; else unset TZ; fi
+          dart run .azure-pipelines/check_local_zone.dart "$(expected)"
+        displayName: Check detected zone (expected '$(expected)')
+        env:
+          TZ_SET: $(tzSet)
+          TZ_VALUE: $(tz)
+
+      - bash: |
+          # Azure agents set TZ, which overrides /etc/localtime: only keep it if asked.
+          if [ "$TZ_SET" = "true" ]; then export TZ="$TZ_VALUE"; else unset TZ; fi
+          dart test
+        displayName: dart test
+        condition: succeededOrFailed()
+        env:
+          TZ_SET: $(tzSet)
+          TZ_VALUE: $(tz)
+
+      - bash: dart test tool/tzdb_compiler/test
+        displayName: TZDB compiler tests
+        condition: succeededOrFailed()
+
+  # SystemDateTimeZoneSource in the browser's Intl data: the shared checks in
+  # test/system_source, as in GitHub's Web legs.
+  - job: Web
+    displayName: 'Web:'
+    timeoutInMinutes: 20
+    strategy:
+      matrix:
+        JavaScript_Chrome:
+          platform: chrome
+          compiler: dart2js
+        WebAssembly_Chrome:
+          platform: chrome
+          compiler: dart2wasm
+        JavaScript_Node:
+          platform: node
+          compiler: dart2js
+    pool:
+      vmImage: ubuntu-latest
+    variables:
+      # A zone with DST; Chrome and Node.js on Linux follow TZ.
+      TZ: Europe/Berlin
+    steps:
+      - bash: |
+          set -e
+          curl -sSfL -o "$AGENT_TEMPDIRECTORY/dart-sdk.zip"             https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-linux-x64-release.zip
+          unzip -q -o "$AGENT_TEMPDIRECTORY/dart-sdk.zip" -d "$AGENT_TOOLSDIRECTORY"
+          echo "##vso[task.prependpath]$AGENT_TOOLSDIRECTORY/dart-sdk/bin"
+        displayName: Install Dart
+
+      - bash: dart --version && dart pub get && (google-chrome --version || true) && node --version
+        displayName: dart pub get
+
+      - bash: >
+          dart test test/system_source
+          --platform $(platform)
+          --compiler $(compiler)
+          --reporter expanded
+        displayName: System time zone checks ($(platform), $(compiler))
+        env:
+          TZ: Europe/Berlin
+
+  # The same checks in the Flutter test app on an iOS Simulator (GitHub's
+  # macOS runners are often at capacity). No Android here: Azure's hosted
+  # Linux agents have no KVM for the emulator; GitHub runs those.
+  - job: iOS
+    displayName: 'iOS Simulator'
+    timeoutInMinutes: 60
+    pool:
+      vmImage: macOS-latest
+    variables:
+      timeZone: Australia/Sydney
+    steps:
+      # The Simulator uses the Mac's time zone when it boots.
+      - bash: |
+          set -e
+          sudo ln -sf "/var/db/timezone/zoneinfo/$(timeZone)" /etc/localtime
+          ls -l /etc/localtime
+          date
+          case "$(readlink /etc/localtime)" in
+            */zoneinfo/"$(timeZone)") ;;
+            *) echo "##vso[task.logissue type=error]/etc/localtime doesn't point at $(timeZone)"; exit 1 ;;
+          esac
+        displayName: Set the Mac's time zone ($(timeZone))
+
+      - bash: |
+          set -e
+          git clone --depth 1 --branch stable https://github.com/flutter/flutter.git "$AGENT_TOOLSDIRECTORY/flutter"
+          echo "##vso[task.prependpath]$AGENT_TOOLSDIRECTORY/flutter/bin"
+        displayName: Install Flutter
+
+      - bash: flutter --version && flutter pub get
+        displayName: flutter pub get
+        workingDirectory: test_apps/system_source_flutter
+
+      # The newest iPhone on the newest iOS runtime that Xcode has.
+      - bash: |
+          set -e
+          xcodebuild -version
+          udid=$(xcrun simctl list devices available --json | jq -r '
+            [.devices | to_entries | sort_by(.key)[]
+              | select(.key | contains(".iOS-")) | .value[]
+              | select(.name | startswith("iPhone"))]
+            | last | .udid // empty')
+          if [ -z "$udid" ]; then
+            echo "##vso[task.logissue type=error]No iPhone simulator available"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          xcrun simctl list devices | grep "$udid"
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b
+          echo "##vso[task.setvariable variable=simulatorUdid]$udid"
+        displayName: Boot an iOS Simulator
+
+      - bash: >
+          flutter test integration_test
+          --device-id $(simulatorUdid)
+          --reporter expanded
+          --dart-define=TIME_MACHINE_EXPECT_SYSTEM_TIME_ZONE=$(timeZone)
+        displayName: System time zone checks on the Simulator
+        workingDirectory: test_apps/system_source_flutter
