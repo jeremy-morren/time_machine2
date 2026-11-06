@@ -1,0 +1,17 @@
+# Installs the latest stable Flutter SDK on any hosted agent, retrying the
+# clone (agents' downloads occasionally fail).
+steps:
+  - bash: |
+      set -e
+      for attempt in 1 2 3 4 5; do
+        rm -rf "$AGENT_TOOLSDIRECTORY/flutter"
+        git clone --depth 1 --branch stable https://github.com/flutter/flutter.git "$AGENT_TOOLSDIRECTORY/flutter" && break
+        [ "$attempt" = 5 ] && exit 1
+        sleep 10
+      done
+      echo "##vso[task.prependpath]$AGENT_TOOLSDIRECTORY/flutter/bin"
+    displayName: Install Flutter
+
+  - bash: flutter --version && flutter pub get
+    displayName: flutter pub get
+    workingDirectory: test_apps/system_source_flutter
