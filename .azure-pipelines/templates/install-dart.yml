@@ -1,0 +1,30 @@
+# Installs the latest stable Dart SDK on any hosted agent, retrying the
+# download (agents' downloads occasionally end prematurely).
+steps:
+  - pwsh: |
+      $zip = "$env:AGENT_TEMPDIRECTORY\dart-sdk.zip"
+      $url = "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-windows-x64-release.zip"
+      # -MaximumRetryCount only retries HTTP errors, not dropped connections.
+      foreach ($attempt in 1..5) {
+        try { Invoke-WebRequest $url -OutFile $zip; break }
+        catch { if ($attempt -eq 5) { throw }; Write-Host "Download failed ($_); retrying"; Start-Sleep 10 }
+      }
+      Expand-Archive $zip -DestinationPath $env:AGENT_TOOLSDIRECTORY -Force
+      Write-Host "##vso[task.prependpath]$env:AGENT_TOOLSDIRECTORY\dart-sdk\bin"
+    displayName: Install Dart
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
+
+  - bash: |
+      set -e
+      case "$(uname -s)-$(uname -m)" in
+        Linux-x86_64)  platform=linux-x64 ;;
+        Linux-aarch64) platform=linux-arm64 ;;
+        Darwin-arm64)  platform=macos-arm64 ;;
+        Darwin-x86_64) platform=macos-x64 ;;
+      esac
+      curl -sSfL --retry 5 --retry-all-errors --retry-delay 10 -o "$AGENT_TEMPDIRECTORY/dart-sdk.zip" \
+        "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-$platform-release.zip"
+      unzip -q -o "$AGENT_TEMPDIRECTORY/dart-sdk.zip" -d "$AGENT_TOOLSDIRECTORY"
+      echo "##vso[task.prependpath]$AGENT_TOOLSDIRECTORY/dart-sdk/bin"
+    displayName: Install Dart
+    condition: ne(variables['Agent.OS'], 'Windows_NT')

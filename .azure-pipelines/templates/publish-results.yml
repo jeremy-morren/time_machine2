@@ -1,0 +1,62 @@
+# Publishes a leg's test results and coverage.
+#
+# Test results: package:test JSON reports in <directory>/test-results/*.json,
+# converted to JUnit for the Tests tab.
+# Coverage: <directory>/coverage/raw (dart test --coverage, formatted here) or
+# <directory>/coverage/lcov.info (flutter test --coverage), published as the
+# artifact coverage-<job>-<leg>. The Coverage job merges every leg's LCOV.
+parameters:
+  - name: directory
+    type: string
+    default: '.'
+
+steps:
+  - bash: |
+      set -e
+      shopt -s nullglob
+      files=(test-results/*.json)
+      if [ ${#files[@]} -eq 0 ]; then echo "No test results"; exit 0; fi
+      dart pub global activate junitreport > /dev/null
+      for f in "${files[@]}"; do
+        dart pub global run junitreport:tojunit --input "$f" --output "${f%.json}.xml"
+      done
+    displayName: Convert test results to JUnit
+    workingDirectory: ${{ parameters.directory }}
+    condition: succeededOrFailed()
+
+  - task: PublishTestResults@2
+    displayName: Publish test results
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: JUnit
+      searchFolder: $(System.DefaultWorkingDirectory)/${{ parameters.directory }}/test-results
+      testResultsFiles: '*.xml'
+      testRunTitle: $(System.PhaseName) $(System.JobName)
+      failTaskOnMissingResultsFile: false
+
+  - bash: |
+      set -e
+      if [ -d coverage/raw ]; then
+        dart run coverage:format_coverage --lcov --check-ignore \
+          --report-on=lib --base-directory=. \
+          --in=coverage/raw --out=coverage/lcov.info
+      fi
+      if [ ! -s coverage/lcov.info ]; then echo "No coverage"; exit 0; fi
+      # The same lib/... paths on every OS and for the test app, so the legs
+      # can be merged.
+      sed -i.bak -e '/^SF:/ s|\\|/|g' -e '/^SF:/ s|^SF:.*/lib/|SF:lib/|' coverage/lcov.info
+      rm -f coverage/lcov.info.bak
+      grep -c '^SF:' coverage/lcov.info | xargs echo "Files with coverage:"
+      mkdir -p "$(Build.ArtifactStagingDirectory)/coverage"
+      cp coverage/lcov.info "$(Build.ArtifactStagingDirectory)/coverage/lcov.info"
+      echo "##vso[task.setvariable variable=hasCoverage]true"
+    displayName: Format coverage
+    workingDirectory: ${{ parameters.directory }}
+    condition: succeededOrFailed()
+
+  - task: PublishPipelineArtifact@1
+    displayName: Publish coverage
+    condition: and(succeededOrFailed(), eq(variables['hasCoverage'], 'true'))
+    inputs:
+      targetPath: $(Build.ArtifactStagingDirectory)/coverage
+      artifact: coverage-$(System.PhaseName)-$(System.JobName)-$(System.JobAttempt)
