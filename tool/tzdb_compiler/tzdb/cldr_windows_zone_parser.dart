@@ -2,7 +2,6 @@ import 'package:universal_io/io.dart' as io;
 
 import 'package:xml/xml.dart' as xml;
 
-import 'package:time_machine2/src/time_machine_internal.dart';
 import 'package:time_machine2/src/timezones/cldr/windows_zones.dart';
 
 export 'package:time_machine2/src/timezones/cldr/windows_zones.dart';
