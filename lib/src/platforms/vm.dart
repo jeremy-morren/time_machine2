@@ -10,7 +10,10 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 import 'package:time_machine2/src/timezones/datetimezone_providers.dart';
 import 'package:time_machine2/time_machine2.dart';
 
+import 'package:time_machine2/src/timezones/zone_guesser.dart';
+
 import 'platform_io.dart';
+import 'windows_time_zone.dart';
 
 Future initialize(Map<String, dynamic> args, {testing = false}) {
   String? timeZoneOverride = args['timeZone'];
@@ -73,12 +76,27 @@ class TimeMachine {
   static Future<DateTimeZone?> _figureOutTimeZone(DateTimeZoneProvider provider,
       [bool strict = false]) async {
     // On Windows, Dart reports Windows time zone names (e.g. 'AUS Eastern Standard Time')
-    // instead of IANA abbreviations, which the heuristic below can't match.
-    if (io.Platform.isWindows) {
-      var windowsZone = await _figureOutWindowsTimeZone(provider);
-      if (windowsZone != null) return windowsZone;
-    }
+    // instead of IANA abbreviations, which the abbreviation heuristic can't match.
+    var zone = io.Platform.isWindows
+        ? await _figureOutWindowsTimeZone(provider)
+        : await _figureOutTimeZoneByAbbreviation(provider, strict);
+    if (zone != null) return zone;
 
+    // As Noda Time does when it can't map the system zone directly, pick the
+    // zone whose offsets best match the system's over the next five years.
+    zone = await _guessTimeZoneByTransitions(provider);
+    if (zone != null) return zone;
+
+    // Last resort: a fixed zone with the system's current offset. This is UTC
+    // on a UTC system, but avoids silently treating every other system as UTC.
+    return DateTimeZone.forOffset(
+        Offset(DateTime.now().timeZoneOffset.inSeconds));
+  }
+
+  /// Matches the zone abbreviations Dart reports (e.g. 'AEST') against TZDB
+  /// zone interval names. Returns null if no zone matches.
+  static Future<DateTimeZone?> _figureOutTimeZoneByAbbreviation(
+      DateTimeZoneProvider provider, bool strict) async {
     var zones = <DateTimeZone>[];
     // load all the timezones; todo: fast_cache method
     for (var id in provider.ids) {
@@ -159,40 +177,47 @@ class TimeMachine {
     }
 
     // todo: this is a good thing to log
-    // If we couldn't figure it out, fall back to a fixed zone with the system's
-    // current offset. This is UTC on a UTC system, but avoids silently treating
-    // every other system as UTC.
-    if (zones.isEmpty) {
-      return DateTimeZone.forOffset(
-          Offset(nowDateTime.timeZoneOffset.inSeconds));
-    }
+    if (zones.isEmpty) return null;
 
     // Ambiguous -- just picking the first result
     return zones.first;
   }
 
-  /// Maps the Windows time zone name reported by Dart to a TZDB zone using the
-  /// CLDR Windows zone mapping embedded in the TZDB data (as Noda Time does),
-  /// and checks that the zone's current offset matches the system's.
+  /// Finds the Windows system time zone, as Noda Time does: the Windows zone
+  /// ID is mapped to a TZDB zone with the CLDR mapping embedded in the TZDB data.
   ///
-  /// Returns null if the name is unknown (for example on a non-English
-  /// Windows installation, where the names are localized).
+  /// The ID is the registry key name from `GetDynamicTimeZoneInformation`,
+  /// which (unlike the display names Dart reports) is the same in every display
+  /// language. Returns null if the zone can't be mapped.
   static Future<DateTimeZone?> _figureOutWindowsTimeZone(
       DateTimeZoneProvider provider) async {
     var source = IDateTimeZoneProviders.tzdbSource;
+
+    var info = readWindowsTimeZoneInfo();
+    if (info != null) {
+      // With "Adjust for daylight saving time automatically" turned off, the
+      // system ignores the zone's DST rules, so the mapped zone would be wrong
+      // for part of the year. Leave that to the guess by transitions.
+      if (info.dynamicDaylightTimeDisabled) return null;
+
+      var id = source.windowsToTzdbIds[info.keyName];
+      if (id != null && provider.ids.contains(id)) return await provider[id];
+      return null;
+    }
+
+    // Couldn't read the zone ID. Fall back to the display names Dart reports,
+    // which only match on English Windows. Dart reports the daylight name while
+    // DST is in effect, so also try January and July: one of them is standard time.
     var now = DateTime.now();
     var nowInstant = Instant.dateTime(now);
-
-    // Dart reports the daylight name while DST is in effect, and the mapping only
-    // knows standard names, so also try January and July: one of them is standard time.
     var names = <String>{
       now.timeZoneName,
       DateTime(now.year, 1, 1).timeZoneName,
       DateTime(now.year, 7, 1).timeZoneName,
     };
-
     for (var name in names) {
-      var id = await source.windowsZoneNameToTzdbId(name);
+      var id = source.windowsStandardNameToTzdbId(name) ??
+          source.windowsToTzdbIds[name];
       if (id == null || !provider.ids.contains(id)) continue;
 
       var zone = await provider[id];
@@ -203,6 +228,27 @@ class TimeMachine {
     }
 
     return null;
+  }
+
+  /// Picks the TZDB zone whose offsets best match the system's (as reported by
+  /// dart:core) at every transition in the next five years. See
+  /// [guessZoneIdByTransitions].
+  static Future<DateTimeZone?> _guessTimeZoneByTransitions(
+      DateTimeZoneProvider provider) async {
+    var source = IDateTimeZoneProviders.tzdbSource;
+    var ids = source.canonicalIdMap.values
+        .toSet()
+        .where(provider.ids.contains)
+        .toList()
+      ..sort();
+    var candidates = [for (var id in ids) await provider[id]];
+    var id = guessZoneIdByTransitions(
+        (instant) => Offset(
+            DateTime.fromMillisecondsSinceEpoch(instant.epochMilliseconds)
+                .timeZoneOffset
+                .inSeconds),
+        candidates);
+    return id == null ? null : await provider[id];
   }
 
   static bool _isTheSame(DateTime dateTime, ZoneInterval zoneInterval) {

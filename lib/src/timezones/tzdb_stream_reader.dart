@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:time_machine2/src/time_machine_internal.dart';
+import 'package:time_machine2/src/timezones/cldr/windows_zones.dart';
 
 // from: https://github.com/nodatime/nodatime/blob/master/src/NodaTime/TimeZones/IO/TzdbStreamFieldId.cs
 
@@ -73,14 +74,13 @@ class TzdbStreamReader {
   late Map<String, DateTimeZone> timeZones;
   late Map<String, String> aliases;
 
-  /// Windows time zone ID (e.g. 'AUS Eastern Standard Time') to TZDB ID, from CLDR.
-  late Map<String, String> windowsIdToTzdbId;
+  /// The CLDR Windows zone mapping.
+  late WindowsZones windowsZones;
 
-  /// Windows standard name to TZDB ID, for zones whose standard name differs
+  /// Windows standard name -> TZDB ID, for zones whose standard name differs
   /// from their Windows ID (e.g. 'Coordinated Universal Time').
   late Map<String, String> windowsStandardNameToTzdbId;
 
-  static const String _primaryTerritory = '001';
 
   TzdbStreamReader(this._input) : _reader = BinaryReader(_input) {
     // Read and validate the version
@@ -124,26 +124,14 @@ class TzdbStreamReader {
     reader.currentOffset = aliasFields[0].offset;
     aliases = reader.readDictionary();
 
-    // Read the Windows ID -> TZDB ID mapping (CLDR windowsZones.xml, primary
-    // territory only). Older data files may not have it.
-    windowsIdToTzdbId = <String, String>{};
+    // Read the CLDR Windows zone mapping. Older data files may not have it.
     var windowsZonesFields =
         fields[TzdbStreamFieldId.cldrSupplementalWindowsZones];
     if (windowsZonesFields != null && windowsZonesFields.isNotEmpty) {
       reader.currentOffset = windowsZonesFields[0].offset;
-      reader.readString(); // CLDR version
-      reader.readString(); // TZDB version
-      reader.readString(); // Windows version
-      int mapZoneCount = reader.readCount();
-      for (int i = 0; i < mapZoneCount; i++) {
-        var windowsId = reader.readString();
-        var territory = reader.readString();
-        var tzdbIds = List<String>.generate(
-            reader.readCount(), (_) => reader.readString());
-        if (territory == _primaryTerritory && tzdbIds.isNotEmpty) {
-          windowsIdToTzdbId[windowsId] = tzdbIds.first;
-        }
-      }
+      windowsZones = WindowsZones.read(reader);
+    } else {
+      windowsZones = WindowsZones('', '', '', const []);
     }
 
     // Read the Windows standard name -> TZDB ID mapping for zones whose
