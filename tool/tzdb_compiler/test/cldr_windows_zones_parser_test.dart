@@ -2,6 +2,8 @@
 // Use of this source code is governed by the Apache License 2.0, as found in the LICENSE.txt file.
 
 // Port of Noda Time's NodaTime.TzdbCompiler.Test/Tzdb/CldrWindowsZonesParserTest.cs.
+import 'dart:io';
+
 import 'package:test/test.dart';
 import 'package:xml/xml.dart' as xml;
 
@@ -69,7 +71,32 @@ void main() {
       expect(mapZones[2], MapZone('X', 't2', ['B', 'C']));
     });
 
-    // Not in Noda Time: the checked-in CLDR data parses and has a version.
+    // Not in Noda Time: every checked-in CLDR file parses, with the version
+    // from its name and a primary mapping for every Windows ID.
+    test('CheckedInFiles', () {
+      var files = Directory('tool/tzdb_compiler/data/cldr')
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.xml'))
+          .toList();
+      expect(files.length, greaterThanOrEqualTo(28));
+      for (var file in files) {
+        var zones = CldrWindowsZonesParser.parseFile(file.path);
+        var name = file.uri.pathSegments.last;
+        expect(
+            zones.version,
+            name
+                .replaceAll('windowsZones-', '')
+                .replaceAll('.xml', '')
+                .replaceAll('-', '.'),
+            reason: name);
+        expect(zones.primaryMapping, isNotEmpty, reason: name);
+        var windowsIds = zones.mapZones.map((z) => z.windowsId).toSet();
+        expect(zones.primaryMapping.keys.toSet(), windowsIds, reason: name);
+      }
+    });
+
+    // Not in Noda Time: the latest checked-in CLDR data.
     test('CheckedInData', () {
       var zones = CldrWindowsZonesParser.parseFile(
           'tool/tzdb_compiler/data/cldr/windowsZones-49.xml');
