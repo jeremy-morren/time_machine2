@@ -2,6 +2,8 @@
 // Portions of this work are Copyright 2018 The Noda Time Authors. All rights reserved.
 // Use of this source code is governed by the Apache License 2.0, as found in the LICENSE.txt file.
 
+import 'dart:collection';
+
 import 'package:time_machine2/src/time_machine_internal.dart';
 
 import 'package:test/test.dart';
@@ -19,12 +21,13 @@ void main() {
   test('ThursdayEpoch', ThursdayEpoch);
   test('FridayEpoch', FridayEpoch);
   test('BclUsesAstronomicalEpoch', BclUsesAstronomicalEpoch);
-  test('SampleDateBclCompatibility', SampleDateBclCompatibility, skip: true);
-  test('BclThroughHistory', BclThroughHistory, skip: true);
+  test('SampleDateBclCompatibility', SampleDateBclCompatibility);
+  test('BclThroughHistory', BclThroughHistory,
+      skip: '.NET only: compares with the BCL HijriCalendar');
   test('GetDaysInMonth', GetDaysInMonth);
-  test('GetInstance_Caching', GetInstance_Caching, skip: true);
+  test('GetInstance_Caching', GetInstance_Caching);
   test('GetInstance_ArgumentValidation', GetInstance_ArgumentValidation,
-      skip: true);
+      skip: 'Not applicable: Dart enums cannot hold out-of-range values');
   test('PlusYears_Simple', PlusYears_Simple);
   test('PlusYears_TruncatesAtLeapYear', PlusYears_TruncatesAtLeapYear);
   test('PlusYears_DoesNotTruncateFromOneLeapYearToAnother',
@@ -32,7 +35,7 @@ void main() {
   test('PlusMonths_Simple', PlusMonths_Simple);
   test('Constructor_InvalidEnumsForCoverage',
       Constructor_InvalidEnumsForCoverage,
-      skip: "Doesn't make sense in Dart");
+      skip: 'Not applicable: Dart enums cannot hold out-of-range values');
 }
 
 final CalendarSystem SampleCalendar = CalendarSystem.getIslamicCalendar(
@@ -289,13 +292,16 @@ void BclUsesAstronomicalEpoch() {
 }
 
 void SampleDateBclCompatibility() {
-  dynamic hijri; // = BclCalendars.Hijri;
-  DateTime bclDirect = hijri.ToDateTime(1302, 10, 15, 0, 0, 0, 0);
+  // Calendar hijri = BclCalendars.Hijri;
+  // DateTime bclDirect = hijri.ToDateTime(1302, 10, 15, 0, 0, 0, 0);
+  // There's no BCL HijriCalendar in Dart: this is the same date computed independently with the
+  // arithmetic Islamic calendar from Calendrical Calculations (fixed-from-islamic: Base16 leap
+  // years, epoch Julian 622-07-15), which is what HijriCalendar implements.
+  var bclDirect = LocalDate(1885, 7, 27);
 
   CalendarSystem islamicCalendar = CalendarSystem.islamicBcl;
   LocalDate iso = LocalDate(1302, 10, 15, islamicCalendar);
-  DateTime bclFromNoda = iso.atMidnight().toDateTimeLocal();
-  expect(bclDirect, bclFromNoda);
+  expect(iso.withCalendar(CalendarSystem.iso), bclDirect);
 }
 
 /// This tests every day for 9000 (ISO) years, to check that it always matches the year, month and day.
@@ -328,32 +334,28 @@ void GetDaysInMonth() {
 }
 
 void GetInstance_Caching() {
-  /*
-  var queue = new Queue<CalendarSystem>();
-  var set = new HashSet<CalendarSystem>();
-  var ids = new HashSet<String>();
+  var queue = Queue<CalendarSystem>();
+  var set = <CalendarSystem>{};
+  var ids = <String>{};
 
-  for (IslamicLeapYearPattern leapYearPattern in Enum.GetValues(typeof(IslamicLeapYearPattern)))
-  {
-  for (IslamicEpoch epoch in Enum.GetValues(typeof(IslamicEpoch)))
-  {
-  var calendar = CalendarSystem.getIslamicCalendar(leapYearPattern, epoch);
-  queue.Enqueue(calendar);
-  expect(set.Add(calendar), isTrue); // Check we haven't already seen it...
-  expect(ids.Add(calendar.Id), isTrue);
-  }
+  for (var leapYearPattern in IslamicLeapYearPattern.values) {
+    for (var epoch in IslamicEpoch.values) {
+      var calendar = CalendarSystem.getIslamicCalendar(leapYearPattern, epoch);
+      queue.add(calendar);
+      expect(set.add(calendar), isTrue); // Check we haven't already seen it...
+      expect(ids.add(calendar.id), isTrue);
+    }
   }
 
   // Now check we get the same references again...
-  for (IslamicLeapYearPattern leapYearPattern in Enum.GetValues(typeof(IslamicLeapYearPattern)))
-  {
-  for (IslamicEpoch epoch in Enum.GetValues(typeof(IslamicEpoch)))
-  {
-  var oldCalendar = queue.Dequeue();
-  var newCalendar = CalendarSystem.getIslamicCalendar(leapYearPattern, epoch);
-  Assert.AreSame(oldCalendar, newCalendar);
+  for (var leapYearPattern in IslamicLeapYearPattern.values) {
+    for (var epoch in IslamicEpoch.values) {
+      var oldCalendar = queue.removeFirst();
+      var newCalendar =
+          CalendarSystem.getIslamicCalendar(leapYearPattern, epoch);
+      expect(identical(oldCalendar, newCalendar), isTrue);
+    }
   }
-  }*/
 }
 
 void GetInstance_ArgumentValidation() {

@@ -15,6 +15,16 @@ void main() {
   test('PlusMonth_Simple', PlusMonth_Simple);
   test('PlusMonth_ChangingYear', PlusMonth_ChangingYear);
   test('PlusMonth_WithTruncation', PlusMonth_WithTruncation);
+  parameterizedTest(
+      'PlusMonths_OutOfRange',
+      [
+        [1500, 1, CalendarOrdinal.umAlQura, 10000],
+        [9377, 12, CalendarOrdinal.persianAstronomical, 120],
+        [9999, 12, CalendarOrdinal.iso, 1],
+        [-9998, 1, CalendarOrdinal.iso, -1],
+      ],
+      PlusMonths_OutOfRange,
+      customDescriptionBuilder: describeArguments);
   test('PlusDays_SameMonth', PlusDays_SameMonth);
   test('PlusDays_MonthBoundary', PlusDays_MonthBoundary);
   test('PlusDays_YearBoundary', PlusDays_YearBoundary);
@@ -132,6 +142,26 @@ void PlusMonth_WithTruncation() {
   LocalDate start = LocalDate(2011, 1, 30);
   LocalDate expected = LocalDate(2011, 2, 28);
   expect(expected, start.addMonths(1));
+}
+
+// See https://github.com/nodatime/nodatime/issues/1906
+// This ends up being a problem in RegularYearMonthDayCalculator, but this is a simpler place to collect
+// test cases.
+void PlusMonths_OutOfRange(
+    int year, int month, CalendarOrdinal calendarOrdinal, int months) {
+  var calendar = ICalendarSystem.forOrdinal(calendarOrdinal);
+  var date = LocalDate(year, month, 1, calendar);
+  // Arguably ArgumentOutOfRangeException would be better in this specific
+  // case, but there may be other cases ending up at the same check,
+  // where OverflowException is better. The existing code "tried" to throw
+  // OverflowException, so in cases where we weren't already failing for
+  // whatever reason, we're keeping the original behavior.
+  // (Both map to RangeError in Time Machine.)
+  // Block-bodied closures: if a call returned an out-of-range date instead of throwing, the matcher would
+  // format it, which itself throws a RangeError and would make the test pass.
+  expect(() {
+    date.addMonths(months);
+  }, throwsRangeError);
 }
 
 void PlusDays_SameMonth() {

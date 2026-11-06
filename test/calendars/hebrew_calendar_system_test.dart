@@ -74,6 +74,22 @@ void main() {
       customDescriptionBuilder: describeArguments);
   test('ScripturalGetDaysFromStartOfYearToStartOfMonth_InvalidForCoverage',
       ScripturalGetDaysFromStartOfYearToStartOfMonth_InvalidForCoverage);
+  parameterizedTest(
+      'PlusMonths_Overflow',
+      [
+        [HebrewMonthNumbering.civil],
+        [HebrewMonthNumbering.scriptural],
+      ],
+      PlusMonths_Overflow,
+      customDescriptionBuilder: describeArguments);
+  parameterizedTest(
+      'Period_AtCalendarBounds',
+      [
+        [HebrewMonthNumbering.civil],
+        [HebrewMonthNumbering.scriptural],
+      ],
+      Period_AtCalendarBounds,
+      customDescriptionBuilder: describeArguments);
 }
 
 void IsLeapYear() {
@@ -332,7 +348,7 @@ void IsLeapYear() {
   }
 }
 
-// todo: I'm a bit unsure on what to do with this one.
+// .NET only: compares every date with the BCL HebrewCalendar.
 /*
 /// This tests every day for the BCL-supported Hebrew calendar range, testing various aspects of each date,
 /// using the civil month numbering.
@@ -350,7 +366,8 @@ void BclThroughHistory_Civil()
   BclEquivalenceHelper.AssertEquivalent(bcl, noda, minYear, maxYear);
 }*/
 
-// todo: we can bring this all in as tables (see: above) -- but...wow... this is gonna be a lot of tables
+// .NET only: compares every date with the BCL HebrewCalendar. (The month and day counts are covered by the
+// tables in hebrew_ecclesiastical_calculator_test.dart; the dates themselves would need BCL conversions.)
 /*
 /// This tests every day for the BCL-supported Hebrew calendar range, testing various aspects of each date,
 /// using the scriptural month numbering.
@@ -412,7 +429,7 @@ void BclThroughHistory_Scriptural()
 void SetYear(String startText, int years, String expectedEndText) {
   var civil = CalendarSystem.hebrewCivil;
   var scriptural = CalendarSystem.hebrewScriptural;
-  var pattern = LocalDatePattern.createWithInvariantCulture('yyyy-MM-dd')
+  var pattern = LocalDatePattern.createWithInvariantCulture('uuuu-MM-dd')
       .withTemplateValue(
           LocalDate(5774, 1, 1, scriptural)); // Sample value in 2014 ISO
 
@@ -429,7 +446,7 @@ void SetYear(String startText, int years, String expectedEndText) {
 void AddMonths_MonthsBetween(
     String startText, int months, String expectedEndText) {
   var civil = CalendarSystem.hebrewCivil;
-  var pattern = LocalDatePattern.createWithInvariantCulture('yyyy-MM-dd')
+  var pattern = LocalDatePattern.createWithInvariantCulture('uuuu-MM-dd')
       .withTemplateValue(
           LocalDate(5774, 1, 1, civil)); // Sample value in 2014 ISO
 
@@ -440,7 +457,7 @@ void AddMonths_MonthsBetween(
 
 void MonthsBetween(String startText, int expectedMonths, String endText) {
   var civil = CalendarSystem.hebrewCivil;
-  var pattern = LocalDatePattern.createWithInvariantCulture('yyyy-MM-dd')
+  var pattern = LocalDatePattern.createWithInvariantCulture('uuuu-MM-dd')
       .withTemplateValue(
           LocalDate(5774, 1, 1, civil)); // Sample value in 2014 ISO
 
@@ -518,6 +535,45 @@ void ScripturalGetDaysFromStartOfYearToStartOfMonth_InvalidForCoverage() {
       () => HebrewScripturalCalculator.getDaysFromStartOfYearToStartOfMonth(
           5502, 0),
       throwsRangeError);
+}
+
+void PlusMonths_Overflow(HebrewMonthNumbering monthNumbering) {
+  var calendar = CalendarSystem.getHebrewCalendar(monthNumbering);
+  // TODO: It would be nice to have an easy way of getting the smallest/largest LocalDate for
+  // a calendar. Or possibly FromDayOfYear as well... instead, we'll just add/subtract 8 months instead
+  var earlyDate = LocalDate(calendar.minYear, 1, 1, calendar);
+  var lateDate = LocalDate(calendar.maxYear, 12, 1, calendar);
+
+  // Block-bodied closures: if a call returned an out-of-range date instead of throwing, the matcher would
+  // format it, which itself throws a RangeError and would make the test pass.
+  expect(() {
+    earlyDate.addMonths(-7);
+  }, throwsRangeError);
+  expect(() {
+    lateDate.addMonths(7);
+  }, throwsRangeError);
+}
+
+/// Periods between dates in the calendar's first or last month: finding the
+/// month count steps a month past them, which mustn't overflow.
+void Period_AtCalendarBounds(HebrewMonthNumbering monthNumbering) {
+  var calendar = CalendarSystem.getHebrewCalendar(monthNumbering);
+  var civil = CalendarSystem.hebrewCivil;
+  // The first month of year 1 and the last of 9999 (civil numbering).
+  var first = LocalDate(civil.minYear, 1, 1, civil).withCalendar(calendar);
+  var last =
+      LocalDate(civil.maxYear, civil.getMonthsInYear(civil.maxYear), 1, civil)
+          .withCalendar(calendar);
+  for (var start in [first, last]) {
+    var end = start.addDays(19);
+    expect(Period.differenceBetweenDates(start, end), const Period(days: 19));
+    expect(Period.differenceBetweenDates(end, start), const Period(days: -19));
+  }
+  var lastEnd = last.addDays(19);
+  expect(Period.differenceBetweenDates(last.addMonths(-3), lastEnd),
+      const Period(months: 3, days: 19));
+  expect(Period.differenceBetweenDates(first.addMonths(3).addDays(5), first),
+      const Period(months: -3, days: -5));
 }
 
 // Cases used for adding months and differences between months.

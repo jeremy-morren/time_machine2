@@ -25,6 +25,11 @@ void main() {
       ForOrdinalUncached_Roundtrip,
       customDescriptionBuilder: describeArguments);
   test('ForOrdinalUncached_Invalid', ForOrdinalUncached_Invalid);
+  test('IdsMatchNodaTime', IdsMatchNodaTime);
+  parameterizedTest('IdNameAndOrdinalMatchNodaTime', NodaTimeCalendars,
+      IdNameAndOrdinalMatchNodaTime,
+      customDescriptionBuilder: describeArguments);
+  test('IslamicCalendarIds', IslamicCalendarIds);
 }
 
 final Iterable<String> SupportedIds = CalendarSystem.ids.toList();
@@ -77,7 +82,9 @@ void NoSubstrings() {
 
 void ForOrdinal_Roundtrip(CalendarSystem calendar) {
   expect(
-      calendar, ICalendarSystem.forOrdinal(ICalendarSystem.ordinal(calendar)));
+      identical(calendar,
+          ICalendarSystem.forOrdinal(ICalendarSystem.ordinal(calendar))),
+      isTrue);
   // Assert.AreSame(calendar, CalendarSystem.ForOrdinal(calendar.Ordinal));
 }
 
@@ -92,4 +99,116 @@ void ForOrdinalUncached_Invalid() {
   expect(() => ICalendarSystem.forOrdinalUncached(const CalendarOrdinal(9999)),
       throwsStateError);
 // Assert.Throws<InvalidOperationException>(() => CalendarSystem.ForOrdinalUncached((CalendarOrdinal)9999));
+}
+
+// The tests below have no direct Noda Time equivalent: they pin the IDs, names and ordinals to Noda Time's
+// values (see CalendarSystem.Id in Noda Time), so that values can be exchanged with Noda Time.
+
+final List<List<Object>> NodaTimeCalendars = [
+  ['ISO', 'ISO', CalendarOrdinal.iso, 'Iso'],
+  ['Gregorian', 'Gregorian', CalendarOrdinal.gregorian, 'Gregorian'],
+  ['Julian', 'Julian', CalendarOrdinal.julian, 'Julian'],
+  ['Coptic', 'Coptic', CalendarOrdinal.coptic, 'Coptic'],
+  ['Hebrew Civil', 'Hebrew', CalendarOrdinal.hebrewCivil, 'HebrewCivil'],
+  [
+    'Hebrew Scriptural',
+    'Hebrew',
+    CalendarOrdinal.hebrewScriptural,
+    'HebrewScriptural'
+  ],
+  ['Persian Simple', 'Persian', CalendarOrdinal.persianSimple, 'PersianSimple'],
+  [
+    'Persian Arithmetic',
+    'Persian',
+    CalendarOrdinal.persianArithmetic,
+    'PersianArithmetic'
+  ],
+  [
+    'Persian Algorithmic',
+    'Persian',
+    CalendarOrdinal.persianAstronomical,
+    'PersianAstronomical'
+  ],
+  [
+    'Hijri Astronomical-Base15',
+    'Hijri',
+    CalendarOrdinal.islamicAstronomicalBase15,
+    'IslamicAstronomicalBase15'
+  ],
+  [
+    'Hijri Astronomical-Base16',
+    'Hijri',
+    CalendarOrdinal.islamicAstronomicalBase16,
+    'IslamicAstronomicalBase16'
+  ],
+  [
+    'Hijri Astronomical-Indian',
+    'Hijri',
+    CalendarOrdinal.islamicAstronomicalIndian,
+    'IslamicAstronomicalIndian'
+  ],
+  [
+    'Hijri Astronomical-HabashAlHasib',
+    'Hijri',
+    CalendarOrdinal.islamicAstronomicalHabashAlHasib,
+    'IslamicAstronomicalHabashAlHasib'
+  ],
+  [
+    'Hijri Civil-Base15',
+    'Hijri',
+    CalendarOrdinal.islamicCivilBase15,
+    'IslamicCivilBase15'
+  ],
+  [
+    'Hijri Civil-Base16',
+    'Hijri',
+    CalendarOrdinal.islamicCivilBase16,
+    'IslamicCivilBase16'
+  ],
+  [
+    'Hijri Civil-Indian',
+    'Hijri',
+    CalendarOrdinal.islamicCivilIndian,
+    'IslamicCivilIndian'
+  ],
+  [
+    'Hijri Civil-HabashAlHasib',
+    'Hijri',
+    CalendarOrdinal.islamicCivilHabashAlHasib,
+    'IslamicCivilHabashAlHasib'
+  ],
+  ['Um Al Qura', 'Um Al Qura', CalendarOrdinal.umAlQura, 'UmAlQura'],
+  ['Badi', 'Badi', CalendarOrdinal.badi, 'Badi'],
+];
+
+void IdsMatchNodaTime() {
+  expect(CalendarSystem.ids.toSet(),
+      NodaTimeCalendars.map((calendar) => calendar[0]).toSet());
+  expect(CalendarSystem.ids.length, NodaTimeCalendars.length);
+}
+
+void IdNameAndOrdinalMatchNodaTime(
+    String id, String name, CalendarOrdinal ordinal, String ordinalName) {
+  var calendar = CalendarSystem.forId(id);
+  expect(calendar.id, id);
+  expect(calendar.toString(), id);
+  expect(calendar.name, name);
+  expect(ICalendarSystem.ordinal(calendar), ordinal);
+  expect(identical(ICalendarSystem.forOrdinal(ordinal), calendar), isTrue);
+  expect(ordinal.toString(), ordinalName);
+  expect(CalendarOrdinal.parse(ordinalName), ordinal);
+}
+
+void IslamicCalendarIds() {
+  expect(
+      CalendarSystem.getIslamicCalendar(
+              IslamicLeapYearPattern.indian, IslamicEpoch.civil)
+          .id,
+      'Hijri Civil-Indian');
+  expect(
+      CalendarSystem.getIslamicCalendar(
+              IslamicLeapYearPattern.habashAlHasib, IslamicEpoch.astronomical)
+          .id,
+      'Hijri Astronomical-HabashAlHasib');
+  expect(CalendarSystem.islamicBcl.id, 'Hijri Astronomical-Base16');
 }

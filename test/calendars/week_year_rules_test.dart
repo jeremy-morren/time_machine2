@@ -10,11 +10,11 @@
 import 'package:test/test.dart';
 
 void main() {
-  test('UnsupportedCalendarWeekRule', UnsupportedCalendarWeekRule);
+  test('UnsupportedCalendarWeekRule', UnsupportedCalendarWeekRule,
+      skip: 'Not applicable: Dart enums cannot hold out-of-range values');
 }
 
 void UnsupportedCalendarWeekRule() {
-// This rule doesn't work in Dart since we can't create an arbitrary enum.
 // expect(() => WeekYearRules.FromCalendarWeekRule(CalendarWeekRule.FirstDay + 1000, DayOfWeek.Monday), throwsArgumentError);
 // expect(() => WeekYearRules.FromCalendarWeekRule(CalendarWeekRule.FirstDay, IsoDayOfWeek.monday), throwsArgumentError);
 }

@@ -4,6 +4,9 @@
 
 import 'package:time_machine2/src/time_machine_internal.dart';
 import 'package:test/test.dart';
+import 'package:parameterized_test/parameterized_test.dart';
+
+import 'time_machine_testing.dart';
 
 void main() {
   test('Addition_WithPeriod', Addition_WithPeriod);
@@ -15,6 +18,21 @@ void main() {
   test('PeriodAddition_MethodEquivalents', PeriodAddition_MethodEquivalents);
   test('PeriodSubtraction_MethodEquivalents',
       PeriodSubtraction_MethodEquivalents);
+  parameterizedTest(
+      'PlusMonths_Overflow',
+      [
+        [9999, 12, 31, 1],
+        [9999, 12, 1, 1],
+        [9999, 11, 30, 2],
+        [9999, 11, 1, 2],
+        [9998, 12, 31, 13],
+        [9998, 12, 1, 13],
+        [-9998, 1, 1, -1],
+        [-9998, 2, 1, -2],
+        [-9997, 1, 1, -13],
+      ],
+      PlusMonths_Overflow,
+      customDescriptionBuilder: describeArguments);
 }
 
 void Addition_WithPeriod() {
@@ -98,4 +116,13 @@ void PeriodSubtraction_MethodEquivalents() {
   expect(
       period, LocalDate.difference(end, start)); // LocalDate.Minus(end, start)
   expect(period, end.periodSince(start));
+}
+
+void PlusMonths_Overflow(int year, int month, int day, int monthsToAdd) {
+  var start = LocalDate(year, month, day);
+  // Block-bodied closures: if a call returned an out-of-range date instead of throwing, the matcher would
+  // format it, which itself throws a RangeError and would make the test pass.
+  expect(() {
+    start.addMonths(monthsToAdd);
+  }, throwsRangeError);
 }

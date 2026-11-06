@@ -12,7 +12,6 @@ void main() {
   test('GetMaxYearOfEra', GetMaxYearOfEra);
 }
 
-// Todo: all tests fail because Coptic is not yet implemented
 final CalendarSystem CopticCalendar = CalendarSystem.coptic;
 
 // Tests using CopticCalendar as a simple example which doesn't override anything.

@@ -11,25 +11,34 @@ import '../time_machine_testing.dart';
 
 void main() {
   parameterizedTest('ResourcePresence', Eras, ResourcePresence,
-      customDescriptionBuilder: describeArguments, skip: 'unimplemented');
+      customDescriptionBuilder: describeArguments);
+  parameterizedTest('ToStringReturnsName', Eras, ToStringReturnsName,
+      customDescriptionBuilder: describeArguments);
 }
 
 /// The static Era fields (typeof(Era).GetTypeInfo().DeclaredProperties in
-/// Noda Time).
-List<Era> Eras = [
-  Era.common,
-  Era.beforeCommon,
-  Era.annoMartyrum,
-  Era.annoHegirae,
-  Era.annoMundi,
-  Era.annoPersico,
-  Era.bahai,
+/// Noda Time), named by field, as two eras share the name 'AM'.
+List<Object> Eras = [
+  Era.common.options(customDescriptionBuilder: (_, __, ___) => 'common'),
+  Era.beforeCommon
+      .options(customDescriptionBuilder: (_, __, ___) => 'beforeCommon'),
+  Era.annoMartyrum
+      .options(customDescriptionBuilder: (_, __, ___) => 'annoMartyrum'),
+  Era.annoHegirae
+      .options(customDescriptionBuilder: (_, __, ___) => 'annoHegirae'),
+  Era.annoMundi.options(customDescriptionBuilder: (_, __, ___) => 'annoMundi'),
+  Era.annoPersico
+      .options(customDescriptionBuilder: (_, __, ___) => 'annoPersico'),
+  Era.bahai.options(customDescriptionBuilder: (_, __, ___) => 'bahai'),
 ];
 
-void ResourcePresence(Era? era) {
-  // todo: get us resources?
-  var valueByName; // PatternResources.ResourceManager.GetString(era.ResourceIdentifier, Culture.invariantCulture);
-  expect(valueByName, isNotNull,
-      reason: 'Missing resource for ' +
-          (era != null ? IEra.resourceIdentifier(era) : 'null'));
+void ResourcePresence(Era era) {
+  var valueByName = PatternResources.getString(
+      IEra.resourceIdentifier(era), Culture.invariant);
+  expect(valueByName, isNotEmpty,
+      reason: 'Missing resource for ${IEra.resourceIdentifier(era)}');
+}
+
+void ToStringReturnsName(Era era) {
+  expect(era.toString(), era.name);
 }

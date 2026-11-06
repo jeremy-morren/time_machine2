@@ -8,7 +8,8 @@ import 'package:test/test.dart';
 // import 'package:matcher/matcher.dart';
 
 void main() {
-  test('BclEquivalence', BclEquivalence, skip: 'Need Dart Equivalent Test');
+  test('BclEquivalence', BclEquivalence,
+      skip: '.NET only: compares with the BCL UmAlQuraCalendar');
   test('GetStartOfYearInDays', GetStartOfYearInDays);
   test('GetYearMonthDay_DaysSinceEpoch', GetYearMonthDay_DaysSinceEpoch);
   test('GetYearMonthDay_YearAndDayOfYear', GetYearMonthDay_YearAndDayOfYear);

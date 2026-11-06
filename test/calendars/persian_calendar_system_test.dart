@@ -12,7 +12,8 @@ import '../time_machine_testing.dart';
 
 /// Tests for PersianYearMonthDayCalculator via the Persian CalendarSystem.
 void main() {
-  test('BclThroughHistory', BclThroughHistory, skip: 'Unsure how to implement');
+  test('BclThroughHistory', BclThroughHistory,
+      skip: '.NET only: compares with the BCL PersianCalendar');
   parameterizedTest(
       'ArithmeticExamples',
       [
@@ -47,6 +48,21 @@ void main() {
       ],
       ArithmeticExamples,
       customDescriptionBuilder: describeArguments);
+  test('ArithmeticLeapYearsRepeatEvery2820Years',
+      ArithmeticLeapYearsRepeatEvery2820Years);
+  parameterizedTest(
+      'ArithmeticYearsBefore474',
+      [
+        [24, false, 645, 21],
+        [25, true, 646, 21],
+        [57, false, 678, 21],
+        [58, true, 679, 21],
+        [441, false, 1062, 21],
+        [442, true, 1063, 21],
+      ],
+      ArithmeticYearsBefore474,
+      customDescriptionBuilder: describeArguments);
+  test('ArithmeticYearEndBefore474', ArithmeticYearEndBefore474);
 }
 
 // [Category('Slow')]
@@ -69,4 +85,38 @@ void ArithmeticExamples(
   expect(gregorianYear, gregorian.year);
   expect(3, gregorian.monthOfYear);
   expect(gregorianDayOfMarch, gregorian.dayOfMonth);
+}
+
+/// The arithmetic calendar repeats every 2820 years, including the years before 474.
+/// A floored modulo puts year 24 in the same position in the cycle as year 2844.
+void ArithmeticLeapYearsRepeatEvery2820Years() {
+  var calendar = CalendarSystem.persianArithmetic;
+  for (var year = calendar.minYear; year + 2820 <= calendar.maxYear; year++) {
+    expect(calendar.isLeapYear(year), calendar.isLeapYear(year + 2820),
+        reason: 'Year $year');
+  }
+}
+
+/// Leap years and new year's days before 474 use the same cycle as later years.
+void ArithmeticYearsBefore474(
+    int persianYear, bool leap, int gregorianYear, int gregorianDayOfMarch) {
+  expect(CalendarSystem.persianArithmetic.isLeapYear(persianYear), leap);
+  var gregorian = LocalDate(persianYear, 1, 1, CalendarSystem.persianArithmetic)
+      .withCalendar(CalendarSystem.gregorian);
+  expect(
+      gregorian,
+      LocalDate(
+          gregorianYear, 3, gregorianDayOfMarch, CalendarSystem.gregorian));
+}
+
+void ArithmeticYearEndBefore474() {
+  var calendar = CalendarSystem.persianArithmetic;
+  var lastDayOfYear24 = LocalDate(24, 12, 29, calendar);
+  expect(lastDayOfYear24.addDays(1), LocalDate(25, 1, 1, calendar));
+  expect(() {
+    LocalDate(24, 12, 30, calendar);
+  }, throwsRangeError);
+
+  var leapDayOfYear25 = LocalDate(25, 12, 30, calendar);
+  expect(leapDayOfYear25.addDays(1), LocalDate(26, 1, 1, calendar));
 }
