@@ -8,10 +8,13 @@ export 'package:time_machine2/src/timezones/cldr/windows_zones.dart';
 
 // todo: internal
 class CldrWindowsZonesParser {
-  static WindowsZones parse(xml.XmlDocument document) {
+  /// Parses a CLDR windowsZones document. [fileName] (such as
+  /// 'windowsZones-49.xml') supplies the CLDR version, as in Noda Time;
+  /// current CLDR files no longer contain a revision number.
+  static WindowsZones parse(xml.XmlDocument document, [String fileName = '']) {
     var mapTimezones = _mapTimezones(document);
     var mapZones = _mapZones(mapTimezones);
-    var windowsZonesVersion = _findVersion(document);
+    var windowsZonesVersion = _findVersion(document, fileName);
     var tzdbVersion = mapTimezones.getAttribute('typeVersion') ?? '';
     var windowsVersion = mapTimezones.getAttribute('otherVersion') ?? '';
     return WindowsZones(
@@ -26,13 +29,24 @@ class CldrWindowsZonesParser {
           .first;
 
   // todo: internal
-  static WindowsZones parseFile(String file) => parse(_loadFile(file));
+  static WindowsZones parseFile(String file) =>
+      parse(_loadFile(file), file);
 
   static xml.XmlDocument _loadFile(String file) =>
       xml.XmlDocument.parse(io.File(file).readAsStringSync());
 
-  static String _findVersion(xml.XmlDocument document) {
-    // String revision = document.Root.Element('version')?.Attribute("number");
+  static String _findVersion(xml.XmlDocument document, String fileName) {
+    // The CLDR version from a file name such as windowsZones-38-1.xml (38.1).
+    var baseName = fileName.split(RegExp(r'[/\\]')).last;
+    if (baseName.endsWith('.xml')) {
+      baseName = baseName.substring(0, baseName.length - 4);
+    }
+    var cldrVersion =
+        baseName.replaceFirst('windowsZones-', '').replaceAll('-', '.');
+    if (RegExp(r'^\d+(\.\d+)?$').hasMatch(cldrVersion)) {
+      return cldrVersion;
+    }
+
     String? revision = document.rootElement
         .findElements('version')
         .firstOrNull

@@ -218,19 +218,13 @@ WindowsZones MergeWindowsZones(
       : overrideZones.windowsVersion;
 
   // Work everything out using dictionaries, and then sort.
-  Map<Map<String, String>, MapZone> mapZones = {
-    for (MapZone mz in originalZones.mapZones)
-      {
-        'windowsId': mz.windowsId,
-        'territory': mz.territory,
-      }: mz
+  // Records compare by value, so (Windows ID, territory) works as a key.
+  var mapZones = <(String, String), MapZone>{
+    for (var mz in originalZones.mapZones) (mz.windowsId, mz.territory): mz
   };
 
   for (var overrideMapZone in overrideZones.mapZones) {
-    var key = {
-      'windowsId': overrideMapZone.windowsId,
-      'territory': overrideMapZone.territory
-    };
+    var key = (overrideMapZone.windowsId, overrideMapZone.territory);
     if (overrideMapZone.tzdbIds.isEmpty) {
       mapZones.remove(key);
     } else {
@@ -240,14 +234,11 @@ WindowsZones MergeWindowsZones(
 
   var mapZoneList = (mapZones.entries.toList()
         ..sort((a, b) {
-          // order by 'windowsId'
-          var cmp = a.key['windowsId']!.compareTo(b.key['windowsId']!);
-          if (cmp != 0) return cmp;
-
-          // then by 'territory'
-          return a.key['territory']!.compareTo(b.key['territory']!);
+          // Order by Windows ID, then by territory.
+          var cmp = a.key.$1.compareTo(b.key.$1);
+          return cmp != 0 ? cmp : a.key.$2.compareTo(b.key.$2);
         }))
-      .map((a) => a.value)
+      .map((entry) => entry.value)
       .toList();
 
   return WindowsZones(version, tzdbVersion, windowsVersion, mapZoneList);

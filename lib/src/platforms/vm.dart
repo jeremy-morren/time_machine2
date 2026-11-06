@@ -106,7 +106,8 @@ class TimeMachine {
     // the guess by transitions, which matches the system's actual offsets.
     if (info.dynamicDaylightTimeDisabled) return null;
 
-    var id = IDateTimeZoneProviders.tzdbSource.windowsToTzdbIds[info.keyName];
+    var id =
+        IDateTimeZoneProviders.tzdbSource.mapSystemTimeZoneId(info.keyName);
     if (id == null || !provider.ids.contains(id)) return null;
     return await provider[id];
   }
@@ -121,7 +122,10 @@ class TimeMachine {
         .where((id) => canonicalIdMap[id] != id)
         .toList()
       ..sort();
-    var id = readUnixTimeZoneId([...canonicalIds, ...aliases]);
+    var systemId = readUnixTimeZoneId([...canonicalIds, ...aliases]);
+    var id = systemId == null
+        ? null
+        : IDateTimeZoneProviders.tzdbSource.mapSystemTimeZoneId(systemId);
     if (id == null || !provider.ids.contains(id)) return null;
     return await provider[id];
   }

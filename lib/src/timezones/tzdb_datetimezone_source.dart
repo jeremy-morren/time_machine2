@@ -32,10 +32,12 @@ class TzdbDateTimeZoneSource extends DateTimeZoneSource {
   WindowsZones _windowsMapping = WindowsZones('', '', '', const []);
   Map<String, String>? _windowsToTzdbIds;
   Map<String, String>? _tzdbToWindowsIds;
+  Map<String, List<String>>? _aliasLookup;
 
   TzdbDateTimeZoneSource();
 
-  /// The TZDB source embedded in Time Machine, as used by [DateTimeZoneProviders.tzdb].
+  /// The TZDB source embedded in Time Machine, as used by
+  /// [DateTimeZoneProviders.tzdb].
   static TzdbDateTimeZoneSource get defaultSource =>
       IDateTimeZoneProviders.tzdbSource;
 
@@ -74,6 +76,7 @@ class TzdbDateTimeZoneSource extends DateTimeZoneSource {
       });
       _windowsToTzdbIds = null;
       _tzdbToWindowsIds = null;
+      _aliasLookup = null;
 
       // Add time zones under their alias names as well
       final aliases = streamReader.aliases;
@@ -138,6 +141,43 @@ class TzdbDateTimeZoneSource extends DateTimeZoneSource {
     return _canonicalIdMap;
   }
 
+  /// A lookup from canonical time zone ID (e.g. 'Europe/London') to the aliases
+  /// of that ID (e.g. 'Europe/Belfast', 'Europe/Guernsey'), in ordinal order.
+  ///
+  /// Only canonical IDs that have aliases are present; any other ID (including
+  /// an alias) isn't a key.
+  Map<String, List<String>> get aliases {
+    _checkInitialized();
+    return _aliasLookup ??= UnmodifiableMapView({
+      for (final entry in (() {
+        final lookup = <String, List<String>>{};
+        for (final pair in _canonicalIdMap.entries) {
+          if (pair.key != pair.value) {
+            lookup.putIfAbsent(pair.value, () => []).add(pair.key);
+          }
+        }
+        return lookup;
+      })()
+          .entries)
+        entry.key: List.unmodifiable(entry.value..sort()),
+    });
+  }
+
+  /// Maps a system time zone ID to a TZDB ID, as Noda Time's
+  /// `TzdbDateTimeZoneSource.MapTimeZoneInfoId` does: first as a Windows
+  /// zone ID (using the CLDR primary mapping), then as a TZDB ID. Returns null
+  /// if it's neither; callers then guess by transitions.
+  @internal
+  String? mapSystemTimeZoneId(String id) {
+    _checkInitialized();
+    // First see if it's a Windows time zone ID.
+    final result = _windowsMapping.primaryMapping[id];
+    if (result != null) return result;
+    // Next see if it's already a TZDB ID (e.g. on Linux or macOS).
+    if (_canonicalIdMap.containsKey(id)) return id;
+    return null;
+  }
+
   /// The Windows time zone mapping information provided in the CLDR
   /// supplemental 'windowsZones.xml' file.
   WindowsZones get windowsMapping {
@@ -155,11 +195,18 @@ class TzdbDateTimeZoneSource extends DateTimeZoneSource {
   /// in the returned map therefore has 'Asia/Kolkata' as the value.
   Map<String, String> get windowsToTzdbIds {
     _checkInitialized();
-    return _windowsToTzdbIds ??= UnmodifiableMapView({
-      for (final entry in _windowsMapping.primaryMapping.entries)
-        entry.key: _canonicalIdMap[entry.value] ?? entry.value,
-    });
+    return _windowsToTzdbIds ??= UnmodifiableMapView(
+        buildWindowsToTzdbIdMap(_windowsMapping, _canonicalIdMap));
   }
+
+  /// Builds the map returned by [windowsToTzdbIds]. Exposed for testing.
+  @visibleForTesting
+  static Map<String, String> buildWindowsToTzdbIdMap(
+          WindowsZones windowsMapping, Map<String, String> canonicalIdMap) =>
+      {
+        for (final entry in windowsMapping.primaryMapping.entries)
+          entry.key: canonicalIdMap[entry.value] ?? entry.value,
+      };
 
   /// A map from TZDB IDs to Windows IDs.
   ///
