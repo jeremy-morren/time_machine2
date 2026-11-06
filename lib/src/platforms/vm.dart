@@ -72,6 +72,13 @@ class TimeMachine {
   /// note: during testing, bugs were found with dart's zone interval id -- it sometimes does daylight savings when it didn't exist
   static Future<DateTimeZone?> _figureOutTimeZone(DateTimeZoneProvider provider,
       [bool strict = false]) async {
+    // On Windows, Dart reports Windows time zone names (e.g. 'AUS Eastern Standard Time')
+    // instead of IANA abbreviations, which the heuristic below can't match.
+    if (io.Platform.isWindows) {
+      var windowsZone = await _figureOutWindowsTimeZone(provider);
+      if (windowsZone != null) return windowsZone;
+    }
+
     var zones = <DateTimeZone>[];
     // load all the timezones; todo: fast_cache method
     for (var id in provider.ids) {
@@ -152,11 +159,50 @@ class TimeMachine {
     }
 
     // todo: this is a good thing to log
-    // Return UTC if we couldn't even figure it out
-    if (zones.isEmpty) return DateTimeZone.utc;
+    // If we couldn't figure it out, fall back to a fixed zone with the system's
+    // current offset. This is UTC on a UTC system, but avoids silently treating
+    // every other system as UTC.
+    if (zones.isEmpty) {
+      return DateTimeZone.forOffset(
+          Offset(nowDateTime.timeZoneOffset.inSeconds));
+    }
 
     // Ambiguous -- just picking the first result
     return zones.first;
+  }
+
+  /// Maps the Windows time zone name reported by Dart to a TZDB zone using the
+  /// CLDR Windows zone mapping embedded in the TZDB data (as Noda Time does),
+  /// and checks that the zone's current offset matches the system's.
+  ///
+  /// Returns null if the name is unknown (for example on a non-English
+  /// Windows installation, where the names are localized).
+  static Future<DateTimeZone?> _figureOutWindowsTimeZone(
+      DateTimeZoneProvider provider) async {
+    var source = IDateTimeZoneProviders.tzdbSource;
+    var now = DateTime.now();
+    var nowInstant = Instant.dateTime(now);
+
+    // Dart reports the daylight name while DST is in effect, and the mapping only
+    // knows standard names, so also try January and July: one of them is standard time.
+    var names = <String>{
+      now.timeZoneName,
+      DateTime(now.year, 1, 1).timeZoneName,
+      DateTime(now.year, 7, 1).timeZoneName,
+    };
+
+    for (var name in names) {
+      var id = await source.windowsZoneNameToTzdbId(name);
+      if (id == null || !provider.ids.contains(id)) continue;
+
+      var zone = await provider[id];
+      if (zone.getUtcOffset(nowInstant).inSeconds ==
+          now.timeZoneOffset.inSeconds) {
+        return zone;
+      }
+    }
+
+    return null;
   }
 
   static bool _isTheSame(DateTime dateTime, ZoneInterval zoneInterval) {

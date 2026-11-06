@@ -277,27 +277,21 @@ class WindowsZones {
 // todo: internal
 class CldrWindowsZonesParser {
   static WindowsZones parse(xml.XmlDocument document) {
-    var mapZones = _mapZones(document);
+    var mapTimezones = _mapTimezones(document);
+    var mapZones = _mapZones(mapTimezones);
     var windowsZonesVersion = _findVersion(document);
-    var tzdbVersion = document
-            .findElements('windowsZones')
-            .first
-            .findElements('mapTimezones')
-            .first
-            .getAttribute('typeVersion') ??
-        '';
-    // todo: var _tzdbVersion = document.rootElement.('windowsZones')?.Element("mapTimezones")?.Attribute("typeVersion")?.Value ?? "";
-    var windowsVersion = document
-            .findElements('windowsZones')
-            .first
-            .findElements('mapTimezones')
-            .first
-            .getAttribute('typeVersion') ??
-        '';
-    // todo: var windowsVersion = document.Root.Element('windowsZones')?.Element("mapTimezones")?.Attribute("otherVersion")?.Value ?? "";
+    var tzdbVersion = mapTimezones.getAttribute('typeVersion') ?? '';
+    var windowsVersion = mapTimezones.getAttribute('otherVersion') ?? '';
     return WindowsZones(
         windowsZonesVersion, tzdbVersion, windowsVersion, mapZones);
   }
+
+  static xml.XmlElement _mapTimezones(xml.XmlDocument document) =>
+      document.rootElement
+          .findElements('windowsZones')
+          .first
+          .findElements('mapTimezones')
+          .first;
 
   // todo: internal
   static WindowsZones parseFile(String file) => parse(_loadFile(file));
@@ -307,9 +301,12 @@ class CldrWindowsZonesParser {
 
   static String _findVersion(xml.XmlDocument document) {
     // String revision = document.Root.Element('version')?.Attribute("number");
-    String? revision =
-        document.findElements('version').first.getAttribute('number');
-    if (revision == null) {
+    String? revision = document.rootElement
+        .findElements('version')
+        .firstOrNull
+        ?.getAttribute('number');
+    // Recent CLDR files contain an unexpanded $Revision$ keyword.
+    if (revision == null || revision == r'$Revision$') {
       return '';
     }
     String prefix = r'$Revision: ';
@@ -338,13 +335,15 @@ class CldrWindowsZonesParser {
   /// Reads the input XML file for the windows mappings.
   /// </summary>
   /// <returns>A lookup of Windows time zone mappings</returns>
-  static List<MapZone> _mapZones(xml.XmlDocument document) => document
-      .findElements('windowsZones')
-      .first
-      .findElements('mapTimezones')
-      .first
+  static List<MapZone> _mapZones(xml.XmlElement mapTimezones) => mapTimezones
       .findElements('mapZone')
-      .map((x) => MapZone(x.getAttribute('other')!,
-          x.getAttribute('territory')!, x.getAttribute('type')!.split(r'\\s+')))
+      .map((x) => MapZone(
+          x.getAttribute('other')!,
+          x.getAttribute('territory')!,
+          x
+              .getAttribute('type')!
+              .split(RegExp(r'\s+'))
+              .where((id) => id.isNotEmpty)
+              .toList()))
       .toList();
 }

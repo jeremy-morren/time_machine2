@@ -11,6 +11,8 @@ class TzdbDateTimeZoneSource extends DateTimeZoneSource {
   // map of date time zones that are deserialized from TZF entries on init
   final _dateTimeZones = <String, DateTimeZone>{};
   final _aliases = <String, String>{};
+  final _windowsIdToTzdbId = <String, String>{};
+  final _windowsStandardNameToTzdbId = <String, String>{};
 
   String _defaultId = "UTC";
   String _versionId = 'Uninitialized';
@@ -32,6 +34,13 @@ class TzdbDateTimeZoneSource extends DateTimeZoneSource {
       _versionId = 'TZDB: ${streamReader.tzdbVersion}';
       _aliases.clear();
       _aliases.addAll(streamReader.aliases);
+
+      _windowsIdToTzdbId
+        ..clear()
+        ..addAll(streamReader.windowsIdToTzdbId);
+      _windowsStandardNameToTzdbId
+        ..clear()
+        ..addAll(streamReader.windowsStandardNameToTzdbId);
 
       final dateTimeZones = streamReader.timeZones;
 
@@ -78,6 +87,17 @@ class TzdbDateTimeZoneSource extends DateTimeZoneSource {
   Future<Iterable<String>> getIds() async {
     await _init();
     return _dateTimeZones.keys;
+  }
+
+  /// Maps a Windows time zone ID or standard name to a TZDB ID, using the
+  /// CLDR Windows zone mapping embedded in the TZDB data.
+  ///
+  /// On Windows, [DateTime.timeZoneName] returns the zone's standard name
+  /// (e.g. 'AUS Eastern Standard Time'), which usually matches the Windows ID.
+  /// Returns null if the name is unknown (e.g. daylight or localized names).
+  Future<String?> windowsZoneNameToTzdbId(String name) async {
+    await _init();
+    return _windowsStandardNameToTzdbId[name] ?? _windowsIdToTzdbId[name];
   }
 
   @override

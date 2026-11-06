@@ -73,6 +73,15 @@ class TzdbStreamReader {
   late Map<String, DateTimeZone> timeZones;
   late Map<String, String> aliases;
 
+  /// Windows time zone ID (e.g. 'AUS Eastern Standard Time') to TZDB ID, from CLDR.
+  late Map<String, String> windowsIdToTzdbId;
+
+  /// Windows standard name to TZDB ID, for zones whose standard name differs
+  /// from their Windows ID (e.g. 'Coordinated Universal Time').
+  late Map<String, String> windowsStandardNameToTzdbId;
+
+  static const String _primaryTerritory = '001';
+
   TzdbStreamReader(this._input) : _reader = BinaryReader(_input) {
     // Read and validate the version
     int version = _reader.readUint8();
@@ -114,6 +123,39 @@ class TzdbStreamReader {
     }
     reader.currentOffset = aliasFields[0].offset;
     aliases = reader.readDictionary();
+
+    // Read the Windows ID -> TZDB ID mapping (CLDR windowsZones.xml, primary
+    // territory only). Older data files may not have it.
+    windowsIdToTzdbId = <String, String>{};
+    var windowsZonesFields =
+        fields[TzdbStreamFieldId.cldrSupplementalWindowsZones];
+    if (windowsZonesFields != null && windowsZonesFields.isNotEmpty) {
+      reader.currentOffset = windowsZonesFields[0].offset;
+      reader.readString(); // CLDR version
+      reader.readString(); // TZDB version
+      reader.readString(); // Windows version
+      int mapZoneCount = reader.readCount();
+      for (int i = 0; i < mapZoneCount; i++) {
+        var windowsId = reader.readString();
+        var territory = reader.readString();
+        var tzdbIds = List<String>.generate(
+            reader.readCount(), (_) => reader.readString());
+        if (territory == _primaryTerritory && tzdbIds.isNotEmpty) {
+          windowsIdToTzdbId[windowsId] = tzdbIds.first;
+        }
+      }
+    }
+
+    // Read the Windows standard name -> TZDB ID mapping for zones whose
+    // standard name differs from their Windows ID.
+    var standardNameFields =
+        fields[TzdbStreamFieldId.windowsAdditionalStandardNameToIdMapping];
+    if (standardNameFields != null && standardNameFields.isNotEmpty) {
+      reader.currentOffset = standardNameFields[0].offset;
+      windowsStandardNameToTzdbId = reader.readDictionary();
+    } else {
+      windowsStandardNameToTzdbId = <String, String>{};
+    }
 
     /*
     // Read Windows mappings
