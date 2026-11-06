@@ -382,3 +382,30 @@ Future AllWindowsRegistryZonesAreMapped() async {
           'tool/tzdb_compiler/tzdb/named_id_mapping_support.dart, '
           'or add a newer CLDR windowsZones file, then rerun the TZDB compiler');
 }
+
+/// Guards the non-English Windows CI leg: with
+/// TIME_MACHINE_EXPECT_LOCALIZED_WINDOWS=1, the display names Dart reports
+/// must not be the English ones, otherwise that leg isn't testing anything.
+@Test()
+Future WindowsDisplayNamesAreLocalizedWhenExpected() async {
+  if (!io.Platform.isWindows ||
+      io.Platform.environment['TIME_MACHINE_EXPECT_LOCALIZED_WINDOWS'] != '1') {
+    return;
+  }
+  var keyName =
+      await _registryValue(_timeZoneInformationKey, 'TimeZoneKeyName');
+  var zoneKey =
+      r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\' +
+          keyName!;
+  var englishNames = {
+    await _registryValue(zoneKey, 'Std'),
+    await _registryValue(zoneKey, 'Dlt'),
+  };
+  var year = DateTime.now().year;
+  var reported = {
+    DateTime(year, 1, 1).timeZoneName,
+    DateTime(year, 7, 1).timeZoneName,
+  };
+  expect(reported.intersection(englishNames), isEmpty,
+      reason: 'Dart reports $reported for Windows zone "$keyName"');
+}
