@@ -1,5 +1,5 @@
 /// This library provides functions for working with time inside machines running Dart.
-library time_machine;
+library;
 
 export 'package:meta/meta.dart';
 

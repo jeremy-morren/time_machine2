@@ -15,7 +15,7 @@ class AnnualDatePatternParser implements IPatternParser<AnnualDate> {
         .handlePercent /**<AnnualDate, AnnualDateParseBucket>*/,
     '\'': SteppedPatternBuilder
         .handleQuote /**<AnnualDate, AnnualDateParseBucket>*/,
-    '\"': SteppedPatternBuilder
+    '"': SteppedPatternBuilder
         .handleQuote /**<AnnualDate, AnnualDateParseBucket>*/,
     '\\': SteppedPatternBuilder
         .handleBackslash /**<AnnualDate, AnnualDateParseBucket>*/,

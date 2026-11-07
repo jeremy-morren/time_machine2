@@ -149,17 +149,17 @@ class DateInterval {
   DateInterval? union(DateInterval interval) {
     _validateInterval(interval);
 
-    var _start = LocalDate.min(start, interval.start);
-    var _end = LocalDate.max(end, interval.end);
+    var unionStart = LocalDate.min(start, interval.start);
+    var unionEnd = LocalDate.max(end, interval.end);
 
     // Check whether the length of the interval we *would* construct is greater
     // than the sum of the lengths - if it is, there's a day in that candidate union
     // that isn't in either interval. Note the absence of "+ 1" and the use of >=
     // - it's equivalent to Period.DaysBetween(...) + 1 > Length + interval.Length,
     // but with fewer operations.
-    return IPeriod.daysBetween(_start, _end) >= length + interval.length
+    return IPeriod.daysBetween(unionStart, unionEnd) >= length + interval.length
         ? null
-        : DateInterval(_start, _end);
+        : DateInterval(unionStart, unionEnd);
   }
 
   void _validateInterval(DateInterval interval) {

@@ -176,14 +176,14 @@ static BadiYearMonthDayCalculator()
   int getDaysInYear(int year) => 361 + getDaysInAyyamiHa(year);
 
   @override
-  int getDaysSinceEpoch(YearMonthDay target) {
-    var month = target.month;
-    var year = target.year;
+  int getDaysSinceEpoch(YearMonthDay yearMonthDay) {
+    var month = yearMonthDay.month;
+    var year = yearMonthDay.year;
 
     var firstDay0OfYear = calculateStartOfYearDays(year) - 1;
 
     var daysSinceEpoch =
-        firstDay0OfYear + (month - 1) * daysInMonth + target.day;
+        firstDay0OfYear + (month - 1) * daysInMonth + yearMonthDay.day;
 
     if (month == _month19) {
       daysSinceEpoch += getDaysInAyyamiHa(year);

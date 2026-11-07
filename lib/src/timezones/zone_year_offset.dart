@@ -25,6 +25,7 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 @internal
 class ZoneYearOffset {
   /// An offset that specifies the beginning of the year.
+  // ignore: non_constant_identifier_names
   static final ZoneYearOffset StartOfYear =
       ZoneYearOffset(TransitionMode.wall, 1, 1, 0, false, LocalTime.midnight);
 

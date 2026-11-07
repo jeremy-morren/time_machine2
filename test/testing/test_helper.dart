@@ -20,7 +20,7 @@ void setFunctions() {
 abstract class TestHelper {
   ///   Tests the equality and inequality operators (==, !=) if they exist on the object.
   ///
-  /// <typeparam name='T'>The type to test.</typeparam>
+  /// [T]: The type to test.
   /// [value]: The base value.
   /// [equalValue]: The value equal to but not the same object as the base value.
   /// [unequalValue]: The value not equal to the base value.
@@ -30,7 +30,7 @@ abstract class TestHelper {
   /// Tests the equality (==), inequality (!=), less than (&lt;), greater than (&gt;), less than or equals (&lt;=),
   /// and greater than or equals (&gt;=) operators if they exist on the object.
   ///
-  /// <typeparam name='T'>The type to test.</typeparam>
+  /// [T]: The type to test.
   /// [value]: The base value.
   /// [equalValue]: The value equal to but not the same object as the base value.
   /// [greaterValue]: The values greater than the base value, in ascending order.
@@ -40,7 +40,7 @@ abstract class TestHelper {
 
   /// Tests the less than (&lt;) and greater than (&gt;) operators if they exist on the object.
   ///
-  /// <typeparam name='T'>The type to test.</typeparam>
+  /// [T]: The type to test.
   /// [value]: The base value.
   /// [equalValue]: The value equal to but not the same object as the base value.
   /// [greaterValue]: The values greater than the base value, in ascending order.
@@ -206,7 +206,7 @@ abstract class TestHelper {
 
   ///   Tests the [IComparable{T}.CompareTo] method for reference objects.
   ///
-  /// <typeparam name='T'>The type to test.</typeparam>
+  /// [T]: The type to test.
   /// [value]: The base value.
   /// [equalValue]: The value equal to but not the same object as the base value.
   /// [greaterValue]: The values greater than the base value, in ascending order.
@@ -233,7 +233,7 @@ abstract class TestHelper {
 
   /// Tests the [IComparable{T}.CompareTo] method for value objects.
   ///
-  /// <typeparam name='T'>The type to test.</typeparam>
+  /// [T]: The type to test.
   /// [value]: The base value.
   /// [equalValue]: The value equal to but not the same object as the base value.
   /// [greaterValue]: The values greater than the base value, in ascending order.
@@ -255,7 +255,7 @@ abstract class TestHelper {
 //  /// <summary>
 //  /// Tests the <see cref='IComparable.CompareTo' /> method - note that this is the non-generic interface.
 //  /// </summary>
-//  /// <typeparam name='T'>The type to test.</typeparam>
+//  /// [T]: The type to test.
 //  /// <param name='value'>The base value.</param>
 //  /// <param name='equalValue'>The value equal to but not the same object as the base value.</param>
 //  /// <param name='greaterValue'>The values greater than the base value, in ascending order.</param>
@@ -284,7 +284,7 @@ abstract class TestHelper {
   /// Tests the IEquatable.Equals method for reference objects. Also tests the
   /// object equals method.
   ///
-  /// <typeparam name='T'>The type to test.</typeparam>
+  /// [T]: The type to test.
   /// [value]: The base value.
   /// [equalValue]: The value equal to but not the same object as the base value.
   /// [unequalValue]: Values not equal to the base value.
@@ -307,7 +307,7 @@ abstract class TestHelper {
   /// Tests the IEquatable.Equals method for value objects. Also tests the
   /// object equals method.
   ///
-  /// <typeparam name='T'>The type to test.</typeparam>
+  /// [T]: The type to test.
   /// [value]: The base value.
   /// [equalValue]: The value equal to but not the same object as the base value.
   /// [unequalValue]: The value not equal to the base value.

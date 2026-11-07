@@ -1,6 +1,6 @@
 // Use of this source code is governed by the Apache License 2.0, as found in the LICENSE.txt file.
 
-import 'package:universal_io/io.dart' as io;
+import 'dart:io' as io;
 
 /// The zone IDs the `TZ` environment variable could name on Windows, most
 /// likely first, following Python's tzlocal (and Node.js, which supports IANA

@@ -5,7 +5,7 @@
 import 'package:time_machine2/src/time_machine_internal.dart';
 
 // Essentially Func<Offset, Offset, Offset>
-typedef _offsetAggregator = Offset Function(Offset x, Offset y);
+typedef _OffsetAggregator = Offset Function(Offset x, Offset y);
 // typedef _offsetExtractor = Offset Function</*todo:in*/T>(T input);
 
 /// Most time zones have a relatively small set of transitions at their start until they finally
@@ -197,7 +197,7 @@ class PrecalculatedDateTimeZone extends DateTimeZone {
   /// Reasonably simple way of computing the maximum/minimum offset
   /// from either periods or transitions, with or without a tail zone.
   static Offset _computeOffset(List<ZoneInterval> intervals,
-      ZoneIntervalMapWithMinMax? tailZone, _offsetAggregator aggregator) {
+      ZoneIntervalMapWithMinMax? tailZone, _OffsetAggregator aggregator) {
     Preconditions.checkNotNull(intervals, 'intervals');
     Preconditions.checkArgument(
         intervals.isNotEmpty, 'intervals', "No intervals specified");

@@ -20,7 +20,7 @@ import 'package:time_machine2/src/timezones/system/tzif.dart';
 import 'package:time_machine2/src/timezones/system/tzif_directory_backend.dart';
 import 'package:time_machine2/src/timezones/system/windows_rules.dart';
 import 'package:time_machine2/src/timezones/system/windows_system_backend.dart';
-import 'package:universal_io/io.dart' as io;
+import 'dart:io' as io;
 
 import 'time_machine_testing.dart';
 

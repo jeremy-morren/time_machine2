@@ -47,9 +47,8 @@ class OffsetDateTime {
   }
 
   OffsetDateTime._lessTrust(
-      LocalDate calendarDate, LocalTime clockTime, Offset offset)
-      : localDateTime = calendarDate.at(clockTime),
-        offset = offset {
+      LocalDate calendarDate, LocalTime clockTime, this.offset)
+      : localDateTime = calendarDate.at(clockTime) {
     // ICalendarSystem.validateYearMonthDay_(calendar, _yearMonthDay);
   }
 
@@ -411,7 +410,6 @@ class _OffsetDateTimeLocalComparer extends OffsetDateTimeComparer {
 
   const _OffsetDateTimeLocalComparer._() : super._();
 
-  /// <inheritdoc />
   @override
   int compare(OffsetDateTime x, OffsetDateTime y) {
     Preconditions.checkArgument(x.calendar == y.calendar, 'y',
@@ -426,12 +424,10 @@ class _OffsetDateTimeLocalComparer extends OffsetDateTimeComparer {
     return x.clockTime.compareTo(y.clockTime);
   }
 
-  /// <inheritdoc />
   @override
   bool equals(OffsetDateTime x, OffsetDateTime y) =>
       x.localDateTime.equals(y.localDateTime); // && x.offset.equals(y.offset);
 
-  /// <inheritdoc />
   @override
   int getHashCode(OffsetDateTime obj) =>
       obj.localDateTime.hashCode; // hash2(obj.localDateTime, obj.offset);
@@ -463,8 +459,8 @@ abstract class OffsetDateTimeComparer // implements Comparable<OffsetDateTime> /
   /// the second value has a local time which is earlier.
   /// This property will return a reference to the same instance every time it is called.
   ///
-  /// <value>A comparer which compares values by the instant values obtained by applying the offset to
-  /// the local date/time, ignoring the calendar system.</value>
+  /// A comparer which compares values by the instant values obtained by applying the offset to
+  /// the local date/time, ignoring the calendar system.
   static OffsetDateTimeComparer get instant =>
       _OffsetDateTimeInstantComparer._instance;
 
@@ -477,24 +473,9 @@ abstract class OffsetDateTimeComparer // implements Comparable<OffsetDateTime> /
   /// [x]: The first value to compare.
   /// [y]: The second value to compare.
   /// A signed integer that indicates the relative values of [x] and [y], as shown in the following table.
-  ///   <list type = 'table'>
-  ///     <listheader>
-  ///       <term>Value</term>
-  ///       <description>Meaning</description>
-  ///     </listheader>
-  ///     <item>
-  ///       <term>Less than zero</term>
-  ///       <description>[x] is less than [y].</description>
-  ///     </item>
-  ///     <item>
-  ///       <term>Zero</term>
-  ///       <description>[x] is equals to [y].</description>
-  ///     </item>
-  ///     <item>
-  ///       <term>Greater than zero</term>
-  ///       <description>[x] is greater than [y].</description>
-  ///     </item>
-  ///   </list>
+  /// * Less than zero: [x] is less than [y].
+  /// * Zero: [x] is equals to [y].
+  /// * Greater than zero: [x] is greater than [y].
   int compare(OffsetDateTime x, OffsetDateTime y);
 
   /// Determines whether the specified `OffsetDateTime` values are equal.
@@ -518,18 +499,15 @@ class _OffsetDateTimeInstantComparer extends OffsetDateTimeComparer {
 
   const _OffsetDateTimeInstantComparer._() : super._();
 
-  /// <inheritdoc />
   @override
   int compare(OffsetDateTime x, OffsetDateTime y) =>
       // TODO(optimization): Optimize cases which are more than 2 days apart, by avoiding the arithmetic?
       x._toElapsedTimeSinceEpoch().compareTo(y._toElapsedTimeSinceEpoch());
 
-  /// <inheritdoc />
   @override
   bool equals(OffsetDateTime x, OffsetDateTime y) =>
       x._toElapsedTimeSinceEpoch() == y._toElapsedTimeSinceEpoch();
 
-  /// <inheritdoc />
   @override
   int getHashCode(OffsetDateTime obj) =>
       obj._toElapsedTimeSinceEpoch().hashCode;

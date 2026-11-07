@@ -74,10 +74,8 @@ void BclThroughHistory() {
   // BclEquivalenceHelper.AssertEquivalent(bcl, noda);
 }
 
-/// <summary>
 /// Use the examples in Calendrical Calculations for where the arithmetic calendar differs
 /// from the astronomical one.
-/// </summary>
 void ArithmeticExamples(
     int persianYear, int gregorianYear, int gregorianDayOfMarch) {
   var persian = LocalDate(persianYear, 1, 1, CalendarSystem.persianArithmetic);

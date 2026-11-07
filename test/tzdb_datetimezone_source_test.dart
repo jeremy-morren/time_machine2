@@ -206,8 +206,8 @@ void _assertInvalid(List<MapZone> mapZones,
 void ValidSample() => TzdbDateTimeZoneSource.validateData(
     _sampleCanonicalIdMap,
     WindowsZones('cldr-version', 'tzdb-version', 'windows-version', [
-      MapZone('windows-id', MapZone.primaryTerritory, ['zone1']),
-      MapZone('windows-id', 'UK', ['zone1']),
+      MapZone('windows-id', MapZone.primaryTerritory, const ['zone1']),
+      MapZone('windows-id', 'UK', const ['zone1']),
     ]));
 
 void CanonicalIdMapValueIsNotAKey() =>
@@ -217,49 +217,49 @@ void CanonicalIdMapValueIsNotCanonical() =>
     _assertInvalid(const [], {..._sampleCanonicalIdMap, 'zone4': 'zone3'});
 
 void WindowsMappingWithoutPrimaryTerritory() => _assertInvalid([
-      MapZone('windows-id', 'nonprimary', ['zone1', 'zone2'])
+      MapZone('windows-id', 'nonprimary', const ['zone1', 'zone2'])
     ]);
 
 void WindowsMappingPrimaryTerritoryNotInNonPrimary() => _assertInvalid([
-      MapZone('windows-id', MapZone.primaryTerritory, ['zone1']),
-      MapZone('windows-id', 'UK', ['zone2']),
+      MapZone('windows-id', MapZone.primaryTerritory, const ['zone1']),
+      MapZone('windows-id', 'UK', const ['zone2']),
     ]);
 
 void WindowsMappingUsesMissingId() => _assertInvalid([
-      MapZone('windows-id', MapZone.primaryTerritory, ['zone4']),
-      MapZone('windows-id', 'UK', ['zone4']),
+      MapZone('windows-id', MapZone.primaryTerritory, const ['zone4']),
+      MapZone('windows-id', 'UK', const ['zone4']),
     ]);
 
 void WindowsMappingContainsDuplicateTzdbIds_SameTerritory() => _assertInvalid([
-      MapZone('windows-id', MapZone.primaryTerritory, ['zone1']),
-      MapZone('windows-id', 'UK', ['zone1']),
-      MapZone('windows-id', 'CA', ['zone2', 'zone2']),
+      MapZone('windows-id', MapZone.primaryTerritory, const ['zone1']),
+      MapZone('windows-id', 'UK', const ['zone1']),
+      MapZone('windows-id', 'CA', const ['zone2', 'zone2']),
     ]);
 
 void WindowsMappingContainsDuplicateTzdbIds_SameWindowsIdDifferentTerritory() =>
     _assertInvalid([
-      MapZone('windows-id', MapZone.primaryTerritory, ['zone1']),
-      MapZone('windows-id', 'UK', ['zone1']),
-      MapZone('windows-id', 'CA', ['zone1']),
+      MapZone('windows-id', MapZone.primaryTerritory, const ['zone1']),
+      MapZone('windows-id', 'UK', const ['zone1']),
+      MapZone('windows-id', 'CA', const ['zone1']),
     ]);
 
 void WindowsMappingContainsDuplicateTzdbIds_DifferentTerritories() =>
     _assertInvalid([
-      MapZone('windows-id1', MapZone.primaryTerritory, ['zone1']),
-      MapZone('windows-id1', 'CA', ['zone1']),
-      MapZone('windows-id2', MapZone.primaryTerritory, ['zone1']),
-      MapZone('windows-id2', 'UK', ['zone1']),
+      MapZone('windows-id1', MapZone.primaryTerritory, const ['zone1']),
+      MapZone('windows-id1', 'CA', const ['zone1']),
+      MapZone('windows-id2', MapZone.primaryTerritory, const ['zone1']),
+      MapZone('windows-id2', 'UK', const ['zone1']),
     ]);
 
 void WindowsMappingContainsWindowsIdWithNoPrimaryTerritory() => _assertInvalid([
-      MapZone('windows-id1', 'CA', ['zone1']),
+      MapZone('windows-id1', 'CA', const ['zone1']),
     ]);
 
 void WindowsMappingContainsWindowsIdWithDuplicateTerritories() =>
     _assertInvalid([
-      MapZone('windows-id1', MapZone.primaryTerritory, ['zone1']),
-      MapZone('windows-id1', 'CA', ['zone2']),
-      MapZone('windows-id1', 'CA', ['zone3']),
+      MapZone('windows-id1', MapZone.primaryTerritory, const ['zone1']),
+      MapZone('windows-id1', 'CA', const ['zone2']),
+      MapZone('windows-id1', 'CA', const ['zone3']),
     ]);
 
 /// Canonical IDs: zone1 to zone6. Aliases, linked to the obvious corresponding
@@ -277,16 +277,16 @@ final _complexCanonicalIdMap = {
 
 final _complexWindowsMapping =
     WindowsZones('cldr-version', 'tzdb-version', 'windows-version', [
-  MapZone('win1', MapZone.primaryTerritory, ['zone1']),
-  MapZone('win1', 'UK', ['zone1']),
-  MapZone('win2', MapZone.primaryTerritory, ['link2']),
-  MapZone('win2', 'UK', ['link2']),
-  MapZone('win3', MapZone.primaryTerritory, ['link3a']),
-  MapZone('win3', 'UK', ['link3a']),
-  MapZone('win4', MapZone.primaryTerritory, ['zone4']),
-  MapZone('win4', 'UK', ['zone4']),
-  MapZone('win4', 'FR', ['zone5']),
-  MapZone('win4', 'CA', ['link3b']),
+  MapZone('win1', MapZone.primaryTerritory, const ['zone1']),
+  MapZone('win1', 'UK', const ['zone1']),
+  MapZone('win2', MapZone.primaryTerritory, const ['link2']),
+  MapZone('win2', 'UK', const ['link2']),
+  MapZone('win3', MapZone.primaryTerritory, const ['link3a']),
+  MapZone('win3', 'UK', const ['link3a']),
+  MapZone('win4', MapZone.primaryTerritory, const ['zone4']),
+  MapZone('win4', 'UK', const ['zone4']),
+  MapZone('win4', 'FR', const ['zone5']),
+  MapZone('win4', 'CA', const ['link3b']),
 ]);
 
 void WindowsToTzdbIds() {

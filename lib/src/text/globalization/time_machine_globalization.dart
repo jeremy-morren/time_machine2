@@ -1,4 +1,3 @@
-
 export 'time_machine_format_info.dart';
 export 'pattern_resources.dart';
 export 'culture.dart';

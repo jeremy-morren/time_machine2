@@ -13,8 +13,7 @@ abstract class EraCalculator {
   final Iterable<Era> eras;
 
   @protected
-  EraCalculator(Iterable<Era> eras)
-      : eras = eras; // new ReadOnlyCollection<Era>(eras);
+  EraCalculator(this.eras); // new ReadOnlyCollection<Era>(eras);
 
   /// The era to use when a year-of-era is specified without an explicit era.
   Era get defaultEra;

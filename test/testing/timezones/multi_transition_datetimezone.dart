@@ -4,8 +4,8 @@
 
 import 'package:time_machine2/src/time_machine_internal.dart';
 
-T min<T extends Comparable>(x, y) => x < y ? x : y;
-T max<T extends Comparable>(x, y) => x > y ? x : y;
+T min<T extends Comparable>(dynamic x, dynamic y) => x < y ? x : y;
+T max<T extends Comparable>(dynamic x, dynamic y) => x > y ? x : y;
 
 /// Time zone with multiple transitions, created via a builder.
 class MultiTransitionDateTimeZone extends DateTimeZone {
@@ -24,7 +24,6 @@ class MultiTransitionDateTimeZone extends DateTimeZone {
             intervals.map((x) => x.wallOffset).reduce(min),
             intervals.map((x) => x.wallOffset).reduce(max));
 
-  /// <inheritdoc />
   @override
   ZoneInterval getZoneInterval(Instant instant) {
     int lower = 0; // Inclusive

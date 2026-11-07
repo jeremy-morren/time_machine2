@@ -83,7 +83,6 @@ class LocalTime implements Comparable<LocalTime> {
     var nanoseconds = hour * TimeConstants.nanosecondsPerHour +
         minute * TimeConstants.nanosecondsPerMinute +
         second * TimeConstants.nanosecondsPerSecond;
-    ;
 
     // Only one sub-second variable may be implemented.
     // todo: is there a more performant check here?

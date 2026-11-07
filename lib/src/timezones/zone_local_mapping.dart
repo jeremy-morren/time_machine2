@@ -25,31 +25,15 @@ abstract class IZoneLocalMapping {
 /// This class is used as the return type of [DateTimeZone.mapLocal]. It allows for
 /// finely-grained handling of the three possible results:
 ///
-/// //todo: Markdown me!
-/// <list type='bullet'>
-///   <item>
-///     <term>Unambiguous mapping</term>
-///     <description>The local time occurs exactly once in the target time zone.</description>
-///   </item>
-///   <item>
-///     <term>Ambiguous mapping</term>
-///     <description>
-///       The local time occurs twice in the target time zone, due to the offset from UTC
-///       changing. This usually occurs for an autumnal daylight saving transition, where the clocks
-///       are put back by an hour. If the clocks change from 2am to 1am for example, then 1:30am occurs
-///       twice - once before the transition and once afterwards.
-///     </description>
-///   </item>
-///   <item>
-///     <term>Impossible mapping</term>
-///     <description>
-///       The local time does not occur at all in the target time zone, due to the offset from UTC
-///       changing. This usually occurs for a vernal (spring-time) daylight saving transition, where the clocks
-///       are put forward by an hour. If the clocks change from 1am to 2am for example, then 1:30am is
-///       skipped entirely.
-///     </description>
-///   </item>
-/// </list>
+/// * Unambiguous mapping: The local time occurs exactly once in the target time zone.
+/// * Ambiguous mapping: The local time occurs twice in the target time zone, due to the offset from UTC
+///   changing. This usually occurs for an autumnal daylight saving transition, where the clocks
+///   are put back by an hour. If the clocks change from 2am to 1am for example, then 1:30am occurs
+///   twice - once before the transition and once afterwards.
+/// * Impossible mapping: The local time does not occur at all in the target time zone, due to the offset from UTC
+///   changing. This usually occurs for a vernal (spring-time) daylight saving transition, where the clocks
+///   are put forward by an hour. If the clocks change from 1am to 2am for example, then 1:30am is
+///   skipped entirely.
 @immutable
 class ZoneLocalMapping {
   /// Gets the [DateTimeZone] in which this mapping was performed.
@@ -76,8 +60,8 @@ class ZoneLocalMapping {
   /// Gets the number of results within this mapping: the number of distinct
   /// [ZonedDateTime] values which map to the original [LocalDateTime].
   ///
-  /// <value>The number of results within this mapping: the number of distinct values which map to the
-  /// original local date and time.</value>
+  /// The number of results within this mapping: the number of distinct values which map to the
+  /// original local date and time.
   final int count;
 
   ZoneLocalMapping._(this.zone, this.localDateTime, this.earlyInterval,

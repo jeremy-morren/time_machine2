@@ -305,7 +305,7 @@ class SpanPatternTest extends PatternTestBase<Time> {
 /*protected*/ @override
   Time get defaultTemplate => Time.zero;
 
-  Data([Time value = Time.zero]) : super(value);
+  Data([super.value = Time.zero]);
 
   Data.hm(int hours, int minutes)
       : this(Time(hours: hours) + Time(minutes: minutes));

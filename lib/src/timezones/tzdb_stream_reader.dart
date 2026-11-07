@@ -81,7 +81,6 @@ class TzdbStreamReader {
   /// from their Windows ID (e.g. 'Coordinated Universal Time').
   late Map<String, String> windowsStandardNameToTzdbId;
 
-
   TzdbStreamReader(this._input) : _reader = BinaryReader(_input) {
     // Read and validate the version
     int version = _reader.readUint8();

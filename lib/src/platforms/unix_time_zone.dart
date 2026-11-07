@@ -1,7 +1,7 @@
 // Use of this source code is governed by the Apache License 2.0, as found in the LICENSE.txt file.
 
 import 'package:collection/collection.dart';
-import 'package:universal_io/io.dart' as io;
+import 'dart:io' as io;
 
 /// Finds the IANA ID of the system time zone on Linux, macOS and Android, the
 /// way .NET's `TimeZoneInfo.Local` does (which is what Noda Time maps):

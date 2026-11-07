@@ -706,10 +706,8 @@ void EpochDaysRoundtrip() {
   expect(calculator.getDaysSinceEpoch(ymd), daysSinceEpoch);
 }
 
-/// <summary>
-/// Create a <see cref='LocalDate'/> in the Badíʿ calendar, treating 0
+/// Create a [LocalDate] in the Badíʿ calendar, treating 0
 /// as the month containing Ayyam-i-Ha.
-/// </summary>
 /// <param name='year'>Year in the Badíʿ calendar</param>
 /// <param name='month'>Month (use 0 for Ayyam-i-Ha)</param>
 /// <param name='day'>Day in month</param>
@@ -724,9 +722,7 @@ LocalDate CreateBadiDate(int year, int month, int day) {
   return LocalDate(year, month, day, CalendarSystem.badi);
 }
 
-/// <summary>
 /// Return the day of this month, treating Ayyam-i-Ha as a separate month.
-/// </summary>
 int BadiDay(LocalDate input) {
   Preconditions.checkArgument(input.calendar == CalendarSystem.badi, 'input',
       "Only valid when using the Badíʿ calendar");
@@ -738,9 +734,7 @@ int BadiDay(LocalDate input) {
   return input.dayOfMonth;
 }
 
-/// <summary>
 /// Return the month of this date. If in Ayyam-i-Ha, returns 0.
-/// </summary>
 int BadiMonth(LocalDate input) {
   Preconditions.checkArgument(input.calendar == CalendarSystem.badi, 'input',
       "Only valid when using the Badíʿ calendar");
@@ -752,9 +746,7 @@ int BadiMonth(LocalDate input) {
   return input.monthOfYear;
 }
 
-/// <summary>
 /// Get a text representation of the date.
-/// </summary>
 @internal
 String AsBadiString(LocalDate input) {
   var year = input.year;

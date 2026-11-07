@@ -45,12 +45,14 @@ T _roundTrip<T>(void Function(IDateTimeZoneWriter writer) write,
 // MapZoneTest
 
 void MapZone_Equality() {
-  var zone1 = MapZone('windowsId', 'territory', ['id1', 'id2', 'id3']);
-  var zone2 = MapZone('windowsId', 'territory', ['id1', 'id2', 'id3']);
-  var zone3 = MapZone('otherWindowsId', 'territory', ['id1', 'id2', 'id3']);
-  var zone4 = MapZone('windowsId', 'otherTerritory', ['id1', 'id2', 'id3']);
-  var zone5 = MapZone('windowsId', 'territory', ['id1', 'id2']);
-  var zone6 = MapZone('windowsId', 'territory', ['id1', 'id2', 'id4']);
+  var zone1 = MapZone('windowsId', 'territory', const ['id1', 'id2', 'id3']);
+  var zone2 = MapZone('windowsId', 'territory', const ['id1', 'id2', 'id3']);
+  var zone3 =
+      MapZone('otherWindowsId', 'territory', const ['id1', 'id2', 'id3']);
+  var zone4 =
+      MapZone('windowsId', 'otherTerritory', const ['id1', 'id2', 'id3']);
+  var zone5 = MapZone('windowsId', 'territory', const ['id1', 'id2']);
+  var zone6 = MapZone('windowsId', 'territory', const ['id1', 'id2', 'id4']);
 
   _testEqualsClass(zone1, zone2, zone3);
   _testEqualsClass(zone1, zone2, zone4);
@@ -59,13 +61,13 @@ void MapZone_Equality() {
 }
 
 void MapZone_ToString() {
-  var zone = MapZone('windowsId', 'territory', ['id1', 'id2', 'id3']);
+  var zone = MapZone('windowsId', 'territory', const ['id1', 'id2', 'id3']);
   expect(zone.toString(),
       'Windows ID: windowsId; Territory: territory; TzdbIds: id1 id2 id3');
 }
 
 void MapZone_ReadWrite() {
-  var zone = MapZone('windowsId', 'territory', ['id1', 'id2', 'id3']);
+  var zone = MapZone('windowsId', 'territory', const ['id1', 'id2', 'id3']);
   var zone2 = _roundTrip(zone.write, MapZone.read);
   expect(zone2, zone);
 }
@@ -73,11 +75,11 @@ void MapZone_ReadWrite() {
 // WindowsZonesTest
 
 final _mapZone1 =
-    MapZone('windowsId1', 'territory1', ['id1.1', 'id1.2', 'id1.3']);
+    MapZone('windowsId1', 'territory1', const ['id1.1', 'id1.2', 'id1.3']);
 final _mapZone2 =
-    MapZone('windowsId2', MapZone.primaryTerritory, ['primaryId2']);
+    MapZone('windowsId2', MapZone.primaryTerritory, const ['primaryId2']);
 final _mapZone3 =
-    MapZone('windowsId3', MapZone.primaryTerritory, ['primaryId3']);
+    MapZone('windowsId3', MapZone.primaryTerritory, const ['primaryId3']);
 
 void WindowsZones_Properties() {
   var zones = WindowsZones('version', 'tzdbVersion', 'windowsVersion',

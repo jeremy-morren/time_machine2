@@ -7,22 +7,24 @@ import 'test_helper.dart';
 
 void setFunctions() {
   testOperatorComparisonFunction = TestHelperWithMirrors.TestOperatorComparison;
-  testOperatorComparisonEqualityFunction = TestHelperWithMirrors.TestOperatorComparisonEquality;
+  testOperatorComparisonEqualityFunction =
+      TestHelperWithMirrors.TestOperatorComparisonEquality;
   testOperatorEqualityFunction = TestHelperWithMirrors.TestOperatorEquality;
   print('Operator Functions without Mirrors!');
 }
 
 /// Provides methods to help run tests for some of the system interfaces and object support.
-abstract class TestHelperWithMirrors
-{
+abstract class TestHelperWithMirrors {
   /// Tests the less than (&lt;) and greater than (&gt;) operators if they exist on the object.
   ///
-  /// <typeparam name='T'>The type to test.</typeparam>
+  /// [T]: The type to test.
   /// [value]: The base value.
   /// [equalValue]: The value equal to but not the same object as the base value.
   /// [greaterValue]: The values greater than the base value, in ascending order.
-  static void TestOperatorComparison<T>(T tvalue, T tequalValue, List<T> tgreaterValues) {
-    TestHelper.ValidateInput(tvalue, tequalValue, tgreaterValues, 'greaterValue');
+  static void TestOperatorComparison<T>(
+      T tvalue, T tequalValue, List<T> tgreaterValues) {
+    TestHelper.ValidateInput(
+        tvalue, tequalValue, tgreaterValues, 'greaterValue');
 
     dynamic value = tvalue;
     dynamic equalValue = tequalValue;
@@ -30,7 +32,7 @@ abstract class TestHelperWithMirrors
 
     var greaterThan = true;
     var lessThan = true;
-    
+
     // Comparisons only involving equal values
     if (greaterThan) {
       expect(value > null, isTrue, reason: 'value > null');
@@ -63,11 +65,12 @@ abstract class TestHelperWithMirrors
   /// Tests the equality (==), inequality (!=), less than (&lt;), greater than (&gt;), less than or equals (&lt;=),
   /// and greater than or equals (&gt;=) operators if they exist on the object.
   ///
-  /// <typeparam name='T'>The type to test.</typeparam>
+  /// [T]: The type to test.
   /// [value]: The base value.
   /// [equalValue]: The value equal to but not the same object as the base value.
   /// [greaterValue]: The values greater than the base value, in ascending order.
-  static void TestOperatorComparisonEquality<T>(T tvalue, T tequalValue, List<T> tgreaterValues) {
+  static void TestOperatorComparisonEquality<T>(
+      T tvalue, T tequalValue, List<T> tgreaterValues) {
     for (var greaterValue in tgreaterValues) {
       TestOperatorEquality<T>(tvalue, tequalValue, greaterValue);
     }
@@ -111,7 +114,7 @@ abstract class TestHelperWithMirrors
 
   ///   Tests the equality and inequality operators (==, !=) if they exist on the object.
   ///
-  /// <typeparam name='T'>The type to test.</typeparam>
+  /// [T]: The type to test.
   /// [value]: The base value.
   /// [equalValue]: The value equal to but not the same object as the base value.
   /// [unequalValue]: The value not equal to the base value.

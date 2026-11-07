@@ -14,7 +14,7 @@ class ValueCursor extends TextCursor {
   /// Initializes a new instance of the [ValueCursor] class.
   ///
   /// [value]: The string to parse.
-  ValueCursor(String value) : super(value);
+  ValueCursor(super.value);
 
   /// Attempts to match the specified character with the current character of the string. If the
   /// character matches then the index is moved passed the character.

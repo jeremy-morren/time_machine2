@@ -176,7 +176,6 @@ T? captureVM<T extends Error>(Function() action) {
   } on T catch (error) {
     return error;
   }
-  ;
 
   return null;
 }
@@ -188,7 +187,6 @@ Object? capture(Function() action) {
   } catch (error) {
     return error;
   }
-  ;
 
   return null;
 }

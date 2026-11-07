@@ -9,10 +9,9 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 abstract class RegularYearMonthDayCalculator extends YearMonthDayCalculator {
   final int _monthsInYear;
 
-  RegularYearMonthDayCalculator(int minYear, int maxYear, int monthsInYear,
-      int averageDaysPer10Years, int daysAtStartOfYear1)
-      : _monthsInYear = monthsInYear,
-        super(minYear, maxYear, averageDaysPer10Years, daysAtStartOfYear1);
+  RegularYearMonthDayCalculator(super.minYear, super.maxYear, int monthsInYear,
+      super.averageDaysPer10Years, super.daysAtStartOfYear1)
+      : _monthsInYear = monthsInYear;
 
   @override
   int getMonthsInYear(int year) => _monthsInYear;

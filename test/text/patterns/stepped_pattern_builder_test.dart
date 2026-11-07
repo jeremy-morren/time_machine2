@@ -75,9 +75,8 @@ void AppendFormat() {
 // < is reserved
 // > is reserved
 void UnhandledLiteral(String text, bool valid) {
-  CharacterHandler<LocalDate, SampleBucket> handler =
-      (PatternCursor x, SteppedPatternBuilder<LocalDate, SampleBucket> y) =>
-          null; // = delegate { };
+  void handler(PatternCursor x,
+      SteppedPatternBuilder<LocalDate, SampleBucket> y) {} // = delegate { };
   var handlers = Map<String, CharacterHandler<LocalDate, SampleBucket>>.from(
       {'a': handler, 'B': handler});
   var builder = SteppedPatternBuilder<LocalDate, SampleBucket>(

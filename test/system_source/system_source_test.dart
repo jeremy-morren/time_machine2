@@ -16,7 +16,7 @@
 import 'package:test/test.dart';
 import 'package:system_source_checks/system_source_checks.dart';
 import 'package:time_machine2/time_machine2.dart';
-import 'package:universal_io/io.dart' as io;
+import 'dart:io' as io;
 
 // ignore: do_not_use_environment
 const bool _isWasm = bool.fromEnvironment('dart.tool.dart2wasm');

@@ -15,7 +15,7 @@ class OffsetDatePatternParser implements IPatternParser<OffsetDate> {
         .handlePercent /**<OffsetDate, OffsetDateParseBucket>*/,
     '\'': SteppedPatternBuilder
         .handleQuote /**<OffsetDate, OffsetDateParseBucket>*/,
-    '\"': SteppedPatternBuilder
+    '"': SteppedPatternBuilder
         .handleQuote /**<OffsetDate, OffsetDateParseBucket>*/,
     '\\': SteppedPatternBuilder
         .handleBackslash /**<OffsetDate, OffsetDateParseBucket>*/,

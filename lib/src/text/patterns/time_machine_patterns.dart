@@ -1,5 +1,5 @@
 /// Time Machine Patterns
-library time_machine_patterns;
+library;
 
 export 'pattern_cursor.dart';
 export 'pattern_fields.dart';

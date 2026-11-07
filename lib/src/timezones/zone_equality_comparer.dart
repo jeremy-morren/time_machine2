@@ -148,7 +148,9 @@ class ZoneEqualityComparerOptions {
   static ZoneEqualityComparerOptions union(
       Iterable<ZoneEqualityComparerOptions> units) {
     int i = 0;
-    units.forEach((u) => i = i | u._value);
+    for (var u in units) {
+      i = i | u._value;
+    }
     return ZoneEqualityComparerOptions(i);
   }
 }

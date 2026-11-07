@@ -21,7 +21,7 @@ class FakeClock extends Clock {
   ///
   /// [initial]: The initial instant.
   /// [autoAdvance]: The duration to advance the clock on each read.
-  /// <seealso cref='AutoAdvance'/>
+  /// See also `AutoAdvance`.
   FakeClock(Instant initial, [Time autoAdvance = Time.zero]) {
     _now = initial;
     autoAdvance = autoAdvance;
@@ -136,7 +136,7 @@ class FakeClock extends Clock {
   ///
   /// The value could even be negative, to simulate particularly odd system clock effects.
   ///
-  /// <seealso cref='GetCurrentInstant'/>
+  /// See also `GetCurrentInstant`.
   // ignore: unnecessary_getters_setters
   Time get AutoAdvance => _autoAdvance;
 

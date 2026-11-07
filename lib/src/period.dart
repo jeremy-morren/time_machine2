@@ -107,6 +107,7 @@ class Period {
   /// Note that as per the [normalize] method, years and months are unchanged by normalization - so 12 months does not
   /// equal 1 year.
   // todo: what to do about this? .. was: IEqualityComparer
+  // ignore: non_constant_identifier_names
   static dynamic get NormalizingEqualityComparer =>
       NormalizingPeriodEqualityComparer.instance;
 
@@ -220,6 +221,7 @@ class Period {
   /// Returns: The new comparer.
   // todo: what to do abuot IComparer?
   // static IComparer<Period> CreateComparer(LocalDateTime baseDateTime) => new PeriodComparer(baseDateTime);
+  // ignore: library_private_types_in_public_api
   static _PeriodComparer createComparer(LocalDateTime baseDateTime) =>
       _PeriodComparer(baseDateTime);
 
@@ -296,7 +298,7 @@ class Period {
 
     // Optimization for single field
     // todo: optimize me?
-    Map _betweenFunctionMap = {
+    Map betweenFunctionMap = {
       PeriodUnits.years: () => Period(
           years: DatePeriodFields.yearsField
               .unitsBetween(start.calendarDate, endDate)),
@@ -322,8 +324,8 @@ class Period {
           nanoseconds: TimePeriodField.nanoseconds.unitsBetween(start, end))
     };
 
-    if (_betweenFunctionMap.containsKey(units))
-      return _betweenFunctionMap[units]();
+    if (betweenFunctionMap.containsKey(units))
+      return betweenFunctionMap[units]();
 
 //    switch (units) {
 //      case PeriodUnits.years:
@@ -485,7 +487,7 @@ class Period {
   /// * [nanoseconds]: (Out) Nanoseconds component of result
   static _TimeComponentsBetweenResult _timeComponentsBetween(
       int totalNanoseconds, PeriodUnits units) {
-    int UnitsBetween(PeriodUnits mask, int nanosecondsPerUnit) {
+    int unitsBetween(PeriodUnits mask, int nanosecondsPerUnit) {
       if ((mask.value & units.value) == 0) {
         return 0;
       }
@@ -498,16 +500,16 @@ class Period {
     }
 
     var hours =
-        UnitsBetween(PeriodUnits.hours, TimeConstants.nanosecondsPerHour);
+        unitsBetween(PeriodUnits.hours, TimeConstants.nanosecondsPerHour);
     var minutes =
-        UnitsBetween(PeriodUnits.minutes, TimeConstants.nanosecondsPerMinute);
+        unitsBetween(PeriodUnits.minutes, TimeConstants.nanosecondsPerMinute);
     var seconds =
-        UnitsBetween(PeriodUnits.seconds, TimeConstants.nanosecondsPerSecond);
-    var milliseconds = UnitsBetween(
+        unitsBetween(PeriodUnits.seconds, TimeConstants.nanosecondsPerSecond);
+    var milliseconds = unitsBetween(
         PeriodUnits.milliseconds, TimeConstants.nanosecondsPerMillisecond);
-    var microseconds = UnitsBetween(
+    var microseconds = unitsBetween(
         PeriodUnits.microseconds, TimeConstants.nanosecondsPerMicrosecond);
-    var nanoseconds = UnitsBetween(PeriodUnits.nanoseconds, 1);
+    var nanoseconds = unitsBetween(PeriodUnits.nanoseconds, 1);
 
     return _TimeComponentsBetweenResult(
         hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
@@ -564,7 +566,7 @@ class Period {
 
   /// Returns the exact difference between two dates or returns the period between a start and an end date, using only the given units.
   ///
-  /// If [end] is before <paramref name='start' />, each property in the returned period
+  /// If [end] is before [start], each property in the returned period
   /// will be negative. If the given set of units cannot exactly reach the end point (e.g. finding
   /// the difference between 12th February and 15th March in months) the result will be such that adding it to [start]
   /// will give a value between [start] and [end]. In other words,
@@ -628,7 +630,7 @@ class Period {
 
   /// Returns the exact difference between two times or returns the period between a start and an end time, using only the given units.
   ///
-  /// If [end] is before <paramref name='start' />, each property in the returned period
+  /// If [end] is before [start], each property in the returned period
   /// will be negative. If the given set of units cannot exactly reach the end point (e.g. finding
   /// the difference between 3am and 4.30am in hours) the result will be such that adding it to [start]
   /// will give a value between [start] and [end]. In other words,

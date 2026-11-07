@@ -177,13 +177,13 @@ abstract class DatePatternHelper {
       builder.addField(PatternFields.era, pattern.current);
       var formatInfo = builder.formatInfo;
 
-      ParseResult<TResult>? _parseAction(cursor, bucket) {
+      ParseResult<TResult>? parseAction(cursor, bucket) {
         var dateBucket = dateBucketFromBucket(bucket);
         return dateBucket.parseEra<TResult>(formatInfo, cursor);
       }
 
       // Note: currently the count is ignored. More work needed to determine whether abbreviated era names should be used for just 'g'.
-      builder.addParseAction(_parseAction);
+      builder.addParseAction(parseAction);
 
       builder.addFormatAction((value, sb) =>
           sb.write(formatInfo.getEraPrimaryName(eraFromValue(value))));

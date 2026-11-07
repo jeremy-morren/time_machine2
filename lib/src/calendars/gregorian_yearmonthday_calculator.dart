@@ -7,21 +7,21 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 class _Constructor {
   // The 0-based days-since-unix-epoch for the start of each month
   static final List<int> _monthStartDays =
-      _gregorianYearMonthDayCalculator_Init()[0];
+      _gregorianYearMonthDayCalculatorInit()[0];
 
   // The 1-based days-since-unix-epoch for the start of each year
   static final List<int> _yearStartDays =
-      _gregorianYearMonthDayCalculator_Init()[1];
+      _gregorianYearMonthDayCalculatorInit()[1];
 
   // this was a static constructor
-  static List<List<int>>? _gregorianYearMonthDayCalculator_Initialized;
-  static List<List<int>> _gregorianYearMonthDayCalculator_Init() {
-    if (_gregorianYearMonthDayCalculator_Initialized != null)
-      return _gregorianYearMonthDayCalculator_Initialized!;
+  static List<List<int>>? _gregorianYearMonthDayCalculatorInitialized;
+  static List<List<int>> _gregorianYearMonthDayCalculatorInit() {
+    if (_gregorianYearMonthDayCalculatorInitialized != null)
+      return _gregorianYearMonthDayCalculatorInitialized!;
 
-    var _monthStartDays = List<int>.filled(
+    var monthStartDays = List<int>.filled(
         (_lastOptimizedYear + 1 - _firstOptimizedYear) * 12 + 1, 0);
-    var _yearStartDays =
+    var yearStartDays =
         List<int>.filled(_lastOptimizedYear + 1 - _firstOptimizedYear, 0);
 
     // It's generally a really bad idea to create an instance before the static initializer
@@ -30,7 +30,7 @@ class _Constructor {
     var instance = GregorianYearMonthDayCalculator();
     for (int year = _firstOptimizedYear; year <= _lastOptimizedYear; year++) {
       int yearStart = instance.calculateStartOfYearDays(year);
-      _yearStartDays[year - _firstOptimizedYear] = yearStart;
+      yearStartDays[year - _firstOptimizedYear] = yearStart;
 
       int monthStartDay = yearStart - 1; // See field description
       int yearMonthIndex = (year - _firstOptimizedYear) * 12;
@@ -38,16 +38,16 @@ class _Constructor {
       for (int month = 1; month <= 12; month++) {
         yearMonthIndex++;
         int monthLength = instance.getDaysInMonth(year, month);
-        _monthStartDays[yearMonthIndex] = monthStartDay;
+        monthStartDays[yearMonthIndex] = monthStartDay;
         monthStartDay += monthLength;
       }
     }
 
-    _gregorianYearMonthDayCalculator_Initialized = [
-      _monthStartDays,
-      _yearStartDays
+    _gregorianYearMonthDayCalculatorInitialized = [
+      monthStartDays,
+      yearStartDays
     ];
-    return _gregorianYearMonthDayCalculator_Initialized!;
+    return _gregorianYearMonthDayCalculatorInitialized!;
   }
 }
 
@@ -159,7 +159,7 @@ class GregorianYearMonthDayCalculator extends GJYearMonthDayCalculator {
   GregorianYearMonthDayCalculator()
       : super(minGregorianYear, maxGregorianYear, _averageDaysPer10Years,
             -719162) {
-    // _gregorianYearMonthDayCalculator_Init();
+    // _gregorianYearMonthDayCalculatorInit();
   }
 
   @override

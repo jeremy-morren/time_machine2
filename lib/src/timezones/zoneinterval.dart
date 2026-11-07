@@ -76,8 +76,8 @@ class ZoneInterval {
   /// Returns `true` if this zone interval has a fixed end point, or `false` if it
   /// extends to the end of time.
   ///
-  /// <value>`true` if this interval has a fixed end point, or `false` if it
-  /// extends to the end of time.</value>
+  /// `true` if this interval has a fixed end point, or `false` if it
+  /// extends to the end of time.
   bool get hasEnd => _rawEnd.isValid;
 
   // TODO(feature): Consider whether we need some way of checking whether IsoLocalStart/End will throw.
@@ -86,8 +86,8 @@ class ZoneInterval {
   /// Gets the local start time of the interval, as a [LocalDateTime]
   /// in the ISO calendar.
   ///
-  /// <value>The local start time of the interval in the ISO calendar, with the offset of
-  /// this zone interval.</value>
+  /// The local start time of the interval in the ISO calendar, with the offset of
+  /// this zone interval.
   /// [OverflowException]: The interval starts too early to represent as a `LocalDateTime`.
   /// [InvalidOperationException]: The interval extends to the start of time.
   LocalDateTime get isoLocalStart =>
@@ -100,10 +100,10 @@ class ZoneInterval {
   /// Gets the local end time of the interval, as a [LocalDateTime]
   /// in the ISO calendar.
   ///
-  /// <value>The local end time of the interval in the ISO calendar, with the offset
+  /// The local end time of the interval in the ISO calendar, with the offset
   /// of this zone interval. As the end time is exclusive, by the time this local time
   /// is reached, the next interval will be in effect and the local time will usually
-  /// have changed (e.g. by adding or subtracting an hour).</value>
+  /// have changed (e.g. by adding or subtracting an hour).
   /// [OverflowException]: The interval ends too late to represent as a `LocalDateTime`.
   /// [InvalidOperationException]: The interval extends to the end of time.
   LocalDateTime get isoLocalEnd =>
@@ -123,13 +123,13 @@ class ZoneInterval {
   ///// Initializes a new instance of the [ZoneInterval] class.
   /////
   ///// [name]: The name of this offset period (e.g. PST or PDT).
-  ///// [start]: The first [Instant] that the <paramref name = 'wallOffset' /> applies,
+  ///// [start]: The first [Instant] that the [wallOffset] applies,
   ///// or `null` to make the zone interval extend to the start of time.
-  ///// [end]: The last [Instant] (exclusive) that the <paramref name = 'wallOffset' /> applies,
+  ///// [end]: The last [Instant] (exclusive) that the [wallOffset] applies,
   ///// or `null` to make the zone interval extend to the end of time.
   ///// [wallOffset]: The [wallOffset] from UTC for this period including any daylight savings.
   ///// [savings]: The [wallOffset] daylight savings contribution to the offset.
-  ///// [ArgumentError]: If `<paramref name = 'start' /> &gt;= <paramref name = "end" />`.
+  ///// [ArgumentError]: If `[start] &gt;= [end]`.
   //ZoneInterval(String name, Instant start, Instant end, Offset wallOffset, Offset savings)
   //    : this(name, start ?? Instant.BeforeMinValue, end ?? Instant.AfterMaxValue, wallOffset, savings)
   //{
@@ -145,13 +145,13 @@ class ZoneInterval {
   /// Initializes a new instance of the [ZoneInterval] class.
   ///
   /// [name]: The name of this offset period (e.g. PST or PDT).
-  /// [start]: The first [Instant] that the <paramref name = 'wallOffset' /> applies,
+  /// [start]: The first [Instant] that the [wallOffset] applies,
   /// or [IInstant.beforeMinValue] to make the zone interval extend to the start of time.
-  /// [end]: The last [Instant] (exclusive) that the <paramref name = 'wallOffset' /> applies,
+  /// [end]: The last [Instant] (exclusive) that the [wallOffset] applies,
   /// or [IInstant.afterMaxValue] to make the zone interval extend to the end of time.
   /// [wallOffset]: The [wallOffset] from UTC for this period including any daylight savings.
   /// [savings]: The [wallOffset] daylight savings contribution to the offset.
-  /// [ArgumentError]: If `<paramref name = 'start' /> &gt;= <paramref name = "end" />`.
+  /// [ArgumentError]: If `[start] &gt;= [end]`.
   factory ZoneInterval._(String name, Instant? rawStart, Instant? rawEnd,
       Offset wallOffset, Offset savings) {
     rawStart ??= IInstant.beforeMinValue;
@@ -207,7 +207,7 @@ class ZoneInterval {
 
   /// Indicates whether the current object is equal to another object of the same type.
   ///
-  /// true if the current object is equal to the <paramref name = 'other' /> parameter; otherwise, false.
+  /// true if the current object is equal to the [other] parameter; otherwise, false.
   ///
   /// [other]: An object to compare with this object.
   bool equals(ZoneInterval other) {

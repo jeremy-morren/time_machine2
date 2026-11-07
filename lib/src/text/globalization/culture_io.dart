@@ -68,7 +68,7 @@ class CultureLoader {
 
 @internal
 class CultureReader extends BinaryReader {
-  CultureReader(ByteData binary, [int offset = 0]) : super(binary, offset);
+  CultureReader(super.binary, [super.offset]);
 
   Culture readCulture() {
     var name = readString();
@@ -101,7 +101,7 @@ class CultureReader extends BinaryReader {
 
 @internal
 class CultureWriter extends BinaryWriter {
-  CultureWriter(List<int> output) : super(output);
+  CultureWriter(super.output);
 
   void writeCulture(Culture culture) {
     writeString(culture.name);

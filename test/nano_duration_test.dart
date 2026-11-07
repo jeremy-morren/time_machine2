@@ -233,9 +233,9 @@ void Comparison() {
 
 void Multiplication(int startDays, int startNanoOfDay, int scalar,
     int expectedDays, int expectedNanoOfDay) {
-  var _start = Time(days: startDays, nanoseconds: startNanoOfDay);
-  if (_start.canNanosecondsBeInteger) {
-    var start = NanosecondTime(_start.inNanoseconds);
+  var startTime = Time(days: startDays, nanoseconds: startNanoOfDay);
+  if (startTime.canNanosecondsBeInteger) {
+    var start = NanosecondTime(startTime.inNanoseconds);
     var expected = Time(days: expectedDays, nanoseconds: expectedNanoOfDay);
     expect(expected, start * scalar);
   }
@@ -264,14 +264,14 @@ void UnaryNegation(int startDays, int startNanoOfDay, int expectedDays,
 // On VM (max: 106751 days) this will be NanosecondTime; on JS (max:52 days) this will be Time
 void Division(int startDays, int startNanoOfDay, int divisor, int expectedDays,
     int expectedNanoOfDay) {
-  var _start = Time(days: startDays, nanoseconds: startNanoOfDay);
-  var _expected = Time(days: expectedDays, nanoseconds: expectedNanoOfDay);
-  var start = _start.canNanosecondsBeInteger
-      ? NanosecondTime(_start.inNanoseconds)
-      : _start;
-  var expected = _expected.canNanosecondsBeInteger
-      ? NanosecondTime(_expected.inNanoseconds)
-      : _expected;
+  var startTime = Time(days: startDays, nanoseconds: startNanoOfDay);
+  var expectedTime = Time(days: expectedDays, nanoseconds: expectedNanoOfDay);
+  var start = startTime.canNanosecondsBeInteger
+      ? NanosecondTime(startTime.inNanoseconds)
+      : startTime;
+  var expected = expectedTime.canNanosecondsBeInteger
+      ? NanosecondTime(expectedTime.inNanoseconds)
+      : expectedTime;
   if (Platform.isVM) {
     expect(start / divisor, expected);
   } else {

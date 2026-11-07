@@ -719,7 +719,7 @@ class OffsetPatternTest extends PatternTestBase<Offset> {
   /*protected*/ @override
   Offset get defaultTemplate => Offset.zero;
 
-  Data(Offset value) : super(value);
+  Data(super.value);
 
   Data.hms(int hours, int minutes,
       [int seconds = 0,

@@ -157,12 +157,12 @@ abstract class TimePatternHelper {
       // If we don't have an AM or PM designator, we're nearly done. Set the AM/PM designator
       // to the special value of 2, meaning 'take it from the template'.
       if (amDesignator == '' && pmDesignator == "") {
-        Null _parseAction(ValueCursor str, TBucket bucket) {
+        Null parseAction(ValueCursor str, TBucket bucket) {
           amPmSetter(bucket, 2);
           return null;
         }
 
-        builder.addParseAction(_parseAction);
+        builder.addParseAction(parseAction);
         return;
       }
       // Odd scenario (but present in af-ZA for .NET 2) - exactly one of the AM/PM designator is valid.

@@ -1,4 +1,4 @@
-library time_machine.time_machine_fields;
+library;
 
 export 'date_period_fields.dart';
 export 'fixed_length_date_period_field.dart';

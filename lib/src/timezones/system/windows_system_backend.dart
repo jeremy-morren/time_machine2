@@ -4,7 +4,7 @@ import 'dart:ffi';
 
 import 'package:time_machine2/src/platforms/windows_time_zone.dart';
 import 'package:time_machine2/src/platforms/windows_tz_environment.dart';
-import 'package:universal_io/io.dart' as io;
+import 'dart:io' as io;
 import 'package:time_machine2/src/time_machine_internal.dart';
 
 import 'system_time_zone_backend.dart';

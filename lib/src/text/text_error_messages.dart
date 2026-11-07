@@ -26,7 +26,7 @@ abstract class TextErrorMessages {
   static const String eraWithoutYearOfEra =
       "The era specifier cannot be used without the \"year of era\" specifier.";
   static const String escapeAtEndOfString =
-      "The format string has an escape character (backslash '\') at the end of the string.";
+      "The format string has an escape character (backslash '') at the end of the string.";
   static const String escapedCharacterMismatch =
       "The value string does not match an escaped character in the format string: \"{0}\"";
   static const String expectedEndOfString =

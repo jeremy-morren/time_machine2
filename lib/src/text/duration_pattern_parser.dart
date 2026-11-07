@@ -9,7 +9,7 @@ class TimePatternParser implements IPatternParser<Time> {
       _patternCharacterHandlers = {
     '%': SteppedPatternBuilder.handlePercent /**<Span, SpanParseBucket>*/,
     '\'': SteppedPatternBuilder.handleQuote /**<Span, SpanParseBucket>*/,
-    '\"': SteppedPatternBuilder.handleQuote /**<Span, SpanParseBucket>*/,
+    '"': SteppedPatternBuilder.handleQuote /**<Span, SpanParseBucket>*/,
     '\\': SteppedPatternBuilder.handleBackslash /**<Span, SpanParseBucket>*/,
     '.': TimePatternHelper.createPeriodHandler<Time, _TimeParseBucket>(
         9,

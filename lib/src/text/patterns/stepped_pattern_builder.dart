@@ -23,8 +23,8 @@ class _FindLongestMatchCursor {
 class SteppedPatternBuilder<TResult, TBucket extends ParseBucket<TResult>> {
   static const int _aCodeUnit = 97;
   static const int _zCodeUnit = 122;
-  static const int _ACodeUnit = 65;
-  static const int _ZCodeUnit = 90;
+  static const int _upperACodeUnit = 65;
+  static const int _upperZCodeUnit = 90;
 
   // #Hack: this accommodates IPostPatternParseFormatAction
   final List<Object> _formatActions = <Object>[];
@@ -72,7 +72,8 @@ class SteppedPatternBuilder<TResult, TBucket extends ParseBucket<TResult>> {
       } else {
         String current = patternCursor.current;
         var currentCodeUnit = current.codeUnitAt(0);
-        if ((currentCodeUnit >= _ACodeUnit && currentCodeUnit <= _ZCodeUnit) ||
+        if ((currentCodeUnit >= _upperACodeUnit &&
+                currentCodeUnit <= _upperZCodeUnit) ||
             (currentCodeUnit >= _aCodeUnit && currentCodeUnit <= _zCodeUnit) ||
             current == PatternCursor.embeddedPatternStart ||
             current == PatternCursor.embeddedPatternEnd) {
@@ -608,7 +609,9 @@ class _SteppedPattern<TResult, TBucket extends ParseBucket<TResult>>
     // can use that when creating a StringBuffer. This will definitely not always
     // be appropriate, but it's a start.
     StringBuffer builder = StringBuffer();
-    formatActions.forEach((formatAction) => formatAction(sample, builder));
+    for (var formatAction in formatActions) {
+      formatAction(sample, builder);
+    }
     var expectedLength = builder.length;
 
     return _SteppedPattern<TResult, TBucket>._(formatActions, parseActions,
@@ -648,7 +651,9 @@ class _SteppedPattern<TResult, TBucket extends ParseBucket<TResult>>
     // if StringBuffer gets an initial size: pass in expectedLength
     StringBuffer builder = StringBuffer();
     // This will call all the actions in the multicast delegate.
-    _formatActions.forEach((formatAction) => formatAction(value, builder));
+    for (var formatAction in _formatActions) {
+      formatAction(value, builder);
+    }
     /* todo: remove me
     for (var formatAction in _formatActions) {
       var x = builder.toString();
@@ -674,7 +679,9 @@ class _SteppedPattern<TResult, TBucket extends ParseBucket<TResult>>
   @override
   StringBuffer appendFormat(TResult value, StringBuffer builder) {
     Preconditions.checkNotNull(builder, 'builder');
-    _formatActions.forEach((formatAction) => formatAction(value, builder));
+    for (var formatAction in _formatActions) {
+      formatAction(value, builder);
+    }
     return builder;
   }
 }

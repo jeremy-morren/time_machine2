@@ -4,8 +4,7 @@
 
 /// Exception thrown when data read by Time Machine (such as serialized time zone data) is invalid. This includes
 /// data which is truncated, i.e. we expect more data than we can read.
-class InvalidTimeDataError extends Error
-{
+class InvalidTimeDataError extends Error {
   final String message;
   final Error? error;
 
@@ -14,5 +13,6 @@ class InvalidTimeDataError extends Error
   /// [message]: The message for the exception.
   InvalidTimeDataError(this.message, [this.error]);
 
-  @override String toString() => error == null ? '$message' : '$message\n$error';
+  @override
+  String toString() => error == null ? message : '$message\n$error';
 }

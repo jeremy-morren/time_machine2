@@ -44,8 +44,8 @@ abstract class FormatHelper {
 
   /// Formats the given value left padded with zeros.
   ///
-  /// Left pads with zeros the value into a field of <paramref name = 'length' /> characters. If the value
-  /// is longer than <paramref name = 'length' />, the entire value is formatted. If the value is negative,
+  /// Left pads with zeros the value into a field of [length] characters. If the value
+  /// is longer than [length], the entire value is formatted. If the value is negative,
   /// it is preceded by '-' but this does not count against the length.
   ///
   /// [value]: The value to format.
@@ -72,8 +72,8 @@ abstract class FormatHelper {
 
   /// Formats the given value left padded with zeros. The value is assumed to be non-negative.
   ///
-  /// Left pads with zeros the value into a field of <paramref name = 'length' /> characters. If the value
-  /// is longer than <paramref name = 'length' />, the entire value is formatted. If the value is negative,
+  /// Left pads with zeros the value into a field of [length] characters. If the value
+  /// is longer than [length], the entire value is formatted. If the value is negative,
   /// it is preceded by '-' but this does not count against the length.
   ///
   /// [value]: The value to format.
@@ -168,8 +168,8 @@ abstract class FormatHelper {
 
   /// Formats the given Int64 value left padded with zeros. The value is assumed to be non-negative.
   ///
-  /// Left pads with zeros the value into a field of <paramref name = 'length' /> characters. If the value
-  /// is longer than <paramref name = 'length' />, the entire value is formatted. If the value is negative,
+  /// Left pads with zeros the value into a field of [length] characters. If the value
+  /// is longer than [length], the entire value is formatted. If the value is negative,
   /// it is preceded by '-' but this does not count against the length.
   ///
   /// [value]: The value to format.
@@ -265,11 +265,9 @@ abstract class FormatHelper {
   /// Formats the given value, which is an integer representation of a fraction.
   /// Note: current usage means this never has to cope with negative numbers.
   ///
-  /// <example>
   /// `AppendFraction(1200, 4, 5, builder)` will result in '0120' being
   /// appended to the builder. The value is treated as effectively 0.01200 because
   /// the scale is 5, but only 4 digits are formatted.
-  /// </example>
   /// [value]: The value to format.
   /// [length]: The length to fill. Must be at most [scale].
   /// [scale]: The scale of the value i.e. the number of significant digits is the range of the value. Must be in the range [1, 7].
@@ -300,12 +298,10 @@ abstract class FormatHelper {
   /// If the entire value is truncated then the preceeding decimal separater is also removed.
   /// Note: current usage means this never has to cope with negative numbers.
   ///
-  /// <example>
   /// `AppendFractionTruncate(1200, 4, 5, builder)` will result in '001' being
   /// appended to the builder. The value is treated as effectively 0.01200 because
   /// the scale is 5; only 4 digits are formatted (leaving '0120') and then the rightmost
   /// 0 digit is truncated.
-  /// </example>
   /// [value]: The value to format.
   /// [length]: The length to fill. Must be at most [scale].
   /// [scale]: The scale of the value i.e. the number of significant digits is the range of the value. Must be in the range [1, 7].

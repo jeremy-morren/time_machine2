@@ -31,7 +31,7 @@ abstract class ICalendarSystem {
 
   static CalendarSystem forOrdinalUncached(CalendarOrdinal ordinal) {
     var calendarSystem =
-        CalendarSystem._forOrdinalUncached_referenceMap[ordinal];
+        CalendarSystem._forOrdinalUncachedReferenceMap[ordinal];
     if (calendarSystem == null)
       throw StateError(
           'Bug: calendar ordinal $ordinal missing from switch in CalendarSystem.ForOrdinal.');
@@ -192,7 +192,7 @@ class CalendarSystem {
 
   // todo: how would caching work if this was inside the function body?
   static final Map<CalendarOrdinal, CalendarSystem>
-      _forOrdinalUncached_referenceMap = {
+      _forOrdinalUncachedReferenceMap = {
     CalendarOrdinal.iso: iso,
     CalendarOrdinal.gregorian: gregorian,
     CalendarOrdinal.julian: julian,

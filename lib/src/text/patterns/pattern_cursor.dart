@@ -13,7 +13,7 @@ class PatternCursor extends TextCursor {
   /// The character signifying the end of an embedded pattern.
   static const String embeddedPatternEnd = '>';
 
-  PatternCursor(String pattern) : super(pattern);
+  PatternCursor(super.pattern);
 
   /// Gets the quoted string.
   ///
@@ -97,7 +97,7 @@ class PatternCursor extends TextCursor {
         if (!moveNext()) {
           throw InvalidPatternError(TextErrorMessages.escapeAtEndOfString);
         }
-      } else if (current == '\'' || current == '\"') {
+      } else if (current == '\'' || current == '"') {
         // We really don't care about the value here. It's slightly inefficient to
         // create the substring and then ignore it, but it's unlikely to be significant.
         getQuotedString(current);

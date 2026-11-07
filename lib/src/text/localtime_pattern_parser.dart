@@ -16,7 +16,7 @@ class LocalTimePatternParser implements IPatternParser<LocalTime> {
         .handlePercent /**<LocalTime, LocalTimeParseBucket>*/,
     '\'': SteppedPatternBuilder
         .handleQuote /**<LocalTime, LocalTimeParseBucket>*/,
-    '\"': SteppedPatternBuilder
+    '"': SteppedPatternBuilder
         .handleQuote /**<LocalTime, LocalTimeParseBucket>*/,
     '\\': SteppedPatternBuilder
         .handleBackslash /**<LocalTime, LocalTimeParseBucket>*/,
@@ -161,23 +161,22 @@ class LocalTimeParseBucket extends ParseBucket<LocalTime> {
       return parseResult.convertError();
     }
     int hour = parseResult.value;
-    int _minutes = usedFields.hasAny(PatternFields.minutes)
+    int minute = usedFields.hasAny(PatternFields.minutes)
         ? minutes
         : templateValue.minuteOfHour;
-    int _seconds = usedFields.hasAny(PatternFields.seconds)
+    int second = usedFields.hasAny(PatternFields.seconds)
         ? seconds
         : templateValue.secondOfMinute;
-    int _nanoseconds = usedFields.hasAny(PatternFields.fractionalSeconds)
+    int nanosecond = usedFields.hasAny(PatternFields.fractionalSeconds)
         ? fractionalSeconds
         : templateValue.nanosecondOfSecond;
     return ParseResult.forValue<LocalTime>(
-        LocalTime(hour, _minutes, _seconds, ns: _nanoseconds));
+        LocalTime(hour, minute, second, ns: nanosecond));
   }
 
   //static const PatternFields hours12 = const PatternFields(1 << 1);
   //static const PatternFields amPm = const PatternFields(1 << 6);
-  static const PatternFields _hours12_booleanOR_amPm =
-      PatternFields(1 << 1 | 1 << 6);
+  static const PatternFields _hours12OrAmPm = PatternFields(1 << 1 | 1 << 6);
 
   ParseResult<int> _determineHour(PatternFields usedFields, String text) {
     if (usedFields.hasAny(PatternFields.hours24)) {
@@ -199,7 +198,7 @@ class LocalTimeParseBucket extends ParseBucket<LocalTime> {
     // Okay, it's definitely valid - but we've still got 8 possibilities for what's been specified.
     int hour = 0;
     var x = usedFields & (PatternFields.hours12 | PatternFields.amPm);
-    if (x == _hours12_booleanOR_amPm) {
+    if (x == _hours12OrAmPm) {
       hour = (hours12 % 12) + amPm * 12;
     } else if (x == PatternFields.hours12) {
       hour = (hours12 % 12) + (templateValue.hourOfDay ~/ 12) * 12;

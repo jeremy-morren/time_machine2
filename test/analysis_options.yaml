@@ -1,0 +1,9 @@
+include: ../analysis_options.yaml
+
+linter:
+  rules:
+    # The tests keep Noda Time's NUnit test names (PascalCase functions and
+    # constants, such as `ParseNull` or `DefaultCulture`), so failures and
+    # skips can be matched with Noda Time's test suite.
+    non_constant_identifier_names: false
+    constant_identifier_names: false

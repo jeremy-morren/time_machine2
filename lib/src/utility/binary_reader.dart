@@ -16,6 +16,7 @@ class BinaryReader {
   bool get isMore => _offset < binary.lengthInBytes;
 
   // Add getter and setter for currentOffset
+  // ignore: unnecessary_getters_setters
   int get currentOffset => _offset;
   set currentOffset(int value) => _offset = value;
 

@@ -229,10 +229,8 @@ abstract class HebrewScripturalCalculator {
     return (_cacheBits(cache) & _isKislevShortCacheBit) != 0;
   }
 
-  /// <summary>
   /// Elapsed days since the Hebrew epoch at the start of the given Hebrew year.
   /// This is *inclusive* of the first day of the year, so ElapsedDays(1) returns 1.
-  /// </summary>
   static int elapsedDays(int year) {
     int cache = _getOrPopulateCache(year);
     return _cacheDays(cache);
@@ -267,12 +265,10 @@ abstract class HebrewScripturalCalculator {
         : alternativeDay;
   }
 
-  /// <summary>
   /// Returns the cached 'elapsed day at start of year / IsHeshvanLong / IsKislevShort' combination,
   /// populating the cache if necessary. The value divided by 4 is the 'elapsed days start of year'; bit 0 is
   /// 'is Heshvan long'; bit 1 is "is Kislev short". If the year is out of the range for the cache,
   /// the value is populated but not cached.
-  /// </summary>
   /// <param name='year'></param>
   static int _getOrPopulateCache(int year) {
     if (year < minYear || year > maxYear) {
@@ -288,9 +284,7 @@ abstract class HebrewScripturalCalculator {
     return cacheEntry.startOfYearDays;
   }
 
-  /// <summary>
   /// Computes the cache entry value for the given year, but without populating the cache.
-  /// </summary>
   static int _computeCacheEntry(int year) {
     int days = _elapsedDaysNoCache(year);
     // We want the elapsed days for the next year as well. Check the cache if possible.

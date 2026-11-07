@@ -1,4 +1,4 @@
-import 'package:universal_io/io.dart' as io;
+import 'dart:io' as io;
 
 import 'package:xml/xml.dart' as xml;
 

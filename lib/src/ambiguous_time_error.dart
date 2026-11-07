@@ -11,6 +11,7 @@ class AmbiguousTimeError extends Error {
   LocalDateTime get localDateTime => earlierMapping.localDateTime;
 
   /// The time zone in which the local date and time is ambiguous.
+  // ignore: non_constant_identifier_names
   DateTimeZone get Zone => earlierMapping.zone;
 
   /// Gets the earlier of the two occurrences of the local date and time within the time zone.

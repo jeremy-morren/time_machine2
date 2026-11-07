@@ -29,9 +29,9 @@ class DateTimeZoneCache extends DateTimeZoneProvider {
   @override
   String get versionId => _source.versionId!;
 
-  /// <inheritdoc />
   // todo:  ReadOnlyCollection<String>
   @override
+  // ignore: overridden_fields
   final List<String> ids;
 
   DateTimeZoneCache._(this._source, this.ids);
@@ -69,7 +69,6 @@ class DateTimeZoneCache extends DateTimeZoneProvider {
     return cache;
   }
 
-  /// <inheritdoc />
   @override
   Future<DateTimeZone> getSystemDefault() async {
     String? id = _source.systemDefaultId;
@@ -90,7 +89,6 @@ class DateTimeZoneCache extends DateTimeZoneProvider {
     return getDateTimeZoneSync(id);
   }
 
-  /// <inheritdoc />
   @override
   Future<DateTimeZone?> getZoneOrNull(String id) async {
     Preconditions.checkNotNull(id, 'id');

@@ -11,16 +11,16 @@ bool stringOrdinalIgnoreCaseEquals(String a, String b) {
   var aRunesIter = aRunes.iterator;
   var bRunesIter = bRunes.iterator;
 
-  while(aRunesIter.moveNext() && bRunesIter.moveNext()) {
-    var aRune=aRunesIter.current;
-    var bRune=bRunesIter.current;
+  while (aRunesIter.moveNext() && bRunesIter.moveNext()) {
+    var aRune = aRunesIter.current;
+    var bRune = bRunesIter.current;
 
     if (aRune <= 90) aRune += 0x20;
     if (bRune <= 90) bRune += 0x20;
 
     if (aRune != bRune) {
       return false;
-    // return aRune - bRune; // If we want to do a standard Compare Operation
+      // return aRune - bRune; // If we want to do a standard Compare Operation
     }
   }
 
@@ -59,7 +59,8 @@ Parameters
 */
 
 // string.CompareOrdinal
-int stringOrdinalCompare(String a, int aIndex, String b, int bIndex, int length) {
+int stringOrdinalCompare(
+    String a, int aIndex, String b, int bIndex, int length) {
 // if (a.length != b.length) return false;
 
   var aRunes = a.codeUnits;
@@ -69,18 +70,18 @@ int stringOrdinalCompare(String a, int aIndex, String b, int bIndex, int length)
   var bRunesIter = bRunes.skip(bIndex).iterator;
 
   int i = 0;
-  while(aRunesIter.moveNext() && bRunesIter.moveNext()) {
+  while (aRunesIter.moveNext() && bRunesIter.moveNext()) {
     if (i++ >= length) break;
 
-    var aRune=aRunesIter.current;
-    var bRune=bRunesIter.current;
+    var aRune = aRunesIter.current;
+    var bRune = bRunesIter.current;
 
 //    if (aRune <= 90) aRune += 0x20;
 //    if (bRune <= 90) bRune += 0x20;
 
     if (aRune != bRune) {
       return aRune.compareTo(bRune);
-    // return aRune - bRune; // If we want to do a standard Compare Operation
+      // return aRune - bRune; // If we want to do a standard Compare Operation
     }
   }
 
@@ -88,7 +89,8 @@ int stringOrdinalCompare(String a, int aIndex, String b, int bIndex, int length)
   return 0;
 }
 
-int stringOrdinalIgnoreCaseCompare(String a, int aIndex, String b, int bIndex, int length) {
+int stringOrdinalIgnoreCaseCompare(
+    String a, int aIndex, String b, int bIndex, int length) {
 // if (a.length != b.length) return false;
 
   var aRunes = a.codeUnits;
@@ -98,18 +100,18 @@ int stringOrdinalIgnoreCaseCompare(String a, int aIndex, String b, int bIndex, i
   var bRunesIter = bRunes.skip(bIndex).iterator;
 
   int i = 0;
-  while(aRunesIter.moveNext() && bRunesIter.moveNext()) {
+  while (aRunesIter.moveNext() && bRunesIter.moveNext()) {
     if (i++ >= length) break;
 
-    var aRune=aRunesIter.current;
-    var bRune=bRunesIter.current;
+    var aRune = aRunesIter.current;
+    var bRune = bRunesIter.current;
 
     if (aRune <= 90) aRune += 0x20;
     if (bRune <= 90) bRune += 0x20;
 
     if (aRune != bRune) {
       return aRune.compareTo(bRune);
-    // return aRune - bRune; // If we want to do a standard Compare Operation
+      // return aRune - bRune; // If we want to do a standard Compare Operation
     }
   }
 

@@ -51,7 +51,7 @@ class TzdbZone1970Location {
   ///
   /// [latitudeSeconds]: Latitude of the location, in seconds.
   /// [longitudeSeconds]: Longitude of the location, in seconds.
-  /// [countries]: Countries associated with this location. Must not be null, must have at least
+  /// [countries]: validatedCountries associated with this location. Must not be null, must have at least
   /// one entry, and all entries must be non-null.
   /// [zoneId]: Time zone identifier of the location. Must not be null.
   /// [comment]: Optional comment. Must not be null, but may be empty.
@@ -67,18 +67,18 @@ class TzdbZone1970Location {
     Preconditions.checkArgumentRange(
         'longitudeSeconds', longitudeSeconds, -180 * 3600, 180 * 3600);
 
-    var Countries = List<TzdbZone1970LocationCountry>.unmodifiable(
+    var validatedCountries = List<TzdbZone1970LocationCountry>.unmodifiable(
         Preconditions.checkNotNull(countries, 'countries'));
-    Preconditions.checkArgument(Countries.isNotEmpty, 'countries',
+    Preconditions.checkArgument(validatedCountries.isNotEmpty, 'countries',
         "Collection must contain at least one entry");
-    // for (var entry in Countries) {
+    // for (var entry in validatedCountries) {
     //   Preconditions.checkArgument(entry != null, 'countries', "Collection must not contain null entries");
     // }
-    var ZoneId = Preconditions.checkNotNull(zoneId, 'zoneId');
-    var Comment = Preconditions.checkNotNull(comment, 'comment');
+    var validatedZoneId = Preconditions.checkNotNull(zoneId, 'zoneId');
+    var validatedComment = Preconditions.checkNotNull(comment, 'comment');
 
-    return TzdbZone1970Location._(
-        Comment, Countries, latitudeSeconds, longitudeSeconds, ZoneId);
+    return TzdbZone1970Location._(validatedComment, validatedCountries,
+        latitudeSeconds, longitudeSeconds, validatedZoneId);
   }
 
   @internal
@@ -91,10 +91,10 @@ class TzdbZone1970Location {
     writer.writeSignedCount(_longitudeSeconds);
 
     writer.writeCount(countries.length);
-    countries.forEach((country) {
+    for (var country in countries) {
       writer.writeString(country.name);
       writer.writeString(country.code);
-    });
+    }
 
     writer.writeString(zoneId);
     writer.writeString(comment);

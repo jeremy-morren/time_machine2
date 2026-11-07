@@ -51,10 +51,10 @@ class ZonedDateTime {
       DateTimeZone? zone,
       CalendarSystem? calendar]) {
     // zone = Preconditions.checkNotNull(zone, 'zone');
-    var _zone = zone ?? DateTimeZone.utc;
-    var _offsetDateTime = IOffsetDateTime.fromInstant(
-        instant, _zone.getUtcOffset(instant), calendar);
-    return ZonedDateTime._(_offsetDateTime, _zone);
+    var resolvedZone = zone ?? DateTimeZone.utc;
+    var offsetDateTime = IOffsetDateTime.fromInstant(
+        instant, resolvedZone.getUtcOffset(instant), calendar);
+    return ZonedDateTime._(offsetDateTime, resolvedZone);
   }
 
   /// Initializes a new instance of [ZonedDateTime] in the specified time zone
@@ -540,17 +540,14 @@ class _ZonedDateTimeLocalComparer extends ZonedDateTimeComparer {
 
   const _ZonedDateTimeLocalComparer._() : super._();
 
-  /// <inheritdoc />
   @override
   int compare(ZonedDateTime x, ZonedDateTime y) => OffsetDateTimeComparer.local
       .compare(x._offsetDateTime, y._offsetDateTime);
 
-  /// <inheritdoc />
   @override
   bool equals(ZonedDateTime x, ZonedDateTime y) =>
       OffsetDateTimeComparer.local.equals(x._offsetDateTime, y._offsetDateTime);
 
-  /// <inheritdoc />
   @override
   int getHashCode(ZonedDateTime obj) =>
       OffsetDateTimeComparer.local.getHashCode(obj._offsetDateTime);
@@ -563,19 +560,16 @@ class _ZonedDateTimeInstantComparer extends ZonedDateTimeComparer {
 
   const _ZonedDateTimeInstantComparer._() : super._();
 
-  /// <inheritdoc />
   @override
   int compare(ZonedDateTime x, ZonedDateTime y) =>
       OffsetDateTimeComparer.instant
           .compare(x._offsetDateTime, y._offsetDateTime);
 
-  /// <inheritdoc />
   @override
   bool equals(ZonedDateTime x, ZonedDateTime y) =>
       OffsetDateTimeComparer.instant
           .equals(x._offsetDateTime, y._offsetDateTime);
 
-  /// <inheritdoc />
   @override
   int getHashCode(ZonedDateTime obj) =>
       OffsetDateTimeComparer.instant.getHashCode(obj._offsetDateTime);

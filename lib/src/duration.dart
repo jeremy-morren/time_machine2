@@ -174,30 +174,32 @@ abstract class Time implements Comparable<Time> {
       num milliseconds = 0,
       num microseconds = 0,
       num nanoseconds = 0}) {
-    var _hours = days * TimeConstants.hoursPerDay;
-    var _minutes = (_hours + hours) * TimeConstants.minutesPerHour;
-    var _seconds = (_minutes + minutes) * TimeConstants.secondsPerMinute;
-    var _milliseconds =
-        (_seconds + seconds) * TimeConstants.millisecondsPerSecond +
+    var totalHours = days * TimeConstants.hoursPerDay;
+    var totalMinutes = (totalHours + hours) * TimeConstants.minutesPerHour;
+    var totalSeconds =
+        (totalMinutes + minutes) * TimeConstants.secondsPerMinute;
+    var totalMilliseconds =
+        (totalSeconds + seconds) * TimeConstants.millisecondsPerSecond +
             milliseconds;
 
-    var _microseconds = (_milliseconds - _milliseconds.toInt()) *
-        TimeConstants.microsecondsPerMillisecond;
+    var fractionalMicroseconds =
+        (totalMilliseconds - totalMilliseconds.toInt()) *
+            TimeConstants.microsecondsPerMillisecond;
 
     // note: this is here to deal with extreme values
     if (microseconds.abs() > Platform.maxMicrosecondsToNanoseconds) {
       var millisecondsToAdd =
           microseconds ~/ TimeConstants.microsecondsPerMillisecond;
-      _milliseconds += millisecondsToAdd;
+      totalMilliseconds += millisecondsToAdd;
       microseconds -=
           millisecondsToAdd * TimeConstants.microsecondsPerMillisecond;
     }
 
-    var _nanoseconds = (_microseconds + microseconds) *
+    var totalNanoseconds = (fractionalMicroseconds + microseconds) *
             TimeConstants.nanosecondsPerMicrosecond +
         nanoseconds;
 
-    return Time._untrusted(_milliseconds.toInt(), _nanoseconds.toInt());
+    return Time._untrusted(totalMilliseconds.toInt(), totalNanoseconds.toInt());
   }
 
   factory Time.duration(Duration duration) {

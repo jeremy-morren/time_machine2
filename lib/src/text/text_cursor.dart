@@ -34,9 +34,7 @@ abstract class TextCursor {
 
   /// Gets a value indicating whether this instance has more characters.
   ///
-  /// <value>
   /// `true` if this instance has more characters; otherwise, `false`.
-  /// </value>
   bool get hasMoreCharacters => (index + 1) < length;
 
   /// Gets the current index into the string being parsed.

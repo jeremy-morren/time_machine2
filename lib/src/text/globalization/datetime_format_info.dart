@@ -4,13 +4,7 @@
 import 'package:meta/meta.dart';
 
 // todo: evaluate name, need, and should this be combined with something else?
-enum CalendarType {
-  unknown,
-  gregorian,
-  persian,
-  hijri,
-  umAlQura
-}
+enum CalendarType { unknown, gregorian, persian, hijri, umAlQura }
 
 @immutable
 class DateTimeFormat {
@@ -33,7 +27,8 @@ class DateTimeFormat {
 
   final List<String> eraNames;
   String getEraName(int era) {
-    if (era == 0) throw UnimplementedError('Calendar.CurrentEraValue not implemented.');
+    if (era == 0)
+      throw UnimplementedError('Calendar.CurrentEraValue not implemented.');
     if (--era < eraNames.length && era >= 0) return eraNames[era];
     throw ArgumentError.value(era, 'era');
   }
@@ -44,7 +39,8 @@ class DateTimeFormat {
   final String shortTimePattern;
   final String longTimePattern;
 
-  factory DateTimeFormat.invariantCulture() => DateTimeFormatBuilder.invariant().Build();
+  factory DateTimeFormat.invariantCulture() =>
+      DateTimeFormatBuilder.invariant().Build();
 
   const DateTimeFormat(
       this.amDesignator,
@@ -63,8 +59,7 @@ class DateTimeFormat {
       this.shortDatePattern,
       this.longDatePattern,
       this.shortTimePattern,
-      this.longTimePattern
-      );
+      this.longTimePattern);
 }
 
 class DateTimeFormatBuilder {
@@ -92,25 +87,25 @@ class DateTimeFormatBuilder {
   late String shortTimePattern;
   late String longTimePattern;
 
-  DateTimeFormat Build() =>
-      DateTimeFormat(
-          amDesignator,
-          pmDesignator,
-          timeSeparator,
-          dateSeparator,
-          abbreviatedDayNames,
-          dayNames,
-          monthNames,
-          abbreviatedMonthNames,
-          monthGenitiveNames,
-          abbreviatedMonthGenitiveNames,
-          calendar,
-          eraNames,
-          fullDateTimePattern,
-          shortDatePattern,
-          longDatePattern,
-          shortTimePattern,
-          longTimePattern);
+  // ignore: non_constant_identifier_names
+  DateTimeFormat Build() => DateTimeFormat(
+      amDesignator,
+      pmDesignator,
+      timeSeparator,
+      dateSeparator,
+      abbreviatedDayNames,
+      dayNames,
+      monthNames,
+      abbreviatedMonthNames,
+      monthGenitiveNames,
+      abbreviatedMonthGenitiveNames,
+      calendar,
+      eraNames,
+      fullDateTimePattern,
+      shortDatePattern,
+      longDatePattern,
+      shortTimePattern,
+      longTimePattern);
 
   DateTimeFormatBuilder([DateTimeFormat? info]) {
     if (info == null) return;
@@ -134,16 +129,60 @@ class DateTimeFormatBuilder {
   }
 
   // Month's have a blank entry at the end
-  static const List<String> _invariantMonthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', ''];
-  static const List<String> _invariantAbbreviatedMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', ''];
+  static const List<String> _invariantMonthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+    ''
+  ];
+  static const List<String> _invariantAbbreviatedMonthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+    ''
+  ];
 
   DateTimeFormatBuilder.invariant()
       : amDesignator = 'AM',
         pmDesignator = 'PM',
         timeSeparator = ':',
         dateSeparator = '/',
-        abbreviatedDayNames = const ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-        dayNames = const ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        abbreviatedDayNames = const [
+          'Sun',
+          'Mon',
+          'Tue',
+          'Wed',
+          'Thu',
+          'Fri',
+          'Sat'
+        ],
+        dayNames = const [
+          'Sunday',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday'
+        ],
         monthNames = _invariantMonthNames,
         abbreviatedMonthNames = _invariantAbbreviatedMonthNames,
         monthGenitiveNames = _invariantMonthNames,
@@ -154,6 +193,5 @@ class DateTimeFormatBuilder {
         shortDatePattern = 'MM/dd/yyyy',
         longDatePattern = 'dddd, dd MMMM yyyy',
         shortTimePattern = 'HH:mm',
-        longTimePattern = 'HH:mm:ss'
-  ;
+        longTimePattern = 'HH:mm:ss';
 }

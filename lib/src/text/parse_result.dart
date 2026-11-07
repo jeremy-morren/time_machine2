@@ -66,6 +66,7 @@ class ParseResult<T> {
   /// * [result]: The parameter to store the parsed value in on success.
   ///
   /// Returns: True if this parse result was successful, or false otherwise.
+  // ignore: non_constant_identifier_names
   T TryGetValue(T failureValue) {
     // todo: This did the true/false return _value ... this might alter how it's used (no longer doing that)
     return success ? _value : failureValue;

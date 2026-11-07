@@ -5,8 +5,7 @@
 /// This exception is primarily intended to be thrown from [DateTimeZoneCache], and only in the face of a buggy
 /// source; user code should not usually need to be aware of this or catch it.
 // sealed
-class InvalidDateTimeZoneSourceError extends Error
-{
+class InvalidDateTimeZoneSourceError extends Error {
   final String message;
 
   /// Creates a new instance with the given message.
@@ -14,5 +13,6 @@ class InvalidDateTimeZoneSourceError extends Error
   /// [message]: The message for the exception.
   InvalidDateTimeZoneSourceError(this.message);
 
-  @override String toString() => message;
+  @override
+  String toString() => message;
 }

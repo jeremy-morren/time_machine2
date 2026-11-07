@@ -59,17 +59,24 @@ class TzdbZoneLocation {
         'latitudeSeconds', latitudeSeconds, -90 * 3600, 90 * 3600);
     Preconditions.checkArgumentRange(
         'longitudeSeconds', longitudeSeconds, -180 * 3600, 180 * 3600);
-    var CountryName = Preconditions.checkNotNull(countryName, 'countryName');
-    var CountryCode = Preconditions.checkNotNull(countryCode, 'countryCode');
-    Preconditions.checkArgument(
-        CountryName.isNotEmpty, 'countryName', "Country name cannot be empty");
-    Preconditions.checkArgument(CountryCode.length == 2, 'countryCode',
+    var validatedCountryName =
+        Preconditions.checkNotNull(countryName, 'countryName');
+    var validatedCountryCode =
+        Preconditions.checkNotNull(countryCode, 'countryCode');
+    Preconditions.checkArgument(validatedCountryName.isNotEmpty, 'countryName',
+        "Country name cannot be empty");
+    Preconditions.checkArgument(validatedCountryCode.length == 2, 'countryCode',
         "Country code must be two characters");
-    var ZoneId = Preconditions.checkNotNull(zoneId, 'zoneId');
-    var Comment = Preconditions.checkNotNull(comment, 'comment');
+    var validatedZoneId = Preconditions.checkNotNull(zoneId, 'zoneId');
+    var validatedComment = Preconditions.checkNotNull(comment, 'comment');
 
-    return TzdbZoneLocation._(Comment, CountryCode, CountryName,
-        latitudeSeconds, longitudeSeconds, ZoneId);
+    return TzdbZoneLocation._(
+        validatedComment,
+        validatedCountryCode,
+        validatedCountryName,
+        latitudeSeconds,
+        longitudeSeconds,
+        validatedZoneId);
   }
 
   @internal

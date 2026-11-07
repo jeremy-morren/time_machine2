@@ -109,8 +109,10 @@ class PeriodBuilder {
 //    Preconditions.checkArgumentRange('value', value, int.MinValue, int.MaxValue);
 //  }
 
-    if (_indexSetterFunctionMap.containsKey(unit))
-      return _indexSetterFunctionMap[unit]!(this, value);
+    if (_indexSetterFunctionMap.containsKey(unit)) {
+      _indexSetterFunctionMap[unit]!(this, value);
+      return;
+    }
     throw ArgumentError('Indexer for PeriodBuilder only takes a single unit');
   }
 

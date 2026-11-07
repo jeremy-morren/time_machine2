@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 import 'package:time_machine2/src/platforms/unix_time_zone.dart';
 import 'package:time_machine2/src/time_machine_internal.dart';
-import 'package:universal_io/io.dart' as io;
+import 'dart:io' as io;
 
 import 'system_time_zone_backend.dart';
 import 'tzif.dart';

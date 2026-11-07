@@ -20,19 +20,21 @@ class Preconditions {
   /// Like [Preconditions.checkNotNull], but only checked in debug builds. (This means it can't return
   /// anything...)
   //[Conditional('DEBUG')]
-  static void debugCheckNotNull<T>(T argument, String paramName) // where T : class
+  static void debugCheckNotNull<T>(
+      T argument, String paramName) // where T : class
   {
     // #if DEBUG
     if (argument == null) {
       throw ArgumentError.notNull(paramName);
     }
-  // #endif
+    // #endif
   }
 
   // Note: this overload exists for performance reasons. It would be reasonable to call the
   // version using 'long' values, but we'd incur conversions on every call. This method
   // may well be called very often.
-  static void checkArgumentRange(String paramName, int value, int minInclusive, int maxInclusive) {
+  static void checkArgumentRange(
+      String paramName, int value, int minInclusive, int maxInclusive) {
     if (value < minInclusive || value > maxInclusive) {
       throw RangeError.range(value, minInclusive, maxInclusive, paramName);
     }
@@ -42,20 +44,23 @@ class Preconditions {
   /// trusting the argument value to be valid, and adding a check just for the sake of documentation - and to help find
   /// internal bugs during development.
   // [Conditional('DEBUG')]
-  static bool debugCheckArgumentRange(String paramName, int value, int minInclusive, int maxInclusive) {
+  static bool debugCheckArgumentRange(
+      String paramName, int value, int minInclusive, int maxInclusive) {
     checkArgumentRange(paramName, value, minInclusive, maxInclusive);
     return true;
   }
 
   // [ContractAnnotation('expression:false => halt')]
   // [Conditional('DEBUG')]
-  static bool debugCheckArgument(bool expression, String parameter, String message) {
+  static bool debugCheckArgument(
+      bool expression, String parameter, String message) {
     checkArgument(expression, parameter, message);
     return true;
   }
 
   // [ContractAnnotation('expression:false => halt')]
-  static void checkArgument(bool? expression, String parameter, String message) {
+  static void checkArgument(
+      bool? expression, String parameter, String message) {
     if (expression == null || !expression) {
       throw ArgumentError('$message (parameter name: $parameter)');
     }
@@ -72,7 +77,6 @@ class Preconditions {
   static void debugCheckState(bool expression, String message) {
     // #if DEBUG
     checkState(expression, message);
-  // #endif
+    // #endif
   }
 }
-

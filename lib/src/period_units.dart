@@ -167,7 +167,9 @@ class PeriodUnits {
   // todo: there is probably a more friendly way to incorporate this for mask usage -- so we can have friendly defined constants above
   static PeriodUnits union(Iterable<PeriodUnits> units) {
     int i = 0;
-    units.forEach((u) => i = i | u._value);
+    for (var u in units) {
+      i = i | u._value;
+    }
     return PeriodUnits(i);
   }
 }

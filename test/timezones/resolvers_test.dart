@@ -96,15 +96,17 @@ void ThrowWhenSkipped() {
 }
 
 void CreateResolver_Unambiguous() {
-  AmbiguousTimeResolver ambiguityResolver = (earlier, later) {
+  ZonedDateTime ambiguityResolver(ZonedDateTime earlier, ZonedDateTime later) {
     /*Assert.Fail*/ throw StateError("Shouldn't be called");
     /*default(ZonedDateTime);*/
-  };
+  }
 
-  SkippedTimeResolver skippedTimeResolver = (local, zone, before, after) {
+  ZonedDateTime skippedTimeResolver(LocalDateTime local, DateTimeZone zone,
+      ZoneInterval before, ZoneInterval after) {
     /*Assert.Fail*/ throw StateError("Shouldn't be called");
     /*default(ZonedDateTime);*/
-  };
+  }
+
   var resolver =
       Resolvers.createMappingResolver(ambiguityResolver, skippedTimeResolver);
 
@@ -120,11 +122,14 @@ void CreateResolver_Ambiguous() {
   ZonedDateTime zoned = IZonedDateTime.trusted(
       TimeInTransition.addDays(1).withOffset(GapZone.EarlyInterval.wallOffset),
       GapZone);
-  AmbiguousTimeResolver ambiguityResolver = (earlier, later) => zoned;
-  SkippedTimeResolver skippedTimeResolver = (local, zone, before, after) {
+  ZonedDateTime ambiguityResolver(ZonedDateTime earlier, ZonedDateTime later) =>
+      zoned;
+  ZonedDateTime skippedTimeResolver(LocalDateTime local, DateTimeZone zone,
+      ZoneInterval before, ZoneInterval after) {
     /*Assert.Fail*/ throw StateError("Shouldn't be called");
     /*default(ZonedDateTime);*/
-  };
+  }
+
   var resolver =
       Resolvers.createMappingResolver(ambiguityResolver, skippedTimeResolver);
 
@@ -136,12 +141,14 @@ void CreateResolver_Skipped() {
   ZonedDateTime zoned = IZonedDateTime.trusted(
       TimeInTransition.addDays(1).withOffset(GapZone.EarlyInterval.wallOffset),
       GapZone);
-  AmbiguousTimeResolver ambiguityResolver = (earlier, later) {
+  ZonedDateTime ambiguityResolver(ZonedDateTime earlier, ZonedDateTime later) {
     /*Assert.Fail*/ throw StateError("Shouldn't be called");
     /*default(ZonedDateTime);*/
-  };
-  SkippedTimeResolver skippedTimeResolver =
-      (local, zone, before, after) => zoned;
+  }
+
+  ZonedDateTime skippedTimeResolver(LocalDateTime local, DateTimeZone zone,
+          ZoneInterval before, ZoneInterval after) =>
+      zoned;
   var resolver =
       Resolvers.createMappingResolver(ambiguityResolver, skippedTimeResolver);
 

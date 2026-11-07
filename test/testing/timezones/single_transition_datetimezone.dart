@@ -49,7 +49,6 @@ class SingleTransitionDateTimeZone extends DateTimeZone {
         super(id, false, Offset.min(offsetBefore, offsetAfter),
             Offset.max(offsetBefore, offsetAfter));
 
-  /// <inheritdoc />
   ///
   /// This returns either the zone interval before or after the transition, based on the instant provided.
   @override

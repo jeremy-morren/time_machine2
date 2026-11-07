@@ -93,7 +93,7 @@ class Interval {
   ///
   /// * [other]: The value to compare with this instance.
   ///
-  /// true if the value of this instant is equal to the value of the <paramref name='other' /> parameter;
+  /// true if the value of this instant is equal to the value of the [other] parameter;
   /// otherwise, false.
   bool equals(Interval other) =>
       identical(this, other) || _start == other._start && _end == other._end;

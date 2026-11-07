@@ -11,7 +11,7 @@ class OffsetPatternParser implements IPatternParser<Offset> {
       _patternCharacterHandlers = {
     '%': SteppedPatternBuilder.handlePercent /**<Offset, OffsetParseBucket>*/,
     '\'': SteppedPatternBuilder.handleQuote /**<Offset, OffsetParseBucket>*/,
-    '\"': SteppedPatternBuilder.handleQuote /**<Offset, OffsetParseBucket>*/,
+    '"': SteppedPatternBuilder.handleQuote /**<Offset, OffsetParseBucket>*/,
     '\\':
         SteppedPatternBuilder.handleBackslash /**<Offset, OffsetParseBucket>*/,
     ':': (pattern, builder) => builder.addLiteral1(
@@ -231,9 +231,7 @@ class _OffsetParseBucket extends ParseBucket<Offset> {
 
   /// Gets a value indicating whether this instance is negative.
   ///
-  /// <value>
   /// `true` if this instance is negative; otherwise, `false`.
-  /// </value>
   bool isNegative = false;
 
   /// Calculates the value from the parsed pieces.

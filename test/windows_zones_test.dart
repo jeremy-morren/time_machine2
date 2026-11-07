@@ -10,7 +10,7 @@ import 'dart:convert';
 import 'package:test/test.dart';
 import 'package:time_machine2/time_machine2.dart';
 import 'package:time_machine2/src/platforms/windows_time_zone.dart';
-import 'package:universal_io/io.dart' as io;
+import 'dart:io' as io;
 
 import 'time_machine_testing.dart';
 

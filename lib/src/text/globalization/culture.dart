@@ -11,6 +11,7 @@ abstract class ICultures {
     Cultures._currentCulture = value;
   }
 
+  // ignore: non_constant_identifier_names
   static void loadAllCulturesInformation_SetFlag() {
     if (Cultures._loader != null)
       throw StateError(

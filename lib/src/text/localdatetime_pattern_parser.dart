@@ -18,7 +18,7 @@ class LocalDateTimePatternParser implements IPatternParser<LocalDateTime> {
         .handlePercent /**<LocalDateTime, LocalDateTimeParseBucket>*/,
     '\'': SteppedPatternBuilder
         .handleQuote /**<LocalDateTime, LocalDateTimeParseBucket>*/,
-    '\"': SteppedPatternBuilder
+    '"': SteppedPatternBuilder
         .handleQuote /**<LocalDateTime, LocalDateTimeParseBucket>*/,
     '\\': SteppedPatternBuilder
         .handleBackslash /**<LocalDateTime, LocalDateTimeParseBucket>*/,

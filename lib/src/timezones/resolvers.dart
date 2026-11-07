@@ -26,8 +26,8 @@ abstract class Resolvers {
   /// A [SkippedTimeResolver] which returns the final tick of the time zone interval
   /// before the 'gap'.
   ///
-  /// <value>A [SkippedTimeResolver] which returns the final tick of the time zone interval
-  /// before the 'gap'.</value>
+  /// A [SkippedTimeResolver] which returns the final tick of the time zone interval
+  /// before the 'gap'.
   static final SkippedTimeResolver returnEndOfIntervalBefore =
       (LocalDateTime local, DateTimeZone zone, ZoneInterval before,
           ZoneInterval after) {
@@ -41,10 +41,8 @@ abstract class Resolvers {
   /// A [SkippedTimeResolver] which returns the first tick of the time zone interval
   /// after the 'gap'.
   ///
-  /// <value>
   /// A [SkippedTimeResolver] which returns the first tick of the time zone interval
   /// after the 'gap'.
-  /// </value>
   static final SkippedTimeResolver returnStartOfIntervalAfter =
       (LocalDateTime local, DateTimeZone zone, ZoneInterval before,
           ZoneInterval after) {
@@ -58,10 +56,8 @@ abstract class Resolvers {
   /// of the gap (which is usually 1 hour). This corresponds to the instant that would have occured,
   /// had there not been a transition.
   ///
-  /// <value>
   /// A [SkippedTimeResolver] which shifts values in the 'gap' forward by the duration
   /// of the gap (which is usually 1 hour).
-  /// </value>
   static final SkippedTimeResolver returnForwardShifted = (LocalDateTime local,
       DateTimeZone zone, ZoneInterval before, ZoneInterval after) {
     Preconditions.checkNotNull(zone, 'zone');
@@ -88,9 +84,9 @@ abstract class Resolvers {
   /// [AmbiguousTimeException], as appropriate. This resolver combines
   /// [throwWhenAmbiguous] and [throwWhenSkipped].
   ///
-  /// <seealso cref='DateTimeZone.AtStrictly'/>
-  /// <value>A [ZoneLocalMappingResolver] which only ever succeeds in the (usual) case where the result
-  /// of the mapping is unambiguous.</value>
+  /// See also `DateTimeZone.AtStrictly`.
+  /// A [ZoneLocalMappingResolver] which only ever succeeds in the (usual) case where the result
+  /// of the mapping is unambiguous.
   static final ZoneLocalMappingResolver strictResolver =
       createMappingResolver(throwWhenAmbiguous, throwWhenSkipped);
 
@@ -102,7 +98,7 @@ abstract class Resolvers {
   /// usage pattern.  Previous versions combined the [returnLater] and [returnStartOfIntervalAfter]
   /// resolvers, which can still be used separately if desired.
   ///
-  /// <seealso cref='DateTimeZone.AtLeniently'/>
+  /// See also `DateTimeZone.AtLeniently`.
   static final ZoneLocalMappingResolver lenientResolver =
       createMappingResolver(returnEarlier, returnForwardShifted);
 

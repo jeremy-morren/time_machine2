@@ -17,7 +17,7 @@ class ZonedDateTimePatternParser implements IPatternParser<ZonedDateTime> {
         .handlePercent /**<ZonedDateTime, ZonedDateTimeParseBucket>*/,
     '\'': SteppedPatternBuilder
         .handleQuote /**<ZonedDateTime, ZonedDateTimeParseBucket>*/,
-    '\"': SteppedPatternBuilder
+    '"': SteppedPatternBuilder
         .handleQuote /**<ZonedDateTime, ZonedDateTimeParseBucket>*/,
     '\\': SteppedPatternBuilder
         .handleBackslash /**<ZonedDateTime, ZonedDateTimeParseBucket>*/,

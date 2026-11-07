@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:universal_io/io.dart';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:time_machine2/src/time_machine_internal.dart';

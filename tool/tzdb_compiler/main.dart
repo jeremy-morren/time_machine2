@@ -2,7 +2,7 @@
 // Portions of this work are Copyright 2018 The Noda Time Authors. All rights reserved.
 // Use of this source code is governed by the Apache License 2.0, as found in the LICENSE.txt file.
 
-import 'package:universal_io/io.dart';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:collection/collection.dart' show mergeSort;

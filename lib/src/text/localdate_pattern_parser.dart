@@ -23,7 +23,7 @@ class LocalDatePatternParser implements IPatternParser<LocalDate> {
         .handlePercent /**<LocalDate, LocalDateParseBucket>*/,
     '\'': SteppedPatternBuilder
         .handleQuote /**<LocalDate, LocalDateParseBucket>*/,
-    '\"': SteppedPatternBuilder
+    '"': SteppedPatternBuilder
         .handleQuote /**<LocalDate, LocalDateParseBucket>*/,
     '\\': SteppedPatternBuilder
         .handleBackslash /**<LocalDate, LocalDateParseBucket>*/,
@@ -277,7 +277,7 @@ class LocalDateParseBucket extends ParseBucket<LocalDate> {
 
   //static const PatternFields monthOfYearNumeric = const PatternFields(1 << 10);
   //static const PatternFields monthOfYearText = const PatternFields(1 << 11);
-  static const PatternFields _monthOfYearText_booleanOR_monthOfYearText =
+  static const PatternFields _monthOfYearTextOrMonthOfYearNumeric =
       PatternFields(1 << 11 | 1 << 10);
 
   ParseResult<LocalDate>? _determineMonth(
@@ -288,7 +288,7 @@ class LocalDateParseBucket extends ParseBucket<LocalDate> {
       // No-op
     } else if (x == PatternFields.monthOfYearText) {
       monthOfYearNumeric = monthOfYearText;
-    } else if (x == _monthOfYearText_booleanOR_monthOfYearText) {
+    } else if (x == _monthOfYearTextOrMonthOfYearNumeric) {
       // PatternFields.monthOfYearNumeric | PatternFields.monthOfYearText:
       if (monthOfYearNumeric != monthOfYearText) {
         return IParseResult.inconsistentMonthValues<LocalDate>(text);

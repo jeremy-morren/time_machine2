@@ -52,6 +52,7 @@ class YearMonthDayCalendar {
   int get day => yearMonthDay.day;
 
   @visibleForTesting
+  // ignore: non_constant_identifier_names
   static YearMonthDayCalendar Parse(String text) {
     // Handle a leading - to negate the year
     if (text.startsWith('-')) {
@@ -77,9 +78,9 @@ class YearMonthDayCalendar {
       YearMonthDay(year, month, day).toString() + '-$calendarOrdinal';
 
   @override
-  bool operator ==(Object rhs) => rhs is YearMonthDayCalendar
-      ? yearMonthDay == rhs.yearMonthDay &&
-          calendarOrdinal == rhs.calendarOrdinal
+  bool operator ==(Object other) => other is YearMonthDayCalendar
+      ? yearMonthDay == other.yearMonthDay &&
+          calendarOrdinal == other.calendarOrdinal
       : false;
 
   @override

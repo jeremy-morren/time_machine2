@@ -1,4 +1,5 @@
 /// Time Machine Text
+library;
 
 export 'composite_pattern_builder.dart';
 export 'i_pattern.dart';

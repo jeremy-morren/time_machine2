@@ -37,7 +37,7 @@ String stringInsert(String text, int index, String value) {
 
 String stringFilled(String text, int count) {
   StringBuffer sb = StringBuffer();
-  for(int i = 0; i < count; i++) {
+  for (int i = 0; i < count; i++) {
     sb.write(text);
   }
   return sb.toString();

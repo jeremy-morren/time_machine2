@@ -13,23 +13,20 @@ class FakeDateTimeZoneSource extends DateTimeZoneSource {
   final Map<String, String> _bclToZoneIds;
 
   // todo: do we care about bclToZoneIds?
-  FakeDateTimeZoneSource._(String versionId, this._zones, this._bclToZoneIds)
-      : versionId = versionId;
+  FakeDateTimeZoneSource._(this.versionId, this._zones, this._bclToZoneIds);
 
   /// Creates a time zone provider ([DateTimeZoneCache]) from this source.
   ///
   /// Returns: A provider backed by this source.
   Future<DateTimeZoneProvider> ToProvider() => DateTimeZoneCache.getCache(this);
 
-  /// <inheritdoc />
   @override
   Future<Iterable<String>> getIds() => Future.value(_zones.keys);
 
-  /// <inheritdoc />
   @override
+  // ignore: overridden_fields
   final String versionId;
 
-  /// <inheritdoc />
   @override
   Future<DateTimeZone> forId(String id) {
     Preconditions.checkNotNull(id, 'id');
@@ -77,8 +74,8 @@ class FakeDateTimeZoneSourceBuilder {
   /// Gets the dictionary mapping BCL [TimeZoneInfo] IDs to the canonical IDs
   /// served within the provider being built.
   ///
-  /// <value>The dictionary mapping BCL IDs to the canonical IDs served within the provider
-  /// being built.</value>
+  /// The dictionary mapping BCL IDs to the canonical IDs served within the provider
+  /// being built.
   Map<String, String> get BclIdsToZoneIds => _bclIdsToZoneIds;
 
   /// Gets the list of zones, exposed as a property for use when a test needs to set properties as

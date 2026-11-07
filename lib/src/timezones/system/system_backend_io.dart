@@ -1,6 +1,6 @@
 // Use of this source code is governed by the Apache License 2.0, as found in the LICENSE.txt file.
 
-import 'package:universal_io/io.dart' as io;
+import 'dart:io' as io;
 
 import 'android_tzdata_backend.dart';
 import 'system_time_zone_backend.dart';
