@@ -1,0 +1,13 @@
+name: system_source_checks
+description: >-
+  Platform-agnostic SystemDateTimeZoneSource checks, shared by Time Machine's
+  tests and the Flutter test app. Only used by CI.
+publish_to: none
+
+environment:
+  sdk: ^3.3.0
+
+dependencies:
+  matcher: any
+  time_machine2:
+    path: ../..

@@ -9,9 +9,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:system_source_checks/system_source_checks.dart';
 import 'package:time_machine2/time_machine2.dart';
-
-import '../../../test/system_source/checks.dart';
 
 const _expectedZone = String.fromEnvironment(
   'TIME_MACHINE_EXPECT_SYSTEM_TIME_ZONE',
@@ -23,7 +22,9 @@ void main() {
   setUpAll(() => TimeMachine.initialize({'rootBundle': rootBundle}));
 
   final platform = SystemSourcePlatform(
-    name: 'Flutter on ${defaultTargetPlatform.name}',
+    name: 'Flutter on ${kIsWeb ? 'web' : defaultTargetPlatform.name}',
+    // Windows' own time zone database uses Windows IDs.
+    usesWindowsIds: !kIsWeb && defaultTargetPlatform == TargetPlatform.windows,
     expectedSystemDefaultId: _expectedZone.isEmpty ? null : _expectedZone,
   );
 

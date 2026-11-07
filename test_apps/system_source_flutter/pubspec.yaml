@@ -1,16 +1,18 @@
 name: system_source_test_app
-description: "Runs the SystemDateTimeZoneSource checks on Android and iOS."
+description: "Runs the SystemDateTimeZoneSource checks on every Flutter platform."
 publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.0
+  sdk: ^3.13.7
 
 dependencies:
   flutter:
     sdk: flutter
   time_machine2:
     path: ../..
+  system_source_checks:
+    path: ../system_source_checks
 
 dev_dependencies:
   flutter_test:
@@ -18,9 +20,6 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  # Used by ../../test/system_source/checks.dart; the version comes from
-  # flutter_test.
-  matcher: any
 
 flutter:
   uses-material-design: true
