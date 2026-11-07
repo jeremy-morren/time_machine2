@@ -62,6 +62,12 @@ class ZonedDateTimePattern implements IPattern<ZonedDateTime> {
   /// in the pattern are taken from the template.
   final ZonedDateTime templateValue;
 
+  /// Maximum two-digit-year in the template to treat as the current century.
+  /// If the value parsed is higher than this, the result is adjusted to the
+  /// previous century. This value defaults to 30. To create a pattern with a
+  /// different value, use [withTwoDigitYearMax].
+  final int twoDigitYearMax;
+
   /// Gets the resolver which is used to map local date/times to zoned date/times,
   /// handling skipped and ambiguous times appropriately (where the offset isn't specified in the pattern).
   /// This may be null, in which case the pattern can only be used for formatting (not parsing).
@@ -72,8 +78,14 @@ class ZonedDateTimePattern implements IPattern<ZonedDateTime> {
   /// only be used for formatting (not parsing).
   final DateTimeZoneProvider? zoneProvider;
 
-  const ZonedDateTimePattern._(this.patternText, this._formatInfo,
-      this.templateValue, this.resolver, this.zoneProvider, this._pattern);
+  const ZonedDateTimePattern._(
+      this.patternText,
+      this._formatInfo,
+      this.templateValue,
+      this.resolver,
+      this.zoneProvider,
+      this.twoDigitYearMax,
+      this._pattern);
 
   // todo: transform to ParseAsync and ParseSync?
   /// Parses the given text value according to the rules of this pattern.
@@ -122,14 +134,15 @@ class ZonedDateTimePattern implements IPattern<ZonedDateTime> {
       TimeMachineFormatInfo formatInfo,
       ZoneLocalMappingResolver? resolver,
       DateTimeZoneProvider? zoneProvider,
-      ZonedDateTime templateValue) {
+      ZonedDateTime templateValue,
+      [int twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax]) {
     Preconditions.checkNotNull(patternText, 'patternText');
     Preconditions.checkNotNull(formatInfo, 'formatInfo');
-    var pattern =
-        ZonedDateTimePatternParser(templateValue, resolver, zoneProvider)
-            .parsePattern(patternText, formatInfo);
+    var pattern = ZonedDateTimePatternParser(
+            templateValue, resolver, zoneProvider, twoDigitYearMax)
+        .parsePattern(patternText, formatInfo);
     return ZonedDateTimePattern._(patternText, formatInfo, templateValue,
-        resolver, zoneProvider, pattern);
+        resolver, zoneProvider, twoDigitYearMax, pattern);
   }
 
   // todo: This needs to be a factory
@@ -211,8 +224,13 @@ class ZonedDateTimePattern implements IPattern<ZonedDateTime> {
   /// * [patternText]: The pattern text to use in the new pattern.
   ///
   /// Returns: A new pattern with the given pattern text.
-  ZonedDateTimePattern withPatternText(String patternText) =>
-      _create(patternText, _formatInfo, resolver, zoneProvider, templateValue);
+  ZonedDateTimePattern withPatternText(String patternText) => _create(
+      patternText,
+      _formatInfo,
+      resolver,
+      zoneProvider,
+      templateValue,
+      twoDigitYearMax);
 
   /// Creates a pattern for the same original pattern text as this pattern, but with the specified
   /// localization information.
@@ -221,7 +239,8 @@ class ZonedDateTimePattern implements IPattern<ZonedDateTime> {
   ///
   /// Returns: A new pattern with the given localization information.
   ZonedDateTimePattern _withFormatInfo(TimeMachineFormatInfo formatInfo) =>
-      _create(patternText, formatInfo, resolver, zoneProvider, templateValue);
+      _create(patternText, formatInfo, resolver, zoneProvider, templateValue,
+          twoDigitYearMax);
 
   /// Creates a pattern for the same original pattern text as this pattern, but with the specified
   /// culture.
@@ -241,8 +260,8 @@ class ZonedDateTimePattern implements IPattern<ZonedDateTime> {
   ZonedDateTimePattern withResolver(ZoneLocalMappingResolver? resolver) =>
       this.resolver == resolver
           ? this
-          : _create(
-              patternText, _formatInfo, resolver, zoneProvider, templateValue);
+          : _create(patternText, _formatInfo, resolver, zoneProvider,
+              templateValue, twoDigitYearMax);
 
   /// Creates a pattern for the same original pattern text as this pattern, but with the specified
   /// time zone provider.
@@ -258,7 +277,7 @@ class ZonedDateTimePattern implements IPattern<ZonedDateTime> {
       newZoneProvider == zoneProvider
           ? this
           : _create(patternText, _formatInfo, resolver, newZoneProvider,
-              templateValue);
+              templateValue, twoDigitYearMax);
 
   /// Creates a pattern for the same original pattern text as this pattern, but with the default
   /// time zone provider.
@@ -279,7 +298,7 @@ class ZonedDateTimePattern implements IPattern<ZonedDateTime> {
       newTemplateValue == templateValue
           ? this
           : _create(patternText, _formatInfo, resolver, zoneProvider,
-              newTemplateValue);
+              newTemplateValue, twoDigitYearMax);
 
   /// Creates a pattern like this one, but with the template value modified to use
   /// the specified calendar system.
@@ -295,4 +314,22 @@ class ZonedDateTimePattern implements IPattern<ZonedDateTime> {
   /// Returns: A new pattern with a template value in the specified calendar system.
   ZonedDateTimePattern withCalendar(CalendarSystem calendar) =>
       withTemplateValue(templateValue.withCalendar(calendar));
+
+  /// Creates a pattern like this one, but with a different [twoDigitYearMax]
+  /// value.
+  ///
+  /// * [twoDigitYearMax]: The value to use for [twoDigitYearMax] in the new
+  ///   pattern, in the range 0-99 inclusive.
+  ///
+  /// Returns: A new pattern with the specified maximum two-digit-year
+  /// value.
+  ///
+  /// * [RangeError]: [twoDigitYearMax] is outside the range 0-99.
+  ZonedDateTimePattern withTwoDigitYearMax(int twoDigitYearMax) => _create(
+      patternText,
+      _formatInfo,
+      resolver,
+      zoneProvider,
+      templateValue,
+      twoDigitYearMax);
 }

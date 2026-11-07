@@ -3,6 +3,8 @@
 // Use of this source code is governed by the Apache License 2.0, as found in the LICENSE.txt file.
 
 // import 'package:quiver_hashcode/hashcode.dart';
+import 'dart:collection';
+
 import 'package:time_machine2/src/time_machine_internal.dart';
 
 /// An interval between two dates.
@@ -12,8 +14,12 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 /// The end date is deemed to be part of the range, as this matches many real life uses of
 /// date ranges. For example, if someone says "I'm going to be on holiday from Monday to Friday," they
 /// usually mean that Friday is part of their holiday.
+///
+/// A date interval is an [Iterable] of the dates it contains, in order from
+/// [start] to [end] (Noda Time's `DateInterval` is an
+/// `IEnumerable<LocalDate>`).
 @immutable
-class DateInterval {
+class DateInterval with IterableMixin<LocalDate> {
   /// Gets the start date of the interval.
   final LocalDate start;
 
@@ -71,13 +77,56 @@ class DateInterval {
   ///
   /// Returns: `true` if [date] is within this interval; `false` otherwise.
   ///
+  /// As this is [Iterable.contains], [date] may be any object: values other
+  /// than a [LocalDate] are never contained.
+  ///
   /// * [ArgumentException]: [date] is not in the same
   /// calendar as the start and end date of this interval.
-  bool contains(LocalDate date) {
-    // if (date == null) throw ArgumentError.notNull('date');
+  @override
+  bool contains(Object? date) {
+    if (date is! LocalDate) return false;
     Preconditions.checkArgument(date.calendar == start.calendar, 'date',
         "The date to check must be in the same calendar as the start and end dates");
     return start <= date && date <= end;
+  }
+
+  /// An iterator over the dates in this interval, from [start] to [end]
+  /// inclusive.
+  @override
+  Iterator<LocalDate> get iterator => _dates().iterator;
+
+  Iterable<LocalDate> _dates() sync* {
+    var date = start;
+    while (true) {
+      yield date;
+      if (date == end) return;
+      date = date.addDays(1);
+    }
+  }
+
+  /// A date interval is never empty: it always contains at least its start
+  /// date.
+  @override
+  bool get isEmpty => false;
+
+  @override
+  bool get isNotEmpty => true;
+
+  /// The first date in the interval: [start].
+  @override
+  LocalDate get first => start;
+
+  /// The last date in the interval: [end].
+  @override
+  LocalDate get last => end;
+
+  /// The date [index] days after [start].
+  ///
+  /// * [RangeError]: [index] is negative or not less than [length].
+  @override
+  LocalDate elementAt(int index) {
+    RangeError.checkValidIndex(index, this, 'index', length);
+    return start.addDays(index);
   }
 
   /// Checks whether the given interval is within this interval. This requires that the start date of the specified
@@ -98,6 +147,7 @@ class DateInterval {
   }
 
   /// Gets the length of this date interval in days. This will always be at least 1.
+  @override
   int get length =>
       // Period.DaysBetween will give us the exclusive result, so we need to add 1
       // to include the end date.

@@ -75,13 +75,13 @@ final LocalDateTime YearAfterTransition = LocalDateTime(2001, 1, 1, 0, 0, 0);
 
 final SingleTransitionDateTimeZone ZoneWithGap =
     SingleTransitionDateTimeZone(Transition, Minus5, Plus10);
-final ZoneInterval IntervalBeforeGap = ZoneWithGap.EarlyInterval;
-final ZoneInterval IntervalAfterGap = ZoneWithGap.LateInterval;
+final ZoneInterval IntervalBeforeGap = ZoneWithGap.earlyInterval;
+final ZoneInterval IntervalAfterGap = ZoneWithGap.lateInterval;
 
 final SingleTransitionDateTimeZone ZoneWithAmbiguity =
     SingleTransitionDateTimeZone(Transition, Plus10, Minus5);
-final ZoneInterval IntervalBeforeAmbiguity = ZoneWithAmbiguity.EarlyInterval;
-final ZoneInterval IntervalAfterAmbiguity = ZoneWithAmbiguity.LateInterval;
+final ZoneInterval IntervalBeforeAmbiguity = ZoneWithAmbiguity.earlyInterval;
+final ZoneInterval IntervalAfterAmbiguity = ZoneWithAmbiguity.lateInterval;
 
 // Time zone with an ambiguity
 void ZoneWithAmbiguity_NearStartOfTime() {
@@ -194,7 +194,7 @@ void TrickyCase() {
   var zone = SingleTransitionDateTimeZone(
       Transition, Offset.hours(3), Offset.hours(5));
   var mapping = zone.mapLocal(LocalDateTime(2000, 1, 1, 1, 0, 0));
-  CheckMapping(mapping, zone.EarlyInterval, zone.EarlyInterval, 1);
+  CheckMapping(mapping, zone.earlyInterval, zone.earlyInterval, 1);
 }
 
 void CheckMapping(ZoneLocalMapping mapping, ZoneInterval earlyInterval,

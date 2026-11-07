@@ -17,6 +17,7 @@ void main() {
   test('DefaultValueIsJanuary1st', DefaultValueIsJanuary1st);
   test('Comparision', Comparision);
   test('Operators', Operators);
+  test('EqualityAndComparision', EqualityAndComparision);
   test('ToStringTest', ToStringTest);
 }
 
@@ -76,4 +77,42 @@ void ToStringTest() {
   expect('02-10', AnnualDate(2, 10).toString());
   expect('12-01', AnnualDate(12, 1).toString());
   expect('12-20', AnnualDate(12, 20).toString());
+}
+
+void EqualityAndComparision() {
+  var value = AnnualDate(6, 19);
+  var equalValue = AnnualDate(6, 19);
+  var greaterValue1 = AnnualDate(6, 20);
+  var greaterValue2 = AnnualDate(7, 1);
+
+  TestHelper.TestEqualsStruct(
+      value, equalValue, [greaterValue1, greaterValue2]);
+  TestHelper.TestCompareToStruct(
+      value, equalValue, [greaterValue1, greaterValue2]);
+  // TestHelper.TestNonGenericCompareTo: Comparable without a type argument.
+  Comparable nonGeneric = value;
+  expect(nonGeneric.compareTo(equalValue), 0);
+  expect(nonGeneric.compareTo(greaterValue1), lessThan(0));
+  // TestHelper.TestOperatorComparisonEquality and TestOperatorComparison,
+  // written out.
+  expect(value == equalValue, isTrue);
+  expect(value != equalValue, isFalse);
+  var previous = value;
+  for (var greater in [greaterValue1, greaterValue2]) {
+    expect(previous == greater, isFalse);
+    expect(previous != greater, isTrue);
+    expect(previous < greater, isTrue);
+    expect(previous <= greater, isTrue);
+    expect(previous > greater, isFalse);
+    expect(previous >= greater, isFalse);
+    expect(greater < previous, isFalse);
+    expect(greater <= previous, isFalse);
+    expect(greater > previous, isTrue);
+    expect(greater >= previous, isTrue);
+    previous = greater;
+  }
+  expect(value < equalValue, isFalse);
+  expect(value <= equalValue, isTrue);
+  expect(value > equalValue, isFalse);
+  expect(value >= equalValue, isTrue);
 }

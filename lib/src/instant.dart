@@ -219,12 +219,40 @@ class Instant implements Comparable<Instant> {
   // int get daysSinceEpoch => timeSinceEpoch.inDays; //days;
   // int get nanosecondOfDay => epochDayTime.inNanoseconds; // timeSinceEpoch.nanosecondOfFloorDay; //nanosecondOfDay;
 
-  int get epochSeconds => timeSinceEpoch.totalSeconds
-      .floor(); // epochDay*TimeConstants.secondsPerDay + timeOfEpochDay.inSeconds;
-  int get epochMilliseconds => timeSinceEpoch.totalMilliseconds
-      .floor(); // epochDay*TimeConstants.millisecondsPerDay + timeOfEpochDay.inMilliseconds;
-  int get epochMicroseconds => timeSinceEpoch.totalMicroseconds.floor();
+  // These are computed from the day and the nanosecond of the day, as Noda
+  // Time does, rather than by flooring Time.totalSeconds (etc.): that double
+  // can't represent instants near the extremes exactly, so for example
+  // Instant.maxValue.epochSeconds would round up to the next second.
+  int get epochSeconds =>
+      epochDay * TimeConstants.secondsPerDay +
+      epochDayTime.inNanoseconds ~/ TimeConstants.nanosecondsPerSecond;
+  int get epochMilliseconds =>
+      epochDay * TimeConstants.millisecondsPerDay +
+      epochDayTime.inNanoseconds ~/ TimeConstants.nanosecondsPerMillisecond;
+  int get epochMicroseconds =>
+      epochDay * TimeConstants.microsecondsPerDay +
+      epochDayTime.inNanoseconds ~/ TimeConstants.nanosecondsPerMicrosecond;
   int get epochNanoseconds => timeSinceEpoch.inNanoseconds;
+
+  /// The number of seconds since the Unix epoch, and the nanosecond within
+  /// that second, so that the value can be represented without loss of
+  /// precision (even on the web, where [epochNanoseconds] can't represent most
+  /// instants exactly).
+  ///
+  /// [seconds] is rounded towards negative infinity, as [epochSeconds] is,
+  /// so [nanoseconds] is always in the range `[0, 999999999]`: the instant
+  /// one nanosecond before the epoch is `(seconds: -1, nanoseconds: 999999999)`.
+  ///
+  /// This is Noda Time's `Instant.ToUnixTimeSecondsAndNanoseconds()`.
+  ({int seconds, int nanoseconds}) get epochSecondsAndNanoseconds {
+    var nanosecondOfDay = epochDayTime.inNanoseconds;
+    return (
+      seconds: epochDay * TimeConstants.secondsPerDay +
+          nanosecondOfDay ~/ TimeConstants.nanosecondsPerSecond,
+      nanoseconds: nanosecondOfDay % TimeConstants.nanosecondsPerSecond
+    );
+  }
+
   bool get canEpochNanosecondsBeInteger =>
       timeSinceEpoch.canNanosecondsBeInteger;
   BigInt get epochNanosecondsAsBigInt => timeSinceEpoch.inNanosecondsAsBigInt;

@@ -28,6 +28,16 @@ abstract class ILocalDateTime {
 /// almost always indicates a bug in the calling code.
 @immutable
 class LocalDateTime implements Comparable<LocalDateTime> {
+  /// The maximum (latest) date and time representable in the ISO calendar
+  /// system: the last nanosecond of [LocalDate.maxIsoValue].
+  static LocalDateTime get maxIsoValue =>
+      LocalDateTime.localDateAtTime(LocalDate.maxIsoValue, LocalTime.maxValue);
+
+  /// The minimum (earliest) date and time representable in the ISO calendar
+  /// system: midnight at the start of [LocalDate.minIsoValue].
+  static LocalDateTime get minIsoValue =>
+      LocalDateTime.localDateAtTime(LocalDate.minIsoValue, LocalTime.minValue);
+
   /// Gets the date portion of this local date and time as a [LocalDate] in the same calendar system as this value.
   final LocalDate calendarDate;
 

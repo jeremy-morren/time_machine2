@@ -360,6 +360,86 @@ class OffsetDateTime {
       toInstant() - time,
       offset); // new Instant.trusted(ToElapsedTimeSinceEpoch()
 
+  /// Returns the result of adding a number of hours to this offset date and
+  /// time. The offset is preserved.
+  ///
+  /// * [hours]: The number of hours to add.
+  ///
+  /// Returns: The result of adding the given number of hours.
+  OffsetDateTime addHours(int hours) => add(Time(hours: hours));
+
+  /// Returns the result of subtracting a number of hours from this offset
+  /// date and time. See [addHours].
+  OffsetDateTime subtractHours(int hours) => subtract(Time(hours: hours));
+
+  /// Returns the result of adding a number of minutes to this offset date and
+  /// time. The offset is preserved.
+  ///
+  /// * [minutes]: The number of minutes to add.
+  ///
+  /// Returns: The result of adding the given number of minutes.
+  OffsetDateTime addMinutes(int minutes) => add(Time(minutes: minutes));
+
+  /// Returns the result of subtracting a number of minutes from this offset
+  /// date and time. See [addMinutes].
+  OffsetDateTime subtractMinutes(int minutes) =>
+      subtract(Time(minutes: minutes));
+
+  /// Returns the result of adding a number of seconds to this offset date and
+  /// time. The offset is preserved.
+  ///
+  /// * [seconds]: The number of seconds to add.
+  ///
+  /// Returns: The result of adding the given number of seconds.
+  OffsetDateTime addSeconds(int seconds) => add(Time(seconds: seconds));
+
+  /// Returns the result of subtracting a number of seconds from this offset
+  /// date and time. See [addSeconds].
+  OffsetDateTime subtractSeconds(int seconds) =>
+      subtract(Time(seconds: seconds));
+
+  /// Returns the result of adding a number of milliseconds to this offset
+  /// date and time. The offset is preserved.
+  ///
+  /// * [milliseconds]: The number of milliseconds to add.
+  ///
+  /// Returns: The result of adding the given number of milliseconds.
+  OffsetDateTime addMilliseconds(int milliseconds) =>
+      add(Time(milliseconds: milliseconds));
+
+  /// Returns the result of subtracting a number of milliseconds from this
+  /// offset date and time. See [addMilliseconds].
+  OffsetDateTime subtractMilliseconds(int milliseconds) =>
+      subtract(Time(milliseconds: milliseconds));
+
+  /// Returns the result of adding a number of microseconds to this offset
+  /// date and time. The offset is preserved.
+  ///
+  /// * [microseconds]: The number of microseconds to add.
+  ///
+  /// Returns: The result of adding the given number of microseconds.
+  OffsetDateTime addMicroseconds(int microseconds) =>
+      add(Time(microseconds: microseconds));
+
+  /// Returns the result of subtracting a number of microseconds from this
+  /// offset date and time. See [addMicroseconds].
+  OffsetDateTime subtractMicroseconds(int microseconds) =>
+      subtract(Time(microseconds: microseconds));
+
+  /// Returns the result of adding a number of nanoseconds to this offset date
+  /// and time. The offset is preserved.
+  ///
+  /// * [nanoseconds]: The number of nanoseconds to add.
+  ///
+  /// Returns: The result of adding the given number of nanoseconds.
+  OffsetDateTime addNanoseconds(int nanoseconds) =>
+      add(Time(nanoseconds: nanoseconds));
+
+  /// Returns the result of subtracting a number of nanoseconds from this
+  /// offset date and time. See [addNanoseconds].
+  OffsetDateTime subtractNanoseconds(int nanoseconds) =>
+      subtract(Time(nanoseconds: nanoseconds));
+
   // dynamic operator -(dynamic value) => value is Time ? minusSpan(value) : value is OffsetDateTime ? minusOffsetDateTime(value) : throw new TypeError();
   // static Duration operator -(OffsetDateTime end, OffsetDateTime start) => end.ToInstant() - start.ToInstant();
 

@@ -109,4 +109,23 @@ class DateAdjusters {
     }
     return (date) => date.previous(dayOfWeek);
   }
+
+  /// Creates a date adjuster to add the specified period to the date.
+  ///
+  /// This is the adjuster equivalent of [LocalDate.add].
+  ///
+  /// * [period]: The period to add when the adjuster is invoked. Must not
+  ///   contain any (non-zero) time units.
+  ///
+  /// Returns: An adjuster which adds the specified period.
+  ///
+  /// * [ArgumentError]: [period] contains a time unit.
+  static LocalDate Function(LocalDate) addPeriod(Period period) {
+    Preconditions.checkNotNull(period, 'period');
+    // Perform this validation eagerly. It will be performed on each invocation as well,
+    // but it's good to throw an exception now rather than waiting for the first invocation.
+    Preconditions.checkArgument(!period.hasTimeComponent, 'period',
+        'Cannot add a period with a time component to a date');
+    return (date) => date + period;
+  }
 }

@@ -9,10 +9,11 @@ import 'time_machine_testing.dart';
 
 void main() {
   test('GetCurrent', GetCurrent);
+  test('Properties', Properties);
 }
 
 final DateTimeZone SampleZone =
-    SingleTransitionDateTimeZone.around(TimeConstants.unixEpoch, 1, 2);
+    SingleTransitionDateTimeZone.hours(TimeConstants.unixEpoch, 1, 2);
 
 void GetCurrent() {
   var julian = CalendarSystem.julian;
@@ -29,4 +30,13 @@ void GetCurrent() {
       zonedClock.getCurrentOffsetDateTime());
   expect(LocalDate(1969, 12, 19, julian), zonedClock.getCurrentDate());
   expect(LocalTime(2, 0, 0), zonedClock.getCurrentTimeOfDay());
+}
+
+void Properties() {
+  var calendar = CalendarSystem.julian;
+  var clock = FakeClock(TimeConstants.unixEpoch);
+  var zonedClock = clock.inZone(SampleZone, calendar);
+  expect(identical(zonedClock.clock, clock), isTrue);
+  expect(identical(zonedClock.calendar, calendar), isTrue);
+  expect(identical(zonedClock.zone, SampleZone), isTrue);
 }

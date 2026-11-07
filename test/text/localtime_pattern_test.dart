@@ -29,6 +29,60 @@ Future main() async {
     test('WithTemplateValue_PropertyFetch',
         fixture.WithTemplateValue_PropertyFetch);
     parameterizedTest(
+        'HourIso_Roundtrip', ['00', '23', '05'], fixture.HourIso_Roundtrip,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest('HourIso_Invalid', ['-05', '05:00', '5', '24', '99'],
+        fixture.HourIso_Invalid,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest('HourMinuteIso_Roundtrip', ['00:31', '23:10'],
+        fixture.HourMinuteIso_Roundtrip,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
+        'HourMinuteIso_Invalid',
+        ['-05:00', '5:00', '24:00', '99:00', '10:60', '10:70'],
+        fixture.HourMinuteIso_Invalid,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
+        'VariablePrecision_Valid',
+        [
+          [
+            '03',
+            ['03:00', '03:00:00']
+          ],
+          [
+            '12',
+            ['12:00', '12:00:00', '12:00:00.000000', '12:00:00.000000000']
+          ],
+          [
+            '12:01',
+            ['12:01:00', '12:01:00.000000']
+          ],
+          [
+            '12:00:01',
+            ['12:00:01.000000']
+          ],
+          [
+            '12:00:01.123',
+            ['12:00:01.123000', '12:00:01.123000000']
+          ],
+          ['12:00:01.123456789', <String>[]],
+        ],
+        fixture.VariablePrecision_Valid,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
+        'VariablePrecision_Invalid',
+        [
+          '24:00',
+          '24',
+          '25',
+          '25:61',
+          '12:23:45.0000000000', // Too many fractional digits
+          '05:63',
+          '05:00:63',
+        ],
+        fixture.VariablePrecision_Invalid,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
         'InvalidPatterns', fixture.InvalidPatternData, fixture.InvalidPatterns,
         customDescriptionBuilder: describeArguments);
     parameterizedTest(
@@ -787,6 +841,50 @@ class LocalTimePatternTest extends PatternTestBase<LocalTime> {
       ..text = '14.15.16.789123456'
       ..pattern = 'r',
 
+    Data.hms(14, 15, 16, 789)
+      ..standardPattern = LocalTimePattern.extendedIso
+      ..standardPatternCode = 'LocalTimePattern.extendedIso'
+      ..culture = TestCultures.DotTimeSeparator
+      ..text = '14:15:16.789'
+      ..pattern = 'o',
+    Data.hms(14, 15, 16, 789)
+      ..standardPattern = LocalTimePattern.extendedIso
+      ..standardPatternCode = 'LocalTimePattern.extendedIso'
+      ..culture = TestCultures.EnUs
+      ..text = '14:15:16.789'
+      ..pattern = 'o',
+    Data.hms(14, 15, 16)
+      ..standardPattern = LocalTimePattern.extendedIso
+      ..standardPatternCode = 'LocalTimePattern.extendedIso'
+      ..culture = Culture.invariant
+      ..text = '14:15:16'
+      ..pattern = 'o',
+
+    Data.hms(14, 15, 16, 789)
+      ..standardPattern = LocalTimePattern.longExtendedIso
+      ..standardPatternCode = 'LocalTimePattern.longExtendedIso'
+      ..culture = TestCultures.DotTimeSeparator
+      ..text = '14:15:16.789000000'
+      ..pattern = 'O',
+    Data.hms(14, 15, 16, 789)
+      ..standardPattern = LocalTimePattern.longExtendedIso
+      ..standardPatternCode = 'LocalTimePattern.longExtendedIso'
+      ..culture = TestCultures.EnUs
+      ..text = '14:15:16.789000000'
+      ..pattern = 'O',
+    Data.hms(14, 15, 16)
+      ..standardPattern = LocalTimePattern.longExtendedIso
+      ..standardPatternCode = 'LocalTimePattern.longExtendedIso'
+      ..culture = Culture.invariant
+      ..text = '14:15:16.000000000'
+      ..pattern = 'O',
+    Data.hms(14, 15, 16)
+      ..standardPattern = LocalTimePattern.generalIso
+      ..standardPatternCode = 'LocalTimePattern.generalIso'
+      ..culture = Culture.invariant
+      ..text = '14:15:16'
+      ..pattern = 'HH:mm:ss',
+
     // ------------ Template value tests ----------
     // Mixtures of 12 and 24 hour times
     Data.hms(18, 0, 0)
@@ -1076,6 +1174,53 @@ AssertBclNodaEquality(culture, culture.DateTimeFormat.ShortTimePattern);
     var pattern = LocalTimePattern.createWithInvariantCulture('HH')
         .withTemplateValue(newValue);
     expect(newValue, pattern.templateValue);
+  }
+
+  void HourIso_Roundtrip(String text) {
+    var result = LocalTimePattern.hourIso.parse(text);
+    expect(result.success, isTrue);
+    var time = result.value;
+    expect(time.minuteOfHour, 0);
+    expect(time.secondOfMinute, 0);
+    expect(time.nanosecondOfSecond, 0);
+    var formatted = LocalTimePattern.hourIso.format(time);
+    expect(formatted, text);
+  }
+
+  void HourIso_Invalid(String text) {
+    var result = LocalTimePattern.hourIso.parse(text);
+    expect(result.success, isFalse);
+  }
+
+  void HourMinuteIso_Roundtrip(String text) {
+    var result = LocalTimePattern.hourMinuteIso.parse(text);
+    expect(result.success, isTrue);
+    var time = result.value;
+    expect(time.secondOfMinute, 0);
+    expect(time.nanosecondOfSecond, 0);
+    var formatted = LocalTimePattern.hourMinuteIso.format(time);
+    expect(formatted, text);
+  }
+
+  void HourMinuteIso_Invalid(String text) {
+    var result = LocalTimePattern.hourMinuteIso.parse(text);
+    expect(result.success, isFalse);
+  }
+
+  void VariablePrecision_Valid(String canonical, List<String> alternatives) {
+    var pattern = LocalTimePattern.variablePrecisionIso;
+    for (var text in [canonical, ...alternatives]) {
+      var result = pattern.parse(text);
+      expect(result.success, isTrue, reason: text);
+      var time = result.value;
+      var formatted = pattern.format(time);
+      expect(formatted, canonical);
+    }
+  }
+
+  void VariablePrecision_Invalid(String text) {
+    var result = LocalTimePattern.variablePrecisionIso.parse(text);
+    expect(result.success, isFalse);
   }
 
 /*

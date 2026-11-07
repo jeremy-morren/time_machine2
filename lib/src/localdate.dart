@@ -481,6 +481,11 @@ class LocalDate implements Comparable<LocalDate> {
     return ZonedDateTime.atStartOfDay(this, zone);
   }
 
+  /// Creates a [YearMonth] value for the month containing this date.
+  ///
+  /// Returns: A year/month value containing this date.
+  YearMonth toYearMonth() => YearMonth(year, monthOfYear, calendar);
+
   /// Creates a new LocalDate representing the same physical date, but in a different calendar.
   /// The returned LocalDate is likely to have different field values to this one.
   /// For example, January 1st 1970 in the Gregorian calendar was December 19th 1969 in the Julian calendar.

@@ -36,6 +36,7 @@ class TimeMachineFormatInfo {
   FixedFormatInfoPatternParser<OffsetTime>? _offsetTimePatternParser;
   FixedFormatInfoPatternParser<ZonedDateTime>? _zonedDateTimePatternParser;
   FixedFormatInfoPatternParser<AnnualDate>? _annualDatePatternParser;
+  FixedFormatInfoPatternParser<YearMonth>? _yearMonthPatternParser;
 
   /// A TimeMachineFormatInfo wrapping the invariant culture.
   // Note: this must occur below the pattern parsers, to make type initialization work...
@@ -215,6 +216,11 @@ class TimeMachineFormatInfo {
               ZonedDateTimePatterns.defaultTemplateValue,
               Resolvers.strictResolver,
               null));
+
+  FixedFormatInfoPatternParser<YearMonth> get yearMonthPatternParser =>
+      _yearMonthPatternParser = _ensureFixedFormatInitialized(
+          _yearMonthPatternParser,
+          () => YearMonthPatternParser(YearMonthPatterns.defaultTemplateValue));
 
   FixedFormatInfoPatternParser<AnnualDate> get annualDatePatternParser =>
       _annualDatePatternParser = _ensureFixedFormatInitialized(

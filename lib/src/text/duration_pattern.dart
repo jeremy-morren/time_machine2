@@ -9,6 +9,8 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 abstract class TimePatterns {
   static final TimePattern roundtripPatternImpl =
       TimePattern.createWithInvariantCulture('-D:hh:mm:ss.FFFFFFFFF');
+  static final TimePattern jsonRoundtripPatternImpl =
+      TimePattern.createWithInvariantCulture('-H:mm:ss.FFFFFFFFF');
   static String format(Time time, String? patternText, Culture? culture) =>
       TimeMachineFormatInfo.getInstance(culture)
           .timePatternParser
@@ -22,6 +24,12 @@ class TimePattern implements IPattern<Time> {
   /// Gets the general pattern for Spans using the invariant culture, with a format string of '-D:hh:mm:ss.FFFFFFFFF'.
   /// This pattern round-trips.
   static TimePattern get roundtrip => TimePatterns.roundtripPatternImpl;
+
+  /// A pattern for times using the invariant culture, with a format string of
+  /// `-H:mm:ss.FFFFFFFFF`: the total number of hours, so there is no day
+  /// component. This pattern round-trips, and is the format Json.NET and
+  /// System.Text.Json use for Noda Time durations.
+  static TimePattern get jsonRoundtrip => TimePatterns.jsonRoundtripPatternImpl;
 
   final IPattern<Time> _pattern;
 

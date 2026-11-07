@@ -19,6 +19,24 @@ void main() {
     test('CreateWithCurrentCulture', fixture.CreateWithCurrentCulture);
     test('Create', fixture.Create);
     parameterizedTest(
+        'WithTwoDigitYearMax',
+        [
+          [0, '00-01-01T00:00:00', 2000],
+          [0, '01-01-01T00:00:00', 1901],
+          [50, '49-01-01T00:00:00', 2049],
+          [50, '50-01-01T00:00:00', 2050],
+          [50, '51-01-01T00:00:00', 1951],
+          [99, '00-01-01T00:00:00', 2000],
+          [99, '99-01-01T00:00:00', 2099],
+        ],
+        fixture.WithTwoDigitYearMax,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
+        'WithTwoDigitYearMax_Invalid',
+        [-1, 100, Platform.int32MinValue, Platform.int32MaxValue],
+        fixture.WithTwoDigitYearMax_Invalid,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
         'InvalidPatterns', fixture.InvalidPatternData, fixture.InvalidPatterns,
         customDescriptionBuilder: describeArguments);
     parameterizedTest(
@@ -92,7 +110,13 @@ class InstantPatternTest extends PatternTestBase<Instant> {
   List<Data> ParseOnlyData = [];
 
   @internal
-  List<Data> FormatOnlyData = [];
+  List<Data> FormatOnlyData = [
+    // Custom template with "wrong" year; this won't roundtrip
+    Data.fromUtc(1970, 6, 19, 12, 0, 0)
+      ..template = Instant.utc(1950, 1, 1, 0, 0)
+      ..text = '06-19 12:00'
+      ..pattern = 'MM-dd HH:mm',
+  ];
 
   void IsoHandlesCommas() {
     Instant expected = Instant.utc(2012, 1, 1, 0, 0) + Time.epsilon;
@@ -121,6 +145,19 @@ class InstantPatternTest extends PatternTestBase<Instant> {
 
   // @Test()
   // void ParseNull() => AssertParseNull(InstantPattern.general);
+
+  void WithTwoDigitYearMax(int twoDigitYearMax, String text, int expectedYear) {
+    var pattern =
+        InstantPattern.createWithInvariantCulture("yy-MM-dd'T'HH:mm:ss")
+            .withTwoDigitYearMax(twoDigitYearMax);
+    var value = pattern.parse(text).value;
+    expect(value.inUtc().year, expectedYear);
+  }
+
+  void WithTwoDigitYearMax_Invalid(int twoDigitYearMax) {
+    expect(() => InstantPattern.general.withTwoDigitYearMax(twoDigitYearMax),
+        throwsRangeError);
+  }
 
   /// Common test data for both formatting and parsing. A test should be placed here unless is truly
   /// cannot be run both ways. This ensures that as many round-trip type tests are performed as possible.
@@ -153,6 +190,12 @@ class InstantPatternTest extends PatternTestBase<Instant> {
       ..standardPatternCode = 'InstantPattern.general'
       ..text = '2012-01-31T17:36:45Z'
       ..pattern = "uuuu-MM-ddTHH:mm:ss'Z'",
+
+    // Custom template
+    Data.fromUtc(1950, 6, 19, 12, 0, 0)
+      ..template = Instant.utc(1950, 1, 1, 0, 0)
+      ..text = '06-19 12:00'
+      ..pattern = 'MM-dd HH:mm',
   ];
 
   @internal
@@ -180,5 +223,6 @@ class InstantPatternTest extends PatternTestBase<Instant> {
   @override
   IPattern<Instant> CreatePattern() =>
       InstantPattern.createWithInvariantCulture(super.pattern)
+          .withTemplateValue(template)
           .withCulture(culture);
 }

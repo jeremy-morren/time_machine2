@@ -4,15 +4,11 @@
 
 import 'package:time_machine2/src/time_machine_internal.dart';
 
-/// Maximum two-digit-year in the template to treat as the current century.
-/// (One day we may want to make this configurable, but it feels very low
-/// priority.)
-const int _twoDigitYearMax = 30;
-
 /// Parser for patterns of [LocalDate] values.
 @internal
 class LocalDatePatternParser implements IPatternParser<LocalDate> {
   final LocalDate _templateValue;
+  final int _twoDigitYearMax;
 
   // todo: was Map<Char
   final Map<String, CharacterHandler<LocalDate, LocalDateParseBucket>>
@@ -53,7 +49,13 @@ class LocalDatePatternParser implements IPatternParser<LocalDate> {
         (date) => date.era, (bucket) => bucket),
   };
 
-  LocalDatePatternParser(this._templateValue);
+  /// * [twoDigitYearMax]: Maximum two-digit-year in the template to treat as
+  ///   the current century, in the range 0-99 inclusive.
+  LocalDatePatternParser(this._templateValue,
+      [this._twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax]) {
+    Preconditions.checkArgumentRange(
+        'twoDigitYearMax', _twoDigitYearMax, 0, 99);
+  }
 
   // Note: to implement the interface. It does no harm, and it's simpler than using explicit
   // interface implementation.
@@ -77,7 +79,8 @@ class LocalDatePatternParser implements IPatternParser<LocalDate> {
                 ? LocalDatePatterns.isoPatternText
                 : LocalDatePatterns.fullRoundtripPatternText,
             formatInfo,
-            LocalDatePatterns.defaultTemplateValue);
+            LocalDatePatterns.defaultTemplateValue,
+            LocalDatePatterns.defaultTwoDigitYearMax);
       }
       String? newPatternText =
           _expandStandardFormatPattern(patternText, formatInfo);
@@ -89,13 +92,17 @@ class LocalDatePatternParser implements IPatternParser<LocalDate> {
       patternText = newPatternText;
     }
 
-    return _parseNoStandardExpansion(patternText, formatInfo, _templateValue);
+    return _parseNoStandardExpansion(
+        patternText, formatInfo, _templateValue, _twoDigitYearMax);
   }
 
-  IPattern<LocalDate> _parseNoStandardExpansion(String patternText,
-      TimeMachineFormatInfo formatInfo, LocalDate templateValue) {
+  IPattern<LocalDate> _parseNoStandardExpansion(
+      String patternText,
+      TimeMachineFormatInfo formatInfo,
+      LocalDate templateValue,
+      int twoDigitYearMax) {
     var patternBuilder = SteppedPatternBuilder<LocalDate, LocalDateParseBucket>(
-        formatInfo, () => LocalDateParseBucket(templateValue));
+        formatInfo, () => LocalDateParseBucket(templateValue, twoDigitYearMax));
     patternBuilder.parseCustomPattern(patternText, _patternCharacterHandlers);
     patternBuilder.validateUsedFields();
     return patternBuilder.build(templateValue);
@@ -122,6 +129,9 @@ class LocalDatePatternParser implements IPatternParser<LocalDate> {
 class LocalDateParseBucket extends ParseBucket<LocalDate> {
   final LocalDate templateValue;
 
+  /// Maximum two-digit-year in the template to treat as the current century.
+  final int twoDigitYearMax;
+
   CalendarSystem calendar;
   int year = 0;
   Era _era = Era.common;
@@ -131,7 +141,8 @@ class LocalDateParseBucket extends ParseBucket<LocalDate> {
   int dayOfMonth = 0;
   int dayOfWeek = 0;
 
-  LocalDateParseBucket(this.templateValue)
+  LocalDateParseBucket(this.templateValue,
+      [this.twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax])
       :
         // Only fetch this once.
         calendar = templateValue.calendar;
@@ -152,13 +163,21 @@ class LocalDateParseBucket extends ParseBucket<LocalDate> {
 
   @internal
   @override
-  ParseResult<LocalDate> calculateValue(PatternFields usedFields, String text) {
+  ParseResult<LocalDate> calculateValue(
+          PatternFields usedFields, String text) =>
+      calculateValueFor(usedFields, text, 'LocalDate');
+
+  /// Calculates the date, naming [eventualResultType] (the type the pattern
+  /// is for, such as `YearMonth`) in error messages.
+  ParseResult<LocalDate> calculateValueFor(
+      PatternFields usedFields, String text, String eventualResultType) {
     if (usedFields.hasAny(PatternFields.embeddedDate)) {
       return ParseResult.forValue<LocalDate>(
           LocalDate(year, monthOfYearNumeric, dayOfMonth, calendar));
     }
     // This will set Year if necessary
-    ParseResult<LocalDate>? failure = _determineYear(usedFields, text);
+    ParseResult<LocalDate>? failure =
+        _determineYear(usedFields, text, eventualResultType);
     if (failure != null) {
       return failure;
     }
@@ -209,17 +228,17 @@ class LocalDateParseBucket extends ParseBucket<LocalDate> {
   ///
   /// Phew.
   ParseResult<LocalDate>? _determineYear(
-      PatternFields usedFields, String text) {
+      PatternFields usedFields, String text, String eventualResultType) {
     if (usedFields.hasAny(PatternFields.year)) {
       if (year > calendar.maxYear || year < calendar.minYear) {
         return IParseResult.fieldValueOutOfRangePostParse<LocalDate>(
-            text, year, 'u', 'LocalDate');
+            text, year, 'u', eventualResultType);
       }
 
       if (usedFields.hasAny(PatternFields.era) &&
           _era != ICalendarSystem.getEra(calendar, year)) {
         return IParseResult.inconsistentValues<LocalDate>(
-            text, 'g', 'u', 'LocalDate');
+            text, 'g', 'u', eventualResultType);
       }
 
       if (usedFields.hasAny(PatternFields.yearOfEra)) {
@@ -230,7 +249,7 @@ class LocalDateParseBucket extends ParseBucket<LocalDate> {
         }
         if (yearOfEraFromYear != yearOfEra) {
           return IParseResult.inconsistentValues<LocalDate>(
-              text, 'y', 'u', 'LocalDate');
+              text, 'y', 'u', eventualResultType);
         }
       }
       return null;
@@ -246,7 +265,7 @@ class LocalDateParseBucket extends ParseBucket<LocalDate> {
       return usedFields.hasAny(PatternFields.era) &&
               _era != ICalendarSystem.getEra(calendar, year)
           ? IParseResult.inconsistentValues<LocalDate>(
-              text, 'g', 'u', 'LocalDate')
+              text, 'g', 'u', eventualResultType)
           : null;
     }
 
@@ -260,7 +279,7 @@ class LocalDateParseBucket extends ParseBucket<LocalDate> {
 
     if (usedFields.hasAny(PatternFields.yearTwoDigits)) {
       int century = templateValue.yearOfEra ~/ 100;
-      if (yearOfEra > _twoDigitYearMax && century > 1) {
+      if (yearOfEra > twoDigitYearMax && century > 1) {
         century--;
       }
       yearOfEra += century * 100;

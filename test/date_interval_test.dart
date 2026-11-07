@@ -20,6 +20,7 @@ void main() {
   test('Equals_DifferentStart', Equals_DifferentStart);
   test('Equals_DifferentEnd', Equals_DifferentEnd);
   test('Equals_DifferentToOtherType', Equals_DifferentToOtherType);
+  test('Equals', Equals);
   test('StringRepresentation', StringRepresentation);
   test('Length', Length);
   test('Calendar', Calendar);
@@ -67,12 +68,8 @@ void main() {
           "2014-03-07,2014-03-07",
           "2014-03-07,2014-03-07"
         ],
-        ['2014-03-07,2014-03-10', "2015-01-01,2015-04-01", null].options(
-            skip:
-                'Never ran before #17 (no @Test): a null interval is not a String'),
-        ['2015-01-01,2015-04-01', "2014-03-07,2014-03-10", null].options(
-            skip:
-                'Never ran before #17 (no @Test): a null interval is not a String'),
+        ['2014-03-07,2014-03-10', "2015-01-01,2015-04-01", null],
+        ['2015-01-01,2015-04-01', "2014-03-07,2014-03-10", null],
         [
           '2014-03-07,2014-03-31',
           "2014-03-07,2014-03-15",
@@ -111,9 +108,7 @@ void main() {
       'Union',
       [
         ['2014-03-07,2014-03-20', "2015-03-07,2015-03-20", null].options(
-            customDescriptionBuilder: (_, __, ___) => "Disjointed intervals",
-            skip:
-                'Never ran before #17 (no @Test): a null interval is not a String'),
+            customDescriptionBuilder: (_, __, ___) => "Disjointed intervals"),
         [
           '2014-03-07,2014-03-20',
           "2014-03-21,2014-03-30",
@@ -141,6 +136,36 @@ void main() {
       ],
       Union,
       customDescriptionBuilder: describeArguments);
+  parameterizedTest(
+      'Iteration',
+      [
+        [
+          '2018-05-04,2018-05-06',
+          ['2018-05-04', '2018-05-05', '2018-05-06']
+        ].options(customDescriptionBuilder: (_, __, ___) => 'Multi-day'),
+        [
+          '2018-05-04,2018-05-04',
+          ['2018-05-04']
+        ].options(customDescriptionBuilder: (_, __, ___) => 'Single date'),
+        [
+          '9999-12-29,9999-12-31',
+          ['9999-12-29', '9999-12-30', '9999-12-31']
+        ].options(customDescriptionBuilder: (_, __, ___) => 'Max dates'),
+      ],
+      Iteration,
+      customDescriptionBuilder: describeArguments);
+  // Not in Noda Time: DateInterval is an Iterable<LocalDate>.
+  test('Iterable_Length', Iterable_Length);
+  test('Iterable_IsNeverEmpty', Iterable_IsNeverEmpty);
+  test('Iterable_FirstAndLast', Iterable_FirstAndLast);
+  test('Iterable_ElementAt', Iterable_ElementAt);
+  test('Iterable_ElementAt_OutOfRange', Iterable_ElementAt_OutOfRange);
+  test('Iterable_Contains_NonLocalDate', Iterable_Contains_NonLocalDate);
+  test('Iterable_SingleDay', Iterable_SingleDay);
+  test('Iterable_EndingAtMaxIsoValue', Iterable_EndingAtMaxIsoValue);
+  test('Iterable_StartingAtMinIsoValue', Iterable_StartingAtMinIsoValue);
+  test('Iterable_NonIsoCalendar', Iterable_NonIsoCalendar);
+  test('Iterable_Repeatable', Iterable_Repeatable);
 }
 
 final CalendarSystem JulianCalendar = CalendarSystem.julian;
@@ -308,16 +333,10 @@ void Contains_DifferentCalendar() {
 //  });
 //}
 
-// @Test()
-// void Contains_NullInterval_Throws()
-// {
-//   var start = LocalDate(2017, 11, 6);
-//   var end = LocalDate(2017, 11, 10);
-//   var value = DateInterval(start, end);
-
-//   // Assert.Throws<ArgumentNullException>(() => value.Contains(null));
-//   expect(() => value.contains(null), throwsArgumentError);
-// }
+// Contains_NullInterval_Throws: not applicable. Noda Time's Contains(null)
+// throws ArgumentNullException, but DateInterval.contains is
+// Iterable.contains, which returns false for null (see
+// Iterable_Contains_NonLocalDate).
 
 void Contains_IntervalWithinAnotherCalendar_Throws() {
   var value = DateInterval(LocalDate(2017, 11, 6, CalendarSystem.gregorian),
@@ -357,10 +376,10 @@ void Intersection_IntervalInDifferentCalendar_Throws() {
 }
 
 void Intersection(
-    String firstInterval, String secondInterval, String expectedInterval) {
+    String firstInterval, String secondInterval, String? expectedInterval) {
   var value = ParseInterval(firstInterval);
   var other = ParseInterval(secondInterval);
-  var expectedResult = ParseInterval(expectedInterval);
+  var expectedResult = ParseIntervalOrNull(expectedInterval);
   expect(expectedResult, value.intersection(other));
 }
 
@@ -383,10 +402,10 @@ void Union_DifferentCalendar_Throws() {
   expect(() => value.union(other), throwsArgumentError);
 }
 
-void Union(String first, String second, String expected) {
+void Union(String first, String second, String? expected) {
   DateInterval firstInterval = ParseInterval(first);
   DateInterval secondInterval = ParseInterval(second);
-  DateInterval expectedResult = ParseInterval(expected);
+  DateInterval? expectedResult = ParseIntervalOrNull(expected);
 
   expect(expectedResult, firstInterval.union(secondInterval),
       reason: 'First union failed.');
@@ -394,15 +413,171 @@ void Union(String first, String second, String expected) {
       reason: 'Second union failed.');
 }
 
-DateInterval ParseInterval(String textualInterval) {
-  // if (textualInterval == null)
-  // {
-  //   return null;
-  // }
+DateInterval? ParseIntervalOrNull(String? textualInterval) =>
+    textualInterval == null ? null : ParseInterval(textualInterval);
 
+DateInterval ParseInterval(String textualInterval) {
   var parts = textualInterval.split(','); //new char[] { ',' });
   var start = LocalDatePattern.iso.parse(parts[0]).value;
   var end = LocalDatePattern.iso.parse(parts[1]).value;
 
   return DateInterval(start, end);
+}
+
+void Equals() {
+  LocalDate start = LocalDate(2000, 1, 1);
+  LocalDate end = LocalDate(2001, 6, 19);
+  var interval = DateInterval(start, end);
+  var equalInterval = DateInterval(start, end);
+  var unequalIntervals = [
+    DateInterval(start.addDays(1), end),
+    DateInterval(start, end.addDays(1)),
+    // This is a really, really similar calendar to ISO, but we do distinguish.
+    // (The calendar system has to be the same for the start and end, so we don't
+    // need to perform start-different vs end-different equality tests.)
+    DateInterval(start.withCalendar(CalendarSystem.gregorian),
+        end.withCalendar(CalendarSystem.gregorian)),
+  ];
+  TestHelper.TestEqualsClass(interval, equalInterval, unequalIntervals);
+
+  expect(interval == equalInterval, isTrue);
+  expect(interval != equalInterval, isFalse);
+
+  DateInterval? nullInterval;
+  expect(interval == nullInterval, isFalse);
+  expect(interval != nullInterval, isTrue);
+  expect(nullInterval == interval, isFalse);
+  expect(nullInterval != interval, isTrue);
+
+  for (var unequalInterval in unequalIntervals) {
+    expect(interval == unequalInterval, isFalse);
+    expect(interval != unequalInterval, isTrue);
+  }
+}
+
+void Iteration(String intervalText, List<String> expectedDatesText) {
+  var interval = ParseInterval(intervalText);
+  var expected = expectedDatesText
+      .map((x) => LocalDatePattern.iso.parse(x).value)
+      .toList();
+  var actual = interval.toList();
+  expect(actual, expected);
+
+  // Noda Time also tests the non-generic IEnumerable; the closest Dart
+  // equivalent is driving the Iterator directly.
+  var iterator = interval.iterator;
+  actual = [];
+  while (iterator.moveNext()) {
+    actual.add(iterator.current);
+  }
+  expect(actual, expected);
+}
+
+void Iterable_Length() {
+  var interval = DateInterval(LocalDate(2000, 1, 1), LocalDate(2000, 2, 10));
+  expect(interval.length, 41);
+  expect(interval.toList().length, 41);
+  // Across a leap day.
+  var leap = DateInterval(LocalDate(2000, 2, 28), LocalDate(2000, 3, 1));
+  expect(leap.length, 3);
+  expect(leap.toList(),
+      [LocalDate(2000, 2, 28), LocalDate(2000, 2, 29), LocalDate(2000, 3, 1)]);
+}
+
+void Iterable_IsNeverEmpty() {
+  var interval = DateInterval(LocalDate(2000, 1, 1), LocalDate(2000, 1, 1));
+  expect(interval.isEmpty, isFalse);
+  expect(interval.isNotEmpty, isTrue);
+}
+
+void Iterable_FirstAndLast() {
+  var start = LocalDate(2000, 1, 1);
+  var end = LocalDate(2000, 2, 10);
+  var interval = DateInterval(start, end);
+  expect(interval.first, start);
+  expect(interval.last, end);
+}
+
+void Iterable_ElementAt() {
+  var interval = DateInterval(LocalDate(2000, 1, 30), LocalDate(2000, 3, 2));
+  expect(interval.elementAt(0), LocalDate(2000, 1, 30));
+  expect(interval.elementAt(1), LocalDate(2000, 1, 31));
+  expect(interval.elementAt(2), LocalDate(2000, 2, 1));
+  expect(interval.elementAt(interval.length - 1), LocalDate(2000, 3, 2));
+  var list = interval.toList();
+  for (var i = 0; i < list.length; i++) {
+    expect(interval.elementAt(i), list[i]);
+  }
+}
+
+void Iterable_ElementAt_OutOfRange() {
+  var interval = DateInterval(LocalDate(2000, 1, 1), LocalDate(2000, 1, 3));
+  expect(() => interval.elementAt(-1), throwsRangeError);
+  expect(() => interval.elementAt(3), throwsRangeError);
+  // The index is checked before any date arithmetic, even at the end of time.
+  var max = DateInterval(LocalDate.maxIsoValue, LocalDate.maxIsoValue);
+  expect(() => max.elementAt(1), throwsRangeError);
+}
+
+void Iterable_Contains_NonLocalDate() {
+  var interval = DateInterval(LocalDate(2000, 1, 1), LocalDate(2000, 1, 3));
+  // Iterable.contains takes any object (deliberately unrelated types here).
+  // ignore: collection_methods_unrelated_type
+  expect(interval.contains(null), isFalse);
+  // ignore: collection_methods_unrelated_type
+  expect(interval.contains('2000-01-02'), isFalse);
+  // ignore: collection_methods_unrelated_type
+  expect(interval.contains(LocalDateTime(2000, 1, 2, 0, 0, 0)), isFalse);
+  expect(interval.contains(LocalDate(2000, 1, 2)), isTrue);
+}
+
+void Iterable_SingleDay() {
+  var date = LocalDate(2018, 5, 4);
+  var interval = DateInterval(date, date);
+  expect(interval.length, 1);
+  expect(interval.toList(), [date]);
+  expect(interval.single, date);
+  expect(interval.first, date);
+  expect(interval.last, date);
+}
+
+void Iterable_EndingAtMaxIsoValue() {
+  var end = LocalDate.maxIsoValue;
+  var interval = DateInterval(end.subtractDays(2), end);
+  // Iteration must stop at the end date without computing the day after it
+  // (which is out of range).
+  expect(interval.toList(), [end.subtractDays(2), end.subtractDays(1), end]);
+  expect(interval.length, 3);
+  expect(interval.last, end);
+  expect(interval.elementAt(2), end);
+  expect(DateInterval(end, end).toList(), [end]);
+}
+
+void Iterable_StartingAtMinIsoValue() {
+  var start = LocalDate.minIsoValue;
+  var interval = DateInterval(start, start.addDays(2));
+  expect(interval.toList(), [start, start.addDays(1), start.addDays(2)]);
+  expect(interval.first, start);
+}
+
+void Iterable_NonIsoCalendar() {
+  var calendar = CalendarSystem.julian;
+  // February 1900 has 29 days in the Julian calendar.
+  var interval = DateInterval(
+      LocalDate(1900, 2, 28, calendar), LocalDate(1900, 3, 1, calendar));
+  expect(interval.toList(), [
+    LocalDate(1900, 2, 28, calendar),
+    LocalDate(1900, 2, 29, calendar),
+    LocalDate(1900, 3, 1, calendar)
+  ]);
+  expect(interval.every((date) => date.calendar == calendar), isTrue);
+}
+
+void Iterable_Repeatable() {
+  var interval = DateInterval(LocalDate(2000, 1, 1), LocalDate(2000, 1, 5));
+  // Each iteration starts again from the start date.
+  expect(interval.toList(), interval.toList());
+  expect(interval.map((date) => date.dayOfMonth).toList(), [1, 2, 3, 4, 5]);
+  expect(interval.where((date) => date.dayOfWeek == DayOfWeek.monday).toList(),
+      [LocalDate(2000, 1, 3)]);
 }

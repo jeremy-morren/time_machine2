@@ -38,6 +38,7 @@ export 'src/ambiguous_time_error.dart' show AmbiguousTimeError;
 export 'src/skipped_time_error.dart' show SkippedTimeError;
 
 export 'src/annual_date.dart' show AnnualDate;
+export 'src/year_month.dart' show YearMonth;
 export 'src/date_adjusters.dart' show DateAdjusters;
 export 'src/date_interval.dart' show DateInterval;
 export 'src/time_adjusters.dart' show TimeAdjusters;
@@ -107,6 +108,7 @@ export 'src/text/localtime_pattern.dart' show LocalTimePattern;
 export 'src/text/localdatetime_pattern.dart' show LocalDateTimePattern;
 
 export 'src/text/annual_date_pattern.dart' show AnnualDatePattern;
+export 'src/text/year_month_pattern.dart' show YearMonthPattern;
 export 'src/text/duration_pattern.dart' show TimePattern;
 export 'src/text/instant_pattern.dart' show InstantPattern;
 export 'src/text/offset_date_pattern.dart' show OffsetDatePattern;

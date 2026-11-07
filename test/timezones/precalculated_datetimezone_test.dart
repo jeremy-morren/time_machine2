@@ -170,7 +170,7 @@ void MapLocal_AmbiguousButTooEarlyInTailZoneTransition() {
   // A local instant of one hour before after the transition from the precalculated zone (which is -5)
   // will therefore be ambiguous, but the resulting instants from the ambiguity occur
   // before our transition into the tail zone, so are ignored.
-  var tailZone = SingleTransitionDateTimeZone.around(
+  var tailZone = SingleTransitionDateTimeZone.hours(
       thirdInterval.end + Time(hours: 1), 10, 8);
   var gapZone = PrecalculatedDateTimeZone(
       'Test', [firstInterval, secondInterval, thirdInterval], tailZone);
@@ -222,7 +222,7 @@ void MapLocal_GapAroundAndInTailZoneTransition() {
   // the transition *to* the tail zone from the precalculated zone.
   // A local time of one hour after the transition from the precalculated zone (which is -5)
   // will therefore be in the gap.
-  var tailZone = SingleTransitionDateTimeZone.around(
+  var tailZone = SingleTransitionDateTimeZone.hours(
       thirdInterval.end + Time(hours: 1), -10, 5);
   var gapZone = PrecalculatedDateTimeZone(
       'Test', [firstInterval, secondInterval, thirdInterval], tailZone);
@@ -230,7 +230,7 @@ void MapLocal_GapAroundAndInTailZoneTransition() {
   expect(thirdInterval, mapping.earlyInterval);
   expect(
       IZoneInterval.newZoneInterval('Single-Early', thirdInterval.end,
-          tailZone.Transition, Offset.hours(-10), Offset.zero),
+          tailZone.transition, Offset.hours(-10), Offset.zero),
       mapping.lateInterval);
   expect(0, mapping.count);
 }

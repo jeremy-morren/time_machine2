@@ -10,6 +10,7 @@ class LocalDateTimePatternParser implements IPatternParser<LocalDateTime> {
   // Split the template value into date and time once, to avoid doing it every time we parse.
   final LocalDate _templateValueDate;
   final LocalTime _templateValueTime;
+  final int _twoDigitYearMax;
 
   static final Map<String /*char*/,
           CharacterHandler<LocalDateTime, LocalDateTimeParseBucket>>
@@ -110,9 +111,15 @@ class LocalDateTimePatternParser implements IPatternParser<LocalDateTime> {
         null),
   };
 
-  LocalDateTimePatternParser(LocalDateTime templateValue)
+  /// * [twoDigitYearMax]: Maximum two-digit-year in the template to treat as
+  ///   the current century, in the range 0-99 inclusive.
+  LocalDateTimePatternParser(LocalDateTime templateValue,
+      [this._twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax])
       : _templateValueDate = templateValue.calendarDate,
-        _templateValueTime = templateValue.clockTime;
+        _templateValueTime = templateValue.clockTime {
+    Preconditions.checkArgumentRange(
+        'twoDigitYearMax', _twoDigitYearMax, 0, 99);
+  }
 
   // Note: to implement the interface. It does no harm, and it's simpler than using explicit
   // interface implementation.
@@ -148,9 +155,11 @@ class LocalDateTimePatternParser implements IPatternParser<LocalDateTime> {
       patternText = newPatternText;
     }
 
-    var patternBuilder = SteppedPatternBuilder<LocalDateTime,
-            LocalDateTimeParseBucket>(formatInfo,
-        () => LocalDateTimeParseBucket(_templateValueDate, _templateValueTime));
+    var patternBuilder =
+        SteppedPatternBuilder<LocalDateTime, LocalDateTimeParseBucket>(
+            formatInfo,
+            () => LocalDateTimeParseBucket(
+                _templateValueDate, _templateValueTime, _twoDigitYearMax));
     patternBuilder.parseCustomPattern(patternText, _patternCharacterHandlers);
     patternBuilder.validateUsedFields();
     return patternBuilder.build(_templateValueDate.at(_templateValueTime));
@@ -186,9 +195,10 @@ class LocalDateTimeParseBucket extends ParseBucket<LocalDateTime> {
   final /*LocalTimePatternParser.*/ LocalTimeParseBucket time;
 
   LocalDateTimeParseBucket(
-      LocalDate templateValueDate, LocalTime templateValueTime)
+      LocalDate templateValueDate, LocalTime templateValueTime,
+      [int twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax])
       : date = /*LocalDatePatternParser.*/
-            LocalDateParseBucket(templateValueDate),
+            LocalDateParseBucket(templateValueDate, twoDigitYearMax),
         time = /*LocalTimePatternParser.*/
             LocalTimeParseBucket(templateValueTime);
 

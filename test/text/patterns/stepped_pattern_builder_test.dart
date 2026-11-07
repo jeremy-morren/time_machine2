@@ -16,7 +16,8 @@ import '../../time_machine_testing.dart';
 void main() {
   test('ParsePartial_ValidInMiddle', ParsePartial_ValidInMiddle);
   test('ParsePartial_ValidAtEnd', ParsePartial_ValidAtEnd);
-  test('Parse_Partial_Invalid', Parse_Partial_Invalid);
+  test('ParsePartial_Invalid', ParsePartial_Invalid);
+  test('FormatOnly_ParsingFails', FormatOnly_ParsingFails);
   test('AppendFormat', AppendFormat);
   parameterizedTest(
       'UnhandledLiteral',
@@ -56,12 +57,40 @@ void ParsePartial_ValidAtEnd() {
   expect(TextCursor.nul, value.current);
 }
 
-void Parse_Partial_Invalid() {
+void ParsePartial_Invalid() {
   var value = ValueCursor('x17:y');
   value.moveNext();
   value.moveNext();
   var result = SimpleOffsetPattern.parsePartial(value);
   expect(() => result.getValueOrThrow(), willThrow<UnparsableValueError>());
+  var error = result.error as UnparsableValueError;
+  expect(error.value, 'x17:y');
+  expect(error.index, 4);
+}
+
+void FormatOnly_ParsingFails() {
+  var builder = SteppedPatternBuilder<LocalDate, SampleBucket>(
+      TimeMachineFormatInfo.invariantInfo, () => SampleBucket());
+  builder.addFormatAction((date, sb) => sb.write('Formatted'));
+  builder.setFormatOnly();
+  var pattern = builder.build(LocalDate.minIsoValue);
+
+  var value = ValueCursor('xyz');
+  var result = pattern.parsePartial(value);
+  expect(result.success, isFalse);
+  expect(result.error, isA<UnparsableValueError>());
+  var error = result.error as UnparsableValueError;
+  expect(error.value, 'xyz');
+  expect(error.index, -1);
+  expect(error.message, TextErrorMessages.formatOnlyPattern);
+
+  result = pattern.parse('xyz');
+  expect(result.success, isFalse);
+  expect(result.error, isA<UnparsableValueError>());
+  error = result.error as UnparsableValueError;
+  expect(error.value, 'xyz');
+  expect(error.index, -1);
+  expect(error.message, TextErrorMessages.formatOnlyPattern);
 }
 
 void AppendFormat() {

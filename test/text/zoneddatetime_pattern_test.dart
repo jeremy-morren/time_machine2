@@ -17,17 +17,14 @@ import 'test_cultures.dart';
 
 // Three zones with a deliberately leading-substring-matching set of names.
 // Transition is at 1am local time, going forward an hour.
-final SingleTransitionDateTimeZone TestZone1 =
-    SingleTransitionDateTimeZone.withId(
-        Instant.utc(2010, 1, 1, 0, 0), Offset.hours(1), Offset.hours(2), 'ab');
+final SingleTransitionDateTimeZone TestZone1 = SingleTransitionDateTimeZone(
+    Instant.utc(2010, 1, 1, 0, 0), Offset.hours(1), Offset.hours(2), 'ab');
 
 // Transition is at 2am local time, going back an hour.
-final SingleTransitionDateTimeZone TestZone2 =
-    SingleTransitionDateTimeZone.withId(
-        Instant.utc(2010, 1, 1, 0, 0), Offset.hours(2), Offset.hours(1), 'abc');
-final SingleTransitionDateTimeZone TestZone3 =
-    SingleTransitionDateTimeZone.withId(Instant.utc(2010, 1, 1, 0, 0),
-        Offset.hours(1), Offset.hours(2), 'abcd');
+final SingleTransitionDateTimeZone TestZone2 = SingleTransitionDateTimeZone(
+    Instant.utc(2010, 1, 1, 0, 0), Offset.hours(2), Offset.hours(1), 'abc');
+final SingleTransitionDateTimeZone TestZone3 = SingleTransitionDateTimeZone(
+    Instant.utc(2010, 1, 1, 0, 0), Offset.hours(1), Offset.hours(2), 'abcd');
 
 late DateTimeZoneProvider TestProvider;
 late DateTimeZoneProvider tzdb;
@@ -48,6 +45,24 @@ Future main() async {
     test('CreateWithCurrentCulture', fixture.CreateWithCurrentCulture);
     test('WithCulture', fixture.WithCulture);
     test('FindLongestZoneId', fixture.FindLongestZoneId);
+    parameterizedTest(
+        'WithTwoDigitYearMax',
+        [
+          [0, '00-01-01T00:00:00 abc', 2000],
+          [0, '01-01-01T00:00:00 abc', 1901],
+          [50, '49-01-01T00:00:00 abc', 2049],
+          [50, '50-01-01T00:00:00 abc', 2050],
+          [50, '51-01-01T00:00:00 abc', 1951],
+          [99, '00-01-01T00:00:00 abc', 2000],
+          [99, '99-01-01T00:00:00 abc', 2099],
+        ],
+        fixture.WithTwoDigitYearMax,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
+        'WithTwoDigitYearMax_Invalid',
+        [-1, 100, Platform.int32MinValue, Platform.int32MaxValue],
+        fixture.WithTwoDigitYearMax_Invalid,
+        customDescriptionBuilder: describeArguments);
     parameterizedTest(
         'InvalidPatterns', fixture.InvalidPatternData, fixture.InvalidPatterns,
         customDescriptionBuilder: describeArguments);
@@ -71,18 +86,18 @@ Future setup() async {
   // etcGMT_12 = await tzdb['Etc/GMT-12'];
   TestProvider =
       await FakeDateTimeZoneSourceBuilder([TestZone1, TestZone2, TestZone3])
-          .Build()
-          .ToProvider();
+          .build()
+          .toProvider();
 
   // todo: implement CanonicalIdMap
   etcGMT_12 = FixedDateTimeZone('Etc/GMT-12', Offset.hours(12), '+12');
   etcGMT_12_tzdb =
-      await FakeDateTimeZoneSourceBuilder([etcGMT_12]).Build().ToProvider();
+      await FakeDateTimeZoneSourceBuilder([etcGMT_12]).build().toProvider();
 }
 
 class ZonedDateTimePatternTest extends PatternTestBase<ZonedDateTime> {
   // @private static final IDateTimeZoneProvider TestProvider =
-  // new FakeDateTimeZoneSourceBuilder([TestZone1, TestZone2, TestZone3]).Build().ToProvider();
+  // new FakeDateTimeZoneSourceBuilder([TestZone1, TestZone2, TestZone3]).build().toProvider();
   @private
   static final DateTimeZone FixedPlus1 =
       FixedDateTimeZone.forOffset(Offset.hours(1));
@@ -269,14 +284,14 @@ class ZonedDateTimePatternTest extends PatternTestBase<ZonedDateTime> {
       ..template = TimeConstants.unixEpoch.inZone(france),
 
     // Skipped value, resolver returns start of second interval
-    Data(TestZone1.Transition.inZone(TestZone1))
+    Data(TestZone1.transition.inZone(TestZone1))
       ..pattern = 'yyyy-MM-dd HH:mm z'
       ..text = '2010-01-01 01:30 ab'
       ..Resolver = Resolvers.createMappingResolver(
           Resolvers.throwWhenAmbiguous, Resolvers.returnStartOfIntervalAfter),
 
     // Skipped value, resolver returns end of first interval
-    Data(TestZone1.Transition.subtract(Time.epsilon).inZone(TestZone1))
+    Data(TestZone1.transition.subtract(Time.epsilon).inZone(TestZone1))
       ..pattern = 'yyyy-MM-dd HH:mm z'
       ..text = '2010-01-01 01:30 ab'
       ..Resolver = Resolvers.createMappingResolver(
@@ -336,7 +351,7 @@ class ZonedDateTimePatternTest extends PatternTestBase<ZonedDateTime> {
       ..text = '2013-01-13 16:02 Europe/Paris',
 
     // Ambiguous value - would be invalid if parsed with a strict parser.
-    Data(TestZone2.Transition.add(Time(minutes: 30)).inZone(TestZone2))
+    Data(TestZone2.transition.add(Time(minutes: 30)).inZone(TestZone2))
       ..pattern = 'yyyy-MM-dd HH:mm'
       ..text = '2010-01-01 01:30',
 
@@ -446,26 +461,26 @@ class ZonedDateTimePatternTest extends PatternTestBase<ZonedDateTime> {
       ..text = '2005-01-01 +01 01:30 ab',
 
     // Ambiguous value, resolver returns later value.
-    Data(TestZone2.Transition.add(Time(minutes: 30)).inZone(TestZone2))
+    Data(TestZone2.transition.add(Time(minutes: 30)).inZone(TestZone2))
       ..pattern = 'yyyy-MM-dd HH:mm z'
       ..text = '2010-01-01 01:30 abc'
       ..Resolver = Resolvers.createMappingResolver(
           Resolvers.returnLater, Resolvers.throwWhenSkipped),
 
     // Ambiguous value, resolver returns earlier value.
-    Data(TestZone2.Transition.add(Time(minutes: -30)).inZone(TestZone2))
+    Data(TestZone2.transition.add(Time(minutes: -30)).inZone(TestZone2))
       ..pattern = 'yyyy-MM-dd HH:mm z'
       ..text = '2010-01-01 01:30 abc'
       ..Resolver = Resolvers.createMappingResolver(
           Resolvers.returnEarlier, Resolvers.throwWhenSkipped),
 
     // Ambiguous local value, but with offset for later value (smaller offset).
-    Data(TestZone2.Transition.add(Time(minutes: 30)).inZone(TestZone2))
+    Data(TestZone2.transition.add(Time(minutes: 30)).inZone(TestZone2))
       ..pattern = 'yyyy-MM-dd HH:mm z o<g>'
       ..text = '2010-01-01 01:30 abc +01',
 
     // Ambiguous local value, but with offset for earlier value (greater offset).
-    Data(TestZone2.Transition.add(Time(minutes: -30)).inZone(TestZone2))
+    Data(TestZone2.transition.add(Time(minutes: -30)).inZone(TestZone2))
       ..pattern = 'yyyy-MM-dd HH:mm z o<g>'
       ..text = '2010-01-01 01:30 abc +02',
 
@@ -648,7 +663,7 @@ class ZonedDateTimePatternTest extends PatternTestBase<ZonedDateTime> {
 
   // Test to hit each exit condition in the time zone ID parsing part of ZonedDateTimePatternParser
   Future FindLongestZoneId() async {
-    DateTimeZone CreateZone(String id) => SingleTransitionDateTimeZone.withId(
+    DateTimeZone CreateZone(String id) => SingleTransitionDateTimeZone(
         TimeConstants.unixEpoch - Time(days: 1),
         Offset.hours(-1),
         Offset.hours(0),
@@ -660,7 +675,7 @@ class ZonedDateTimePatternTest extends PatternTestBase<ZonedDateTime> {
       CreateZone('ABCB'),
       CreateZone('ABCBX'),
       CreateZone('ABCD')
-    ])).Build();
+    ])).build();
 
     var provider = await DateTimeZoneCache.getCache(source);
     var pattern = ZonedDateTimePattern.createWithCulture(
@@ -678,6 +693,21 @@ class ZonedDateTimePatternTest extends PatternTestBase<ZonedDateTime> {
 
   // @Test()
   // void ParseNull() => AssertParseNull(ZonedDateTimePattern.extendedFormatOnlyIso.withZoneProvider(TestProvider));
+
+  void WithTwoDigitYearMax(int twoDigitYearMax, String text, int expectedYear) {
+    var pattern = ZonedDateTimePattern.createWithInvariantCulture(
+            "yy-MM-dd'T'HH:mm:ss z", TestProvider)
+        .withTwoDigitYearMax(twoDigitYearMax);
+    var value = pattern.parse(text).value;
+    expect(value.year, expectedYear);
+  }
+
+  void WithTwoDigitYearMax_Invalid(int twoDigitYearMax) {
+    expect(
+        () => ZonedDateTimePattern.generalFormatOnlyIso
+            .withTwoDigitYearMax(twoDigitYearMax),
+        throwsRangeError);
+  }
 }
 
 /*sealed*/ class Data extends PatternTestData<ZonedDateTime> {

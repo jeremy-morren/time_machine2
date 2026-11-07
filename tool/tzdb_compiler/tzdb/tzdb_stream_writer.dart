@@ -54,12 +54,15 @@ class TzdbStreamWriter {
       timeZoneMap[key] = value;
     }
 
-    // As Noda Time's compiler does, check that the Windows mapping only uses
-    // IDs in this database and is otherwise consistent.
+    // As Noda Time's compiler does, check that the Windows mapping and the
+    // zone locations only use IDs in this database and are otherwise
+    // consistent.
     TzdbDateTimeZoneSource.validateData({
       for (var zone in zones) zone.id: zone.id,
       ...timeZoneMap,
-    }, cldrWindowsZones);
+    }, cldrWindowsZones,
+        zoneLocations: database.zoneLocations,
+        zone1970Locations: database.zone1970Locations);
 
     fields
         .addField(TzdbStreamFieldId.tzdbIdMap, stringPool)

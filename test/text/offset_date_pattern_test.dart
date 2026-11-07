@@ -22,6 +22,24 @@ void main() {
     test('WithTemplateValue', fixture.WithTemplateValue);
     test('WithCalendar', fixture.WithCalendar);
     parameterizedTest(
+        'WithTwoDigitYearMax',
+        [
+          [0, '00-01-01 +01', 2000],
+          [0, '01-01-01 +01', 1901],
+          [50, '49-01-01 +01', 2049],
+          [50, '50-01-01 +01', 2050],
+          [50, '51-01-01 +01', 1951],
+          [99, '00-01-01 +01', 2000],
+          [99, '99-01-01 +01', 2099],
+        ],
+        fixture.WithTwoDigitYearMax,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
+        'WithTwoDigitYearMax_Invalid',
+        [-1, 100, Platform.int32MinValue, Platform.int32MaxValue],
+        fixture.WithTwoDigitYearMax_Invalid,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
         'InvalidPatterns', fixture.InvalidPatternData, fixture.InvalidPatterns,
         customDescriptionBuilder: describeArguments);
     parameterizedTest(
@@ -241,6 +259,19 @@ class OffsetDatePatternTest extends PatternTestBase<OffsetDate> {
 
   // @Test()
   // void ParseNull() => AssertParseNull(OffsetDatePattern.generalIso);
+
+  void WithTwoDigitYearMax(int twoDigitYearMax, String text, int expectedYear) {
+    var pattern = OffsetDatePattern.createWithInvariantCulture('yy-MM-dd o<g>')
+        .withTwoDigitYearMax(twoDigitYearMax);
+    var value = pattern.parse(text).value;
+    expect(value.year, expectedYear);
+  }
+
+  void WithTwoDigitYearMax_Invalid(int twoDigitYearMax) {
+    expect(
+        () => OffsetDatePattern.generalIso.withTwoDigitYearMax(twoDigitYearMax),
+        throwsRangeError);
+  }
 }
 
 @internal

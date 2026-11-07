@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:time_machine2/src/time_machine_internal.dart';
 import 'package:time_machine2/src/timezones/cldr/windows_zones.dart';
+import 'package:time_machine2/src/timezones/tzdb_zone_1970_location.dart';
+import 'package:time_machine2/src/timezones/tzdb_zone_location.dart';
 
 // from: https://github.com/nodatime/nodatime/blob/master/src/NodaTime/TimeZones/IO/TzdbStreamFieldId.cs
 
@@ -81,6 +83,13 @@ class TzdbStreamReader {
   /// from their Windows ID (e.g. 'Coordinated Universal Time').
   late Map<String, String> windowsStandardNameToTzdbId;
 
+  /// The zone locations from zone.tab, or null if the data doesn't have them.
+  List<TzdbZoneLocation>? zoneLocations;
+
+  /// The zone locations from zone1970.tab, or null if the data doesn't have
+  /// them.
+  List<TzdbZone1970Location>? zone1970Locations;
+
   TzdbStreamReader(this._input) : _reader = BinaryReader(_input) {
     // Read and validate the version
     int version = _reader.readUint8();
@@ -144,33 +153,23 @@ class TzdbStreamReader {
       windowsStandardNameToTzdbId = <String, String>{};
     }
 
-    /*
-    // Read Windows mappings
-    var windowsZonesField =
-        fields[TzdbStreamFieldId.cldrSupplementalWindowsZones]!;
-    reader.currentOffset = windowsZonesField.offset;
-    windowsZones = WindowsZones.read(reader);
-
-    // Read zone locations if present
-    List<TzdbZoneLocation>? zoneLocations;
-    var zoneLocationsField = fields[TzdbStreamFieldId.zoneLocations];
-    if (zoneLocationsField != null) {
-      reader.currentOffset = zoneLocationsField.offset;
+    // Read the zone locations, if present.
+    var zoneLocationsFields = fields[TzdbStreamFieldId.zoneLocations];
+    if (zoneLocationsFields != null && zoneLocationsFields.isNotEmpty) {
+      reader.currentOffset = zoneLocationsFields[0].offset;
       int count = reader.readCount();
-      zoneLocations = List<TzdbZoneLocation>.generate(
-          count, (_) => TzdbZoneLocation.read(reader));
+      zoneLocations = List<TzdbZoneLocation>.unmodifiable(
+          List.generate(count, (_) => TzdbZoneLocation.read(reader)));
     }
 
-    // Read 1970 zone locations if present
-    List<TzdbZone1970Location>? zone1970Locations;
-    var zone1970Field = fields[TzdbStreamFieldId.zone1970Locations];
-    if (zone1970Field != null) {
-      reader.currentOffset = zone1970Field.offset;
+    // Read the 'zone 1970' locations, if present.
+    var zone1970Fields = fields[TzdbStreamFieldId.zone1970Locations];
+    if (zone1970Fields != null && zone1970Fields.isNotEmpty) {
+      reader.currentOffset = zone1970Fields[0].offset;
       int count = reader.readCount();
-      zone1970Locations = List<TzdbZone1970Location>.generate(
-          count, (_) => TzdbZone1970Location.read(reader));
+      zone1970Locations = List<TzdbZone1970Location>.unmodifiable(
+          List.generate(count, (_) => TzdbZone1970Location.read(reader)));
     }
-    */
   }
 
   Map<TzdbStreamFieldId, List<FieldPosition>> _readFields() {

@@ -621,7 +621,7 @@ class _SteppedPattern<TResult, TBucket extends ParseBucket<TResult>>
   @override
   ParseResult<TResult> parse(String? text) {
     if (_parseActions == null) {
-      return IParseResult.formatOnlyPattern.convertError();
+      return IParseResult.formatOnlyPattern<TResult>(ValueCursor(text ?? ''));
     }
     if (text == null) {
       return IParseResult.argumentNull<TResult>('text');
@@ -665,9 +665,16 @@ class _SteppedPattern<TResult, TBucket extends ParseBucket<TResult>>
 
   @override
   ParseResult<TResult> parsePartial(ValueCursor cursor) {
+    // At the moment we shouldn't get a partial parse for a format-only pattern, but
+    // let's guard against it for the future.
+    final parseActions = _parseActions;
+    if (parseActions == null) {
+      return IParseResult.formatOnlyPattern<TResult>(cursor);
+    }
+
     TBucket bucket = _bucketProvider();
 
-    for (var action in _parseActions!) {
+    for (var action in parseActions) {
       ParseResult<TResult>? failure = action(cursor, bucket);
       if (failure != null) {
         return failure;

@@ -17,6 +17,7 @@ void main() {
   test('SimpleProperties', SimpleProperties);
   test('Add_AroundTimeZoneTransition', Add_AroundTimeZoneTransition);
   test('Add_MethodEquivalents', Add_MethodEquivalents);
+  test('AddHours_AcrossTimeZoneTransition', AddHours_AcrossTimeZoneTransition);
   test('Subtract_AroundTimeZoneTransition', Subtract_AroundTimeZoneTransition);
   test(
       'SubtractDuration_MethodEquivalents', SubtractDuration_MethodEquivalents);
@@ -45,7 +46,7 @@ void main() {
 
 /// Changes from UTC+3 to UTC+4 at 1am local time on June 13th 2011.
 final SingleTransitionDateTimeZone SampleZone =
-    SingleTransitionDateTimeZone.around(Instant.utc(2011, 6, 12, 22, 0), 3, 4);
+    SingleTransitionDateTimeZone.hours(Instant.utc(2011, 6, 12, 22, 0), 3, 4);
 
 void SimpleProperties() {
   var value = ZonedDateTime.atStrictly(
@@ -107,48 +108,58 @@ void Add_MethodEquivalents() {
   expect(before + Time.oneDay, ZonedDateTime.plus(before, Time.oneDay));
   expect(before + Time.oneDay, before.add(Time.oneDay));
 
-  expect(before + Time(hours: hours), before.add(Time(hours: hours)));
-  expect(before + Time(hours: -hours), before.add(Time(hours: -hours)));
+  expect(before + Time(hours: hours), before.addHours(hours));
+  expect(before + Time(hours: -hours), before.addHours(-hours));
 
-  expect(before + Time(minutes: minutes), before.add(Time(minutes: minutes)));
-  expect(before + Time(minutes: -minutes), before.add(Time(minutes: -minutes)));
+  expect(before + Time(minutes: minutes), before.addMinutes(minutes));
+  expect(before + Time(minutes: -minutes), before.addMinutes(-minutes));
 
-  expect(before + Time(seconds: seconds), before.add(Time(seconds: seconds)));
-  expect(before + Time(seconds: -seconds), before.add(Time(seconds: -seconds)));
+  expect(before + Time(seconds: seconds), before.addSeconds(seconds));
+  expect(before + Time(seconds: -seconds), before.addSeconds(-seconds));
 
   expect(before + Time(milliseconds: milliseconds),
-      before.add(Time(milliseconds: milliseconds)));
+      before.addMilliseconds(milliseconds));
   expect(before + Time(milliseconds: -milliseconds),
-      before.add(Time(milliseconds: -milliseconds)));
+      before.addMilliseconds(-milliseconds));
 
-  expect(before + Time(microseconds: ticks),
-      before.add(Time(microseconds: ticks)));
-  expect(before + Time(microseconds: -ticks),
-      before.add(Time(microseconds: -ticks)));
+  // Noda Time's PlusTicks: Time Machine's finest unit above nanoseconds is
+  // the microsecond.
+  expect(before + Time(microseconds: ticks), before.addMicroseconds(ticks));
+  expect(before + Time(microseconds: -ticks), before.addMicroseconds(-ticks));
 
   expect(before + Time(nanoseconds: nanoseconds),
-      before.add(Time(nanoseconds: nanoseconds)));
+      before.addNanoseconds(nanoseconds));
   expect(before + Time(nanoseconds: -nanoseconds),
-      before.add(Time(nanoseconds: -nanoseconds)));
-  /*
-  expect(before + new Time(hours: hours), before.plusHours(hours));
-  expect(before + new Time(hours: -hours), before.plusHours(-hours));
+      before.addNanoseconds(-nanoseconds));
 
-  expect(before + new Time(minutes: minutes), before.plusMinutes(minutes));
-  expect(before + new Time(minutes: -minutes), before.plusMinutes(-minutes));
+  // Time Machine's subtract* methods are the add* methods with the value
+  // negated (Noda Time only has Plus*).
+  expect(before - Time(hours: hours), before.subtractHours(hours));
+  expect(before - Time(minutes: minutes), before.subtractMinutes(minutes));
+  expect(before - Time(seconds: seconds), before.subtractSeconds(seconds));
+  expect(before - Time(milliseconds: milliseconds),
+      before.subtractMilliseconds(milliseconds));
+  expect(
+      before - Time(microseconds: ticks), before.subtractMicroseconds(ticks));
+  expect(before - Time(nanoseconds: nanoseconds),
+      before.subtractNanoseconds(nanoseconds));
+  expect(before.addHours(-hours), before.subtractHours(hours));
+  expect(before.addNanoseconds(-nanoseconds),
+      before.subtractNanoseconds(nanoseconds));
+}
 
-  expect(before + new Time(seconds: seconds), before.plusSeconds(seconds));
-  expect(before + new Time(seconds: -seconds), before.plusSeconds(-seconds));
-
-  expect(before + new Time(milliseconds: milliseconds), before.plusMilliseconds(milliseconds));
-  expect(before + new Time(milliseconds: -milliseconds), before.plusMilliseconds(-milliseconds));
-
-  expect(before + new Time(microseconds: ticks), before.plusMicroseconds(ticks));
-  expect(before + new Time(microseconds: -ticks), before.plusMicroseconds(-ticks));
-
-  expect(before + new Time(nanoseconds: nanoseconds), before.plusNanoseconds(nanoseconds));
-  expect(before + new Time(nanoseconds: -nanoseconds), before.plusNanoseconds(-nanoseconds));
-  */
+void AddHours_AcrossTimeZoneTransition() {
+  // Before the transition at 3pm on June 12th (UTC+3)...
+  ZonedDateTime before = ZonedDateTime.atStrictly(
+      LocalDateTime(2011, 6, 12, 15, 0, 0), SampleZone);
+  // ... 24 elapsed hours later it's 4pm on June 13th (UTC+4), as for
+  // Add_AroundTimeZoneTransition.
+  ZonedDateTime afterExpected = ZonedDateTime.atStrictly(
+      LocalDateTime(2011, 6, 13, 16, 0, 0), SampleZone);
+  expect(before.addHours(24), afterExpected);
+  expect(before.addMinutes(24 * 60), afterExpected);
+  expect(afterExpected.subtractHours(24), before);
+  expect(afterExpected.subtractSeconds(24 * 60 * 60), before);
 }
 
 void Subtract_AroundTimeZoneTransition() {
@@ -191,8 +202,8 @@ void WithZone() {
   expect(LocalDateTime(2012, 2, 4, 16, 35, 0), zoned.localDateTime);
 
   // Will be UTC-8 for our instant.
-  DateTimeZone newZone = SingleTransitionDateTimeZone.around(
-      Instant.utc(2000, 1, 1, 0, 0), -7, -8);
+  DateTimeZone newZone =
+      SingleTransitionDateTimeZone.hours(Instant.utc(2000, 1, 1, 0, 0), -7, -8);
   ZonedDateTime converted = zoned.withZone(newZone);
   expect(LocalDateTime(2012, 2, 4, 4, 35, 0), converted.localDateTime);
   expect(converted.toInstant(), instant);
@@ -340,13 +351,13 @@ void ToOffsetDateTime() {
   var zoned = ZonedDateTime.atStrictly(local, SampleZone);
   var offsetDateTime = zoned.toOffsetDateTime();
   expect(local, offsetDateTime.localDateTime);
-  expect(SampleZone.EarlyInterval.wallOffset, offsetDateTime.offset);
+  expect(SampleZone.earlyInterval.wallOffset, offsetDateTime.offset);
 }
 
 void Equality() {
   // Goes back from 2am to 1am on June 13th
-  SingleTransitionDateTimeZone zone = SingleTransitionDateTimeZone.around(
-      Instant.utc(2011, 6, 12, 22, 0), 4, 3);
+  SingleTransitionDateTimeZone zone =
+      SingleTransitionDateTimeZone.hours(Instant.utc(2011, 6, 12, 22, 0), 4, 3);
   var sample = zone.mapLocal(LocalDateTime(2011, 6, 13, 1, 30, 0)).first();
   var fromUtc = Instant.utc(2011, 6, 12, 21, 30).inZone(zone);
 
@@ -387,22 +398,22 @@ void Constructor_ArgumentValidation()
 }*/
 
 void Construct_FromLocal_ValidUnambiguousOffset() {
-  SingleTransitionDateTimeZone zone = SingleTransitionDateTimeZone.around(
-      Instant.utc(2011, 6, 12, 22, 0), 4, 3);
+  SingleTransitionDateTimeZone zone =
+      SingleTransitionDateTimeZone.hours(Instant.utc(2011, 6, 12, 22, 0), 4, 3);
 
   LocalDateTime local = LocalDateTime(2000, 1, 2, 3, 4, 5);
   ZonedDateTime zoned =
-      ZonedDateTime.atOffset(local, zone, zone.EarlyInterval.wallOffset);
+      ZonedDateTime.atOffset(local, zone, zone.earlyInterval.wallOffset);
   expect(zoned, local.inZoneStrictly(zone));
 }
 
 void Construct_FromLocal_ValidEarlierOffset() {
-  SingleTransitionDateTimeZone zone = SingleTransitionDateTimeZone.around(
-      Instant.utc(2011, 6, 12, 22, 0), 4, 3);
+  SingleTransitionDateTimeZone zone =
+      SingleTransitionDateTimeZone.hours(Instant.utc(2011, 6, 12, 22, 0), 4, 3);
 
   LocalDateTime local = LocalDateTime(2011, 6, 13, 1, 30, 0);
   ZonedDateTime zoned =
-      ZonedDateTime.atOffset(local, zone, zone.EarlyInterval.wallOffset);
+      ZonedDateTime.atOffset(local, zone, zone.earlyInterval.wallOffset);
 
   // Map the local time to the earlier of the offsets in a way which is tested elsewhere.
   var resolver = Resolvers.createMappingResolver(
@@ -411,12 +422,12 @@ void Construct_FromLocal_ValidEarlierOffset() {
 }
 
 void Construct_FromLocal_ValidLaterOffset() {
-  SingleTransitionDateTimeZone zone = SingleTransitionDateTimeZone.around(
-      Instant.utc(2011, 6, 12, 22, 0), 4, 3);
+  SingleTransitionDateTimeZone zone =
+      SingleTransitionDateTimeZone.hours(Instant.utc(2011, 6, 12, 22, 0), 4, 3);
 
   LocalDateTime local = LocalDateTime(2011, 6, 13, 1, 30, 0);
   ZonedDateTime zoned =
-      ZonedDateTime.atOffset(local, zone, zone.LateInterval.wallOffset);
+      ZonedDateTime.atOffset(local, zone, zone.lateInterval.wallOffset);
 
   // Map the local time to the later of the offsets in a way which is tested elsewhere.
   var resolver = Resolvers.createMappingResolver(
@@ -425,13 +436,13 @@ void Construct_FromLocal_ValidLaterOffset() {
 }
 
 void Construct_FromLocal_InvalidOffset() {
-  SingleTransitionDateTimeZone zone = SingleTransitionDateTimeZone.around(
-      Instant.utc(2011, 6, 12, 22, 0), 4, 3);
+  SingleTransitionDateTimeZone zone =
+      SingleTransitionDateTimeZone.hours(Instant.utc(2011, 6, 12, 22, 0), 4, 3);
 
   // Attempt to ask for the later offset in the earlier interval
   LocalDateTime local = LocalDateTime(2000, 1, 1, 0, 0, 0);
   expect(
-      () => ZonedDateTime.atOffset(local, zone, zone.LateInterval.wallOffset),
+      () => ZonedDateTime.atOffset(local, zone, zone.lateInterval.wallOffset),
       throwsArgumentError);
 }
 

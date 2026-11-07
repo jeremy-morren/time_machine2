@@ -23,6 +23,25 @@ abstract class LocalDateTimePatterns {
   static final LocalDateTimePattern fullRoundtripPatternImpl =
       LocalDateTimePattern.createWithInvariantCulture(
           "uuuu'-'MM'-'dd'T'HH':'mm':'ss'.'fffffffff '('c')'");
+  static final LocalDateTimePattern dateHourIsoPatternImpl =
+      LocalDateTimePattern.createWithInvariantCulture("uuuu'-'MM'-'dd'T'HH");
+  static final LocalDateTimePattern dateHourMinuteIsoPatternImpl =
+      LocalDateTimePattern.createWithInvariantCulture(
+          "uuuu'-'MM'-'dd'T'HH':'mm");
+  static final IPattern<LocalDateTime> variablePrecisionIsoPatternImpl =
+      (CompositePatternBuilder<LocalDateTime>()
+            ..add(extendedIsoPatternImpl, (time) => true)
+            ..add(
+                dateHourMinuteIsoPatternImpl,
+                (time) =>
+                    time.secondOfMinute == 0 && time.nanosecondOfSecond == 0)
+            ..add(
+                dateHourIsoPatternImpl,
+                (time) =>
+                    time.minuteOfHour == 0 &&
+                    time.secondOfMinute == 0 &&
+                    time.nanosecondOfSecond == 0))
+          .build();
 
   static final LocalDateTime defaultTemplateValue =
       LocalDateTime(2000, 1, 1, 0, 0, 0);
@@ -39,8 +58,10 @@ abstract class LocalDateTimePatterns {
       localDateTimePattern._underlyingPattern;
 
   static LocalDateTimePattern create(String patternText,
-          TimeMachineFormatInfo formatInfo, LocalDateTime templateValue) =>
-      LocalDateTimePattern._create(patternText, formatInfo, templateValue);
+          TimeMachineFormatInfo formatInfo, LocalDateTime templateValue,
+          [int twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax]) =>
+      LocalDateTimePattern._create(
+          patternText, formatInfo, templateValue, twoDigitYearMax);
 }
 
 /// Represents a pattern for parsing and formatting [LocalDateTime] values.
@@ -82,6 +103,25 @@ class LocalDateTimePattern implements IPattern<LocalDateTime> {
   static LocalDateTimePattern get fullRoundtrip =>
       LocalDateTimePatterns.fullRoundtripPatternImpl;
 
+  /// An invariant local date/time pattern which is ISO-8601 compatible,
+  /// providing up to the hour. This corresponds to the text pattern
+  /// `uuuu'-'MM'-'dd'T'HH`.
+  static LocalDateTimePattern get dateHourIso =>
+      LocalDateTimePatterns.dateHourIsoPatternImpl;
+
+  /// An invariant local date/time pattern which is ISO-8601 compatible,
+  /// providing up to the minute. This corresponds to the text pattern
+  /// `uuuu'-'MM'-'dd'T'HH':'mm`.
+  static LocalDateTimePattern get dateHourMinuteIso =>
+      LocalDateTimePatterns.dateHourMinuteIsoPatternImpl;
+
+  /// An invariant local date/time pattern which is ISO-8601 compatible, and
+  /// which formats values to the shortest precision that represents them
+  /// exactly: [dateHourIso], [dateHourMinuteIso] or [extendedIso]. It parses
+  /// any of those three formats.
+  static IPattern<LocalDateTime> get variablePrecisionIso =>
+      LocalDateTimePatterns.variablePrecisionIsoPatternImpl;
+
   /// Gets the pattern text for this pattern, as supplied on creation.
   final String patternText;
 
@@ -92,12 +132,18 @@ class LocalDateTimePattern implements IPattern<LocalDateTime> {
   /// in the pattern are taken from the template.
   final LocalDateTime templateValue;
 
+  /// Maximum two-digit-year in the template to treat as the current century.
+  /// If the value parsed is higher than this, the result is adjusted to the
+  /// previous century. This value defaults to 30. To create a pattern with a
+  /// different value, use [withTwoDigitYearMax].
+  final int twoDigitYearMax;
+
   /// Returns the pattern that this object delegates to. Mostly useful to avoid this public class
   /// implementing an internal interface.
   final IPartialPattern<LocalDateTime> _underlyingPattern;
 
   const LocalDateTimePattern._(this.patternText, this._formatInfo,
-      this.templateValue, this._underlyingPattern);
+      this.templateValue, this.twoDigitYearMax, this._underlyingPattern);
 
   /// Parses the given text value according to the rules of this pattern.
   ///
@@ -140,20 +186,22 @@ class LocalDateTimePattern implements IPattern<LocalDateTime> {
   ///
   /// * [InvalidPatternError]: The pattern text was invalid.
   static LocalDateTimePattern _create(String patternText,
-      TimeMachineFormatInfo formatInfo, LocalDateTime templateValue) {
+      TimeMachineFormatInfo formatInfo, LocalDateTime templateValue,
+      [int twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax]) {
     Preconditions.checkNotNull(patternText, 'patternText');
     Preconditions.checkNotNull(formatInfo, 'formatInfo');
     // Use the 'fixed' parser for the common case of the default template value.
-    var pattern = templateValue == LocalDateTimePatterns.defaultTemplateValue
+    var pattern = templateValue == LocalDateTimePatterns.defaultTemplateValue &&
+            twoDigitYearMax == LocalDatePatterns.defaultTwoDigitYearMax
         ? formatInfo.localDateTimePatternParser.parsePattern(patternText)
-        : LocalDateTimePatternParser(templateValue)
+        : LocalDateTimePatternParser(templateValue, twoDigitYearMax)
             .parsePattern(patternText, formatInfo);
     // If ParsePattern returns a standard pattern instance, we need to get the underlying partial pattern.
     pattern =
         pattern is LocalDateTimePattern ? pattern._underlyingPattern : pattern;
     var partialPattern = pattern as IPartialPattern<LocalDateTime>;
-    return LocalDateTimePattern._(
-        patternText, formatInfo, templateValue, partialPattern);
+    return LocalDateTimePattern._(patternText, formatInfo, templateValue,
+        twoDigitYearMax, partialPattern);
   }
 
   // todo: do factories
@@ -212,7 +260,7 @@ class LocalDateTimePattern implements IPattern<LocalDateTime> {
   ///
   /// Returns: A new pattern with the given localization information.
   LocalDateTimePattern _withFormatInfo(TimeMachineFormatInfo formatInfo) =>
-      _create(patternText, formatInfo, templateValue);
+      _create(patternText, formatInfo, templateValue, twoDigitYearMax);
 
   /// Creates a pattern for the same original pattern text as this pattern, but with the specified
   /// culture.
@@ -229,7 +277,20 @@ class LocalDateTimePattern implements IPattern<LocalDateTime> {
   ///
   /// Returns: A new pattern with the given template value.
   LocalDateTimePattern withTemplateValue(LocalDateTime newTemplateValue) =>
-      _create(patternText, _formatInfo, newTemplateValue);
+      _create(patternText, _formatInfo, newTemplateValue, twoDigitYearMax);
+
+  /// Creates a pattern like this one, but with a different [twoDigitYearMax]
+  /// value.
+  ///
+  /// * [twoDigitYearMax]: The value to use for [twoDigitYearMax] in the new
+  ///   pattern, in the range 0-99 inclusive.
+  ///
+  /// Returns: A new pattern with the specified maximum two-digit-year
+  /// value.
+  ///
+  /// * [RangeError]: [twoDigitYearMax] is outside the range 0-99.
+  LocalDateTimePattern withTwoDigitYearMax(int twoDigitYearMax) =>
+      _create(patternText, _formatInfo, templateValue, twoDigitYearMax);
 
   /// Creates a pattern like this one, but with the template value modified to use
   /// the specified calendar system.

@@ -7,6 +7,8 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 import 'package:time_machine2/src/timezones/cldr/windows_zones.dart';
 import 'package:time_machine2/src/timezones/datetimezone_providers.dart';
 import 'package:time_machine2/src/timezones/tzdb_stream_reader.dart';
+import 'package:time_machine2/src/timezones/tzdb_zone_1970_location.dart';
+import 'package:time_machine2/src/timezones/tzdb_zone_location.dart';
 
 /// Provides an implementation of [DateTimeZoneSource] that loads data
 /// originating from the [tz database](https://www.iana.org/time-zones)
@@ -33,8 +35,40 @@ class TzdbDateTimeZoneSource extends DateTimeZoneSource {
   Map<String, String>? _windowsToTzdbIds;
   Map<String, String>? _tzdbToWindowsIds;
   Map<String, List<String>>? _aliasLookup;
+  List<TzdbZoneLocation>? _zoneLocations;
+  List<TzdbZone1970Location>? _zone1970Locations;
 
   TzdbDateTimeZoneSource();
+
+  /// Creates a source from TZDB data in Time Machine's format (as written by
+  /// `tool/tzdb_compiler`, like the embedded `lib/data/tzdb/tzdb.bin`), either
+  /// XZ-compressed or not. This allows a newer (or older) version of the
+  /// tz database to be used than the one embedded in Time Machine.
+  ///
+  /// The source is ready to use: unlike the embedded source, it doesn't need
+  /// `TimeMachine.initialize()` to load its data. Use
+  /// `DateTimeZoneCache.getCache(source)` to create a provider for it.
+  ///
+  /// This is the equivalent of Noda Time's `TzdbDateTimeZoneSource.FromStream`.
+  ///
+  /// * [data]: The TZDB data.
+  ///
+  /// * [InvalidTimeDataError]: The data is not a valid TZDB data stream.
+  static TzdbDateTimeZoneSource fromBytes(List<int> data) {
+    final source = TzdbDateTimeZoneSource();
+    final bytes = data is Uint8List ? data : Uint8List.fromList(data);
+    const xzMagic = [0xFD, 0x37, 0x7A, 0x58, 0x5A, 0x00];
+    final isXz = bytes.length >= xzMagic.length &&
+        Iterable.generate(xzMagic.length).every((i) => bytes[i] == xzMagic[i]);
+    try {
+      source._load(isXz ? XZDecoder().decodeBytes(bytes, verify: true) : bytes);
+    } on InvalidTimeDataError {
+      rethrow;
+    } catch (e) {
+      throw InvalidTimeDataError('Invalid TZDB data: $e');
+    }
+    return source;
+  }
 
   /// The TZDB source embedded in Time Machine, as used by
   /// [DateTimeZoneProviders.tzdb].
@@ -51,55 +85,61 @@ class TzdbDateTimeZoneSource extends DateTimeZoneSource {
               .asUint8List(),
           verify: true);
 
-      final streamReader = TzdbStreamReader(ByteData.sublistView(tzdbData));
+      _load(tzdbData);
+    }
+  }
 
-      _tzdbVersion = streamReader.tzdbVersion;
-      _windowsMapping = streamReader.windowsZones;
-      _versionId = _windowsMapping.version.isEmpty
-          ? 'TZDB: $_tzdbVersion'
-          : 'TZDB: $_tzdbVersion (mapping: ${_windowsMapping.version})';
-      _aliases.clear();
-      _aliases.addAll(streamReader.aliases);
+  void _load(Uint8List tzdbData) {
+    final streamReader = TzdbStreamReader(ByteData.sublistView(tzdbData));
 
-      _windowsStandardNameToTzdbId
-        ..clear()
-        ..addAll(streamReader.windowsStandardNameToTzdbId);
+    _tzdbVersion = streamReader.tzdbVersion;
+    _zoneLocations = streamReader.zoneLocations;
+    _zone1970Locations = streamReader.zone1970Locations;
+    _windowsMapping = streamReader.windowsZones;
+    _versionId = _windowsMapping.version.isEmpty
+        ? 'TZDB: $_tzdbVersion'
+        : 'TZDB: $_tzdbVersion (mapping: ${_windowsMapping.version})';
+    _aliases.clear();
+    _aliases.addAll(streamReader.aliases);
 
-      final dateTimeZones = streamReader.timeZones;
+    _windowsStandardNameToTzdbId
+      ..clear()
+      ..addAll(streamReader.windowsStandardNameToTzdbId);
 
-      _dateTimeZones.clear();
-      _dateTimeZones.addAll(dateTimeZones);
+    final dateTimeZones = streamReader.timeZones;
 
-      _canonicalIdMap = UnmodifiableMapView({
-        for (final id in dateTimeZones.keys) id: id,
-        ..._aliases,
-      });
-      _windowsToTzdbIds = null;
-      _tzdbToWindowsIds = null;
-      _aliasLookup = null;
+    _dateTimeZones.clear();
+    _dateTimeZones.addAll(dateTimeZones);
 
-      // Add time zones under their alias names as well
-      final aliases = streamReader.aliases;
-      for (final entry in aliases.entries) {
-        final aliasId = entry.key;
-        final canonicalId = entry.value;
-        if (_dateTimeZones.containsKey(canonicalId)) {
-          final originalZone = _dateTimeZones[canonicalId]!;
-          if (originalZone is FixedDateTimeZone) {
-            _dateTimeZones[aliasId] = FixedDateTimeZone(
-                aliasId, originalZone.offset, originalZone.name);
-          } else if (originalZone is PrecalculatedDateTimeZone) {
-            _dateTimeZones[aliasId] = PrecalculatedDateTimeZone(
-                aliasId, originalZone.periods, originalZone.tailZone);
-          } else {
-            // For any other type, just use the original instance
-            _dateTimeZones[aliasId] = originalZone;
-          }
+    _canonicalIdMap = UnmodifiableMapView({
+      for (final id in dateTimeZones.keys) id: id,
+      ..._aliases,
+    });
+    _windowsToTzdbIds = null;
+    _tzdbToWindowsIds = null;
+    _aliasLookup = null;
+
+    // Add time zones under their alias names as well
+    final aliases = streamReader.aliases;
+    for (final entry in aliases.entries) {
+      final aliasId = entry.key;
+      final canonicalId = entry.value;
+      if (_dateTimeZones.containsKey(canonicalId)) {
+        final originalZone = _dateTimeZones[canonicalId]!;
+        if (originalZone is FixedDateTimeZone) {
+          _dateTimeZones[aliasId] = FixedDateTimeZone(
+              aliasId, originalZone.offset, originalZone.name);
+        } else if (originalZone is PrecalculatedDateTimeZone) {
+          _dateTimeZones[aliasId] = PrecalculatedDateTimeZone(
+              aliasId, originalZone.periods, originalZone.tailZone);
+        } else {
+          // For any other type, just use the original instance
+          _dateTimeZones[aliasId] = originalZone;
         }
       }
-
-      _initialized = true;
     }
+
+    _initialized = true;
   }
 
   void _checkInitialized() {
@@ -131,6 +171,30 @@ class TzdbDateTimeZoneSource extends DateTimeZoneSource {
   String get tzdbVersion {
     _checkInitialized();
     return _tzdbVersion;
+  }
+
+  /// The zone locations for the source, from the tz database's `zone.tab`
+  /// file: one for each country (or territory) and zone, with the
+  /// coordinates of the zone's principal location. Null if the data has no
+  /// zone locations.
+  ///
+  /// The zones in `zone.tab` are a subset of the canonical zone IDs, and are
+  /// mostly the ones of interest to end users.
+  List<TzdbZoneLocation>? get zoneLocations {
+    _checkInitialized();
+    return _zoneLocations;
+  }
+
+  /// The "zone 1970" locations for the source, from the tz database's
+  /// `zone1970.tab` file: one for each zone which has had a distinct history
+  /// since 1970, with all the countries (or territories) it's used in. Null if
+  /// the data has no such locations.
+  ///
+  /// This is generally the better choice than [zoneLocations] for letting a
+  /// user pick a zone, as it has no near-duplicate zones.
+  List<TzdbZone1970Location>? get zone1970Locations {
+    _checkInitialized();
+    return _zone1970Locations;
   }
 
   /// A map from time zone ID to the canonical ID for that zone. Canonical IDs
@@ -290,13 +354,16 @@ class TzdbDateTimeZoneSource extends DateTimeZoneSource {
   /// Throws [InvalidDateTimeZoneSourceError] if the source data is invalid.
   void validate() {
     _checkInitialized();
-    validateData(_canonicalIdMap, _windowsMapping);
+    validateData(_canonicalIdMap, _windowsMapping,
+        zoneLocations: _zoneLocations, zone1970Locations: _zone1970Locations);
   }
 
   /// Validates the given data, as [validate] does. Exposed for the TZDB compiler and tests.
   @internal
   static void validateData(
-      Map<String, String> canonicalIdMap, WindowsZones windowsMapping) {
+      Map<String, String> canonicalIdMap, WindowsZones windowsMapping,
+      {List<TzdbZoneLocation>? zoneLocations,
+      List<TzdbZone1970Location>? zone1970Locations}) {
     void fail(String message) => throw InvalidDateTimeZoneSourceError(message);
 
     // Check that each entry has a canonical value. (Every mapping x to y
@@ -363,6 +430,21 @@ class TzdbDateTimeZoneSource extends DateTimeZoneSource {
         fail('Windows mapping primary territory entry for Windows ID '
             '${group.key} has TZDB ID $primaryTzdb which does not occur in a '
             'non-primary territory');
+      }
+    }
+
+    // Check that each zone location has a valid zone ID
+    for (final location in zoneLocations ?? const <TzdbZoneLocation>[]) {
+      if (!canonicalIdMap.containsKey(location.zoneId)) {
+        fail('Zone location ${location.countryName} uses zone ID '
+            '${location.zoneId} which is missing');
+      }
+    }
+    for (final location
+        in zone1970Locations ?? const <TzdbZone1970Location>[]) {
+      if (!canonicalIdMap.containsKey(location.zoneId)) {
+        fail('Zone 1970 location ${location.countries[0].name} uses zone ID '
+            '${location.zoneId} which is missing');
       }
     }
   }

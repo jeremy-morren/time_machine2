@@ -15,6 +15,7 @@ void main() {
   test('Max', Max);
   test('Min', Min);
   test('WithOffset', WithOffset);
+  test('TestToString', TestToString);
 }
 
 void MinValueEqualToMidnight() {
@@ -68,4 +69,13 @@ void WithOffset() {
   var offset = Offset.hours(5);
   var expected = OffsetTime(time, offset);
   expect(expected, time.withOffset(offset));
+}
+
+void TestToString() {
+  // As in Noda Time, this is the OffsetTime's ToString.
+  var value = LocalTime(3, 45, 12, ms: 34).withOffset(Offset.hours(5));
+  expect(value.toString(), value.toString(null, null));
+  // Not in Noda Time: the LocalTime's own.
+  var time = LocalTime(3, 45, 12, ms: 34);
+  expect(time.toString(), time.toString(null, null));
 }

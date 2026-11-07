@@ -148,7 +148,8 @@ abstract class IParseResult {
         // Format the overall message, containing the parse error and the value itself.
         String overallMessage = stringFormat(
             TextErrorMessages.unparsableValue, [detailMessage, cursor]);
-        return UnparsableValueError(overallMessage);
+        return UnparsableValueError(overallMessage,
+            value: cursor.value, index: cursor.index);
       });
 
   static ParseResult<T> forInvalidValuePostParse<T>(
@@ -160,7 +161,7 @@ abstract class IParseResult {
         // Format the overall message, containing the parse error and the value itself.
         String overallMessage = stringFormat(
             TextErrorMessages.unparsableValuePostParse, [detailMessage, text]);
-        return UnparsableValueError(overallMessage);
+        return UnparsableValueError(overallMessage, value: text, index: -1);
       });
 
   // note: was ForInvalidValue
@@ -212,8 +213,11 @@ abstract class IParseResult {
           cursor, TextErrorMessages.unexpectedNegative);
 
   /// This isn't really an issue with the value so much as the pattern... but the result is the same.
-  static final ParseResult formatOnlyPattern = ParseResult._error(
-      () => UnparsableValueError(TextErrorMessages.formatOnlyPattern), true);
+  static ParseResult<T> formatOnlyPattern<T>(ValueCursor cursor) =>
+      ParseResult<T>._error(
+          () => UnparsableValueError(TextErrorMessages.formatOnlyPattern,
+              value: cursor.value, index: cursor.index),
+          true);
 
   static ParseResult<T> mismatchedNumber<T>(
           ValueCursor cursor, String pattern) =>

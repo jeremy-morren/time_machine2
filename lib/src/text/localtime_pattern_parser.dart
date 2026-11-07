@@ -112,6 +112,13 @@ class LocalTimePatternParser implements IPatternParser<LocalTime> {
         return formatInfo.dateTimeFormat.longTimePattern;
       case 'r':
         return 'HH:mm:ss.FFFFFFFFF';
+      // Invariant ISO patterns, as in Noda Time: 'o' is
+      // LocalTimePattern.extendedIso and 'O' is LocalTimePattern.longExtendedIso.
+      // (The colons are quoted, so the culture's time separator isn't used.)
+      case 'o':
+        return "HH':'mm':'ss;FFFFFFFFF";
+      case 'O':
+        return "HH':'mm':'ss;fffffffff";
       default:
         // Will be turned into an exception.
         return null;

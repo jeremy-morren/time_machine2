@@ -25,6 +25,8 @@ export 'localdatetime_pattern.dart';
 
 export 'annual_date_pattern.dart';
 export 'annual_date_pattern_parser.dart';
+export 'year_month_pattern.dart';
+export 'year_month_pattern_parser.dart';
 export 'duration_pattern.dart';
 export 'duration_pattern_parser.dart';
 export 'instant_pattern.dart';

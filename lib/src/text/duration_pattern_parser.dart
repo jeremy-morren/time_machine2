@@ -66,6 +66,9 @@ class TimePatternParser implements IPatternParser<Time> {
       switch (patternText[0]) {
         case 'o':
           return TimePatterns.roundtripPatternImpl;
+        // As in Noda Time, 'j' is the "JSON roundtrip" pattern (TimePattern.jsonRoundtrip).
+        case 'j':
+          return TimePatterns.jsonRoundtripPatternImpl;
         default:
           throw IInvalidPatternError.format(
               TextErrorMessages.unknownStandardFormat,

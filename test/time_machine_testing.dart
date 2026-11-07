@@ -8,10 +8,7 @@ import 'testing/test_helper.dart' as helper;
 export 'testing/time_matchers.dart';
 export 'testing/test_helper.dart';
 
-export 'testing/fake_clock.dart';
-export 'testing/timezones/single_transition_datetimezone.dart';
-export 'testing/timezones/multi_transition_datetimezone.dart';
-export 'testing/timezones/fake_datetimezone_source.dart';
+export 'package:time_machine2/testing.dart';
 
 export 'testing/skip.dart';
 

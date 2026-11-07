@@ -40,6 +40,7 @@ export 'ambiguous_time_error.dart';
 export 'skipped_time_error.dart';
 
 export 'annual_date.dart';
+export 'year_month.dart';
 export 'date_adjusters.dart';
 export 'date_interval.dart';
 export 'time_adjusters.dart';

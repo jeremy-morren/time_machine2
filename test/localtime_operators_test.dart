@@ -6,6 +6,8 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 
 import 'package:test/test.dart';
 
+import 'time_machine_testing.dart';
+
 void main() {
   test('Addition_WithPeriod', Addition_WithPeriod);
   test('Addition_WrapsAtMidnight', Addition_WrapsAtMidnight);
@@ -16,6 +18,7 @@ void main() {
   test('PeriodAddition_MethodEquivalents', PeriodAddition_MethodEquivalents);
   test('PeriodSubtraction_MethodEquivalents',
       PeriodSubtraction_MethodEquivalents);
+  test('EqualityAndComparison', EqualityAndComparison);
   test('ComparisonOperators', ComparisonOperators);
   test(
       'Comparison_IgnoresOriginalCalendar', Comparison_IgnoresOriginalCalendar);
@@ -105,6 +108,20 @@ void PeriodSubtraction_MethodEquivalents() {
   // todo: does not exist
   // expect(period, LocalTime.Subtract(end, start));
   expect(period, end.periodSince(start));
+}
+
+void EqualityAndComparison() {
+  LocalTime time1 = LocalTime(10, 30, 45);
+  LocalTime time2 = LocalTime(10, 30, 45);
+  LocalTime time3 = LocalTime(10, 30, 50);
+
+  // TestHelper.TestNonGenericCompareTo: Comparable without a type argument.
+  Comparable nonGeneric = time1;
+  expect(nonGeneric.compareTo(time2), 0);
+  expect(nonGeneric.compareTo(time3), lessThan(0));
+  TestHelper.TestCompareToStruct(time1, time2, [time3]);
+  // TestHelper.TestOperatorComparisonEquality: see ComparisonOperators.
+  TestHelper.TestEqualsStruct(time1, time2, [time3]);
 }
 
 void ComparisonOperators() {

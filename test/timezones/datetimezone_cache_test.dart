@@ -263,8 +263,8 @@ class TestDateTimeZoneSource extends DateTimeZoneSource {
   @override
   DateTimeZone forCachedId(String id) {
     LastRequestedId = id;
-    return SingleTransitionDateTimeZone.withId(TimeConstants.unixEpoch,
-        Offset.zero, Offset.hours(id.hashCode % 18), id);
+    return SingleTransitionDateTimeZone(TimeConstants.unixEpoch, Offset.zero,
+        Offset.hours(id.hashCode % 18), id);
   }
 
   @override

@@ -42,6 +42,116 @@ Future main() async {
     test('WithCalendar', fixture.WithCalendar);
     test('CreateWithCurrentCulture', fixture.CreateWithCurrentCulture);
     parameterizedTest(
+        'WithTwoDigitYearMax',
+        [
+          [0, '00-01-01T00:00:00', 2000],
+          [0, '01-01-01T00:00:00', 1901],
+          [50, '49-01-01T00:00:00', 2049],
+          [50, '50-01-01T00:00:00', 2050],
+          [50, '51-01-01T00:00:00', 1951],
+          [99, '00-01-01T00:00:00', 2000],
+          [99, '99-01-01T00:00:00', 2099],
+        ],
+        fixture.WithTwoDigitYearMax,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
+        'WithTwoDigitYearMax_Invalid',
+        [-1, 100, Platform.int32MinValue, Platform.int32MaxValue],
+        fixture.WithTwoDigitYearMax_Invalid,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
+        'DateHourIso_Roundtrip',
+        ['1992-01-25T00', '-1000-12-31T23', '9999-12-31T05'],
+        fixture.DateHourIso_Roundtrip,
+        customDescriptionBuilder: describeArguments);
+    test('DateHourIso_2400', fixture.DateHourIso_2400);
+    parameterizedTest(
+        'DateHourIso_Invalid',
+        [
+          '10000-01-01T05',
+          '1999-13-01T05',
+          '1999-09-31T05',
+          '1992-01-25T-05',
+          '1992-01-25T05:00',
+          '1992-01-25T5',
+          '1992-01-25T99',
+        ],
+        fixture.DateHourIso_Invalid,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
+        'DateHourMinuteIso_Roundtrip',
+        ['1992-01-25T00:31', '1992-01-25T23:10'],
+        fixture.DateHourMinuteIso_Roundtrip,
+        customDescriptionBuilder: describeArguments);
+    test('DateHourMinuteIso_2400', fixture.DateHourMinuteIso_2400);
+    parameterizedTest(
+        'DateHourMinuteIso_Invalid',
+        [
+          '10000-01-01T05:00',
+          '1999-13-01T05:00',
+          '1999-09-31T05:00',
+          '1992-01-25T-05:00',
+          '1992-01-25T5:00',
+          '1992-01-25T24:01', // 24:00 is valid; covered above.
+          '1992-01-25T99:00',
+          '1992-01-25T10:60',
+          '1992-01-25T10:70',
+        ],
+        fixture.DateHourMinuteIso_Invalid,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
+        'VariablePrecision_Valid',
+        [
+          [
+            '03',
+            ['03:00', '03:00:00']
+          ],
+          [
+            '12',
+            ['12:00', '12:00:00', '12:00:00.000000', '12:00:00.000000000']
+          ],
+          [
+            '12:01',
+            ['12:01:00', '12:01:00.000000']
+          ],
+          [
+            '12:00:01',
+            ['12:00:01.000000']
+          ],
+          [
+            '12:00:01.123',
+            ['12:00:01.123000', '12:00:01.123000000']
+          ],
+          ['12:00:01.123456789', <String>[]],
+        ],
+        fixture.VariablePrecision_Valid,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
+        'VarablePrecision_2400',
+        [
+          '1992-01-25T24',
+          '1992-01-25T24:00',
+          '1992-01-25T24:00:00',
+          '1992-01-25T24:00:00.000',
+          '1992-01-25T24:00:00.000000000',
+        ],
+        fixture.VarablePrecision_2400,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
+        'VariablePrecision_Invalid',
+        [
+          '1992-01-32',
+          '10:00',
+          '1992-01-32T10:00',
+          '1992-13-25T10:00',
+          '1992-01-25T25:61',
+          '1992-01-25T12:23:45.0000000000', // Too many fractional digits
+          '1992-01-25T05:63',
+          '1992-01-25T05:00:63',
+        ],
+        fixture.VariablePrecision_Invalid,
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest(
         'ParseFormattedStandardPattern',
         fixture.AllCulturesStandardPatterns,
         fixture.ParseFormattedStandardPattern,
@@ -467,6 +577,91 @@ class LocalDateTimePatternTest extends PatternTestBase<LocalDateTime> {
 
   // @Test()
   // void ParseNull() => AssertParseNull(LocalDateTimePattern.extendedIso);
+
+  void WithTwoDigitYearMax(int twoDigitYearMax, String text, int expectedYear) {
+    var pattern =
+        LocalDateTimePattern.createWithInvariantCulture("yy-MM-dd'T'HH:mm:ss")
+            .withTwoDigitYearMax(twoDigitYearMax);
+    var value = pattern.parse(text).value;
+    expect(value.year, expectedYear);
+  }
+
+  void WithTwoDigitYearMax_Invalid(int twoDigitYearMax) {
+    expect(
+        () => LocalDateTimePattern.extendedIso
+            .withTwoDigitYearMax(twoDigitYearMax),
+        throwsRangeError);
+  }
+
+  void DateHourIso_Roundtrip(String text) {
+    var result = LocalDateTimePattern.dateHourIso.parse(text);
+    expect(result.success, isTrue);
+    var time = result.value;
+    expect(time.minuteOfHour, 0);
+    expect(time.secondOfMinute, 0);
+    expect(time.nanosecondOfSecond, 0);
+    var formatted = LocalDateTimePattern.dateHourIso.format(time);
+    expect(formatted, text);
+  }
+
+  void DateHourIso_2400() {
+    var result = LocalDateTimePattern.dateHourIso.parse('1992-01-25T24');
+    expect(result.success, isTrue);
+    expect(result.value, LocalDateTime(1992, 1, 26, 0, 0, 0));
+  }
+
+  void DateHourIso_Invalid(String text) {
+    var result = LocalDateTimePattern.dateHourIso.parse(text);
+    expect(result.success, isFalse);
+  }
+
+  void DateHourMinuteIso_Roundtrip(String text) {
+    var result = LocalDateTimePattern.dateHourMinuteIso.parse(text);
+    expect(result.success, isTrue);
+    var time = result.value;
+    expect(time.secondOfMinute, 0);
+    expect(time.nanosecondOfSecond, 0);
+    var formatted = LocalDateTimePattern.dateHourMinuteIso.format(time);
+    expect(formatted, text);
+  }
+
+  void DateHourMinuteIso_2400() {
+    var result =
+        LocalDateTimePattern.dateHourMinuteIso.parse('1992-01-25T24:00');
+    expect(result.success, isTrue);
+    expect(result.value, LocalDateTime(1992, 1, 26, 0, 0, 0));
+  }
+
+  void DateHourMinuteIso_Invalid(String text) {
+    var result = LocalDateTimePattern.dateHourMinuteIso.parse(text);
+    expect(result.success, isFalse);
+  }
+
+  void VariablePrecision_Valid(String canonical, List<String> alternatives) {
+    // Just use the same prefix for all values; it's only the time part that can vary in precision.
+    String prefix = '1992-01-25T';
+    String fullCanonical = prefix + canonical;
+
+    var pattern = LocalDateTimePattern.variablePrecisionIso;
+    for (var text in [canonical, ...alternatives]) {
+      var result = pattern.parse(prefix + text);
+      expect(result.success, isTrue, reason: text);
+      var time = result.value;
+      var formatted = pattern.format(time);
+      expect(formatted, fullCanonical);
+    }
+  }
+
+  void VarablePrecision_2400(String text) {
+    var result = LocalDateTimePattern.variablePrecisionIso.parse(text);
+    expect(result.success, isTrue);
+    expect(result.value, LocalDateTime(1992, 1, 26, 0, 0, 0));
+  }
+
+  void VariablePrecision_Invalid(String text) {
+    var result = LocalDateTimePattern.variablePrecisionIso.parse(text);
+    expect(result.success, isFalse);
+  }
 
   /*
   @Test()

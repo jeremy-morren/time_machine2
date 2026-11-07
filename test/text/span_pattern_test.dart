@@ -242,6 +242,20 @@ class SpanPatternTest extends PatternTestBase<Time> {
       ..text = '-1:02:03:04.123456789'
       ..culture = TestCultures.DotTimeSeparator,
 
+    // Same tests for the "JSON roundtrip" pattern.
+    Data.dhmsn(1, 2, 3, 4, 123456789)
+      ..standardPattern = TimePattern.jsonRoundtrip
+      ..standardPatternCode = 'TimePattern.jsonRoundtrip'
+      ..pattern = 'j'
+      ..text = '26:03:04.123456789'
+      ..culture = TestCultures.DotTimeSeparator,
+    Data.dhmsn(-1, -2, -3, -4, -123456789)
+      ..standardPattern = TimePattern.jsonRoundtrip
+      ..standardPatternCode = 'TimePattern.jsonRoundtrip'
+      ..pattern = 'j'
+      ..text = '-26:03:04.123456789'
+      ..culture = TestCultures.DotTimeSeparator,
+
     // Extremes...
     /* todo: our extremes are different (could be different based on platform?)
     new Data(Span.minValue)

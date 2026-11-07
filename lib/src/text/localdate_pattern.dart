@@ -17,10 +17,16 @@ abstract class LocalDatePatterns {
       LocalDatePattern.createWithInvariantCulture(fullRoundtripPatternText);
 
   static LocalDatePattern create(String patternText,
-          TimeMachineFormatInfo formatInfo, LocalDate templateValue) =>
-      LocalDatePattern._create(patternText, formatInfo, templateValue);
+          TimeMachineFormatInfo formatInfo, LocalDate templateValue,
+          [int twoDigitYearMax = defaultTwoDigitYearMax]) =>
+      LocalDatePattern._create(
+          patternText, formatInfo, templateValue, twoDigitYearMax);
 
   static final LocalDate defaultTemplateValue = LocalDate(2000, 1, 1);
+
+  /// Default value for [LocalDatePattern.twoDigitYearMax] (and the other
+  /// patterns' `twoDigitYearMax`).
+  static const int defaultTwoDigitYearMax = 30;
   static IPartialPattern<LocalDate> underlyingPattern(
           LocalDatePattern localDatePattern) =>
       localDatePattern._underlyingPattern;
@@ -68,8 +74,14 @@ class LocalDatePattern implements IPattern<LocalDate> {
   /// in the pattern are taken from the template.
   final LocalDate templateValue;
 
+  /// Maximum two-digit-year in the template to treat as the current century.
+  /// If the value parsed is higher than this, the result is adjusted to the
+  /// previous century. This value defaults to 30. To create a pattern with a
+  /// different value, use [withTwoDigitYearMax].
+  final int twoDigitYearMax;
+
   const LocalDatePattern._(this.patternText, this._formatInfo,
-      this.templateValue, this._underlyingPattern);
+      this.templateValue, this.twoDigitYearMax, this._underlyingPattern);
 
   /// Parses the given text value according to the rules of this pattern.
   ///
@@ -112,20 +124,22 @@ class LocalDatePattern implements IPattern<LocalDate> {
   ///
   /// * [InvalidPatternError]: The pattern text was invalid.
   static LocalDatePattern _create(String patternText,
-      TimeMachineFormatInfo formatInfo, LocalDate templateValue) {
+      TimeMachineFormatInfo formatInfo, LocalDate templateValue,
+      [int twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax]) {
     Preconditions.checkNotNull(patternText, 'patternText');
     Preconditions.checkNotNull(formatInfo, 'formatInfo');
     // Use the 'fixed' parser for the common case of the default template value.
-    var pattern = templateValue == LocalDatePatterns.defaultTemplateValue
+    var pattern = templateValue == LocalDatePatterns.defaultTemplateValue &&
+            twoDigitYearMax == LocalDatePatterns.defaultTwoDigitYearMax
         ? formatInfo.localDatePatternParser.parsePattern(patternText)
-        : LocalDatePatternParser(templateValue)
+        : LocalDatePatternParser(templateValue, twoDigitYearMax)
             .parsePattern(patternText, formatInfo);
     // If ParsePattern returns a standard pattern instance, we need to get the underlying partial pattern.
     pattern =
         pattern is LocalDatePattern ? pattern._underlyingPattern : pattern;
     var partialPattern = pattern as IPartialPattern<LocalDate>;
-    return LocalDatePattern._(
-        patternText, formatInfo, templateValue, partialPattern);
+    return LocalDatePattern._(patternText, formatInfo, templateValue,
+        twoDigitYearMax, partialPattern);
   }
 
   /// Creates a pattern for the given pattern text, culture, and template value.
@@ -183,7 +197,7 @@ class LocalDatePattern implements IPattern<LocalDate> {
   ///
   /// Returns: A new pattern with the given localization information.
   LocalDatePattern _withFormatInfo(TimeMachineFormatInfo formatInfo) =>
-      _create(patternText, formatInfo, templateValue);
+      _create(patternText, formatInfo, templateValue, twoDigitYearMax);
 
   /// Creates a pattern for the same original pattern text as this pattern, but with the specified
   /// culture.
@@ -200,7 +214,20 @@ class LocalDatePattern implements IPattern<LocalDate> {
   ///
   /// Returns: A new pattern with the given template value.
   LocalDatePattern withTemplateValue(LocalDate newTemplateValue) =>
-      _create(patternText, _formatInfo, newTemplateValue);
+      _create(patternText, _formatInfo, newTemplateValue, twoDigitYearMax);
+
+  /// Creates a pattern like this one, but with a different [twoDigitYearMax]
+  /// value.
+  ///
+  /// * [twoDigitYearMax]: The value to use for [twoDigitYearMax] in the new
+  ///   pattern, in the range 0-99 inclusive.
+  ///
+  /// Returns: A new pattern with the specified maximum two-digit-year
+  /// value.
+  ///
+  /// * [RangeError]: [twoDigitYearMax] is outside the range 0-99.
+  LocalDatePattern withTwoDigitYearMax(int twoDigitYearMax) =>
+      _create(patternText, _formatInfo, templateValue, twoDigitYearMax);
 
   /// Creates a pattern like this one, but with the template value modified to use
   /// the specified calendar system.

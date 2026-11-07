@@ -14,6 +14,23 @@ class InstantPatternParser implements IPatternParser<Instant> {
   static const String beforeMinValueText = 'StartOfTime';
   static const String afterMaxValueText = 'EndOfTime';
 
+  /// The template value as a UTC local date/time, or null for the default
+  /// template value.
+  final LocalDateTime? _localTemplateValue;
+  final int _twoDigitYearMax;
+
+  /// * [templateValue]: The template value, or null for the default
+  ///   (the start of the year 2000 in UTC).
+  /// * [twoDigitYearMax]: Maximum two-digit-year in the template to treat as
+  ///   the current century, in the range 0-99 inclusive.
+  InstantPatternParser(
+      [Instant? templateValue,
+      this._twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax])
+      : _localTemplateValue = templateValue?.inUtc().localDateTime {
+    Preconditions.checkArgumentRange(
+        'twoDigitYearMax', _twoDigitYearMax, 0, 99);
+  }
+
   @override
   IPattern<Instant> parsePattern(
       String patternText, TimeMachineFormatInfo formatInfo) {
@@ -37,8 +54,16 @@ class InstantPatternParser implements IPatternParser<Instant> {
       }
     }
 
-    IPattern<LocalDateTime> localResult =
-        formatInfo.localDateTimePatternParser.parsePattern(patternText);
+    // We unwrap the LocalDateTimePattern to avoid unnecessary levels of indirection.
+    var localTemplateValue = _localTemplateValue;
+    IPattern<LocalDateTime> localResult = localTemplateValue == null &&
+            _twoDigitYearMax == LocalDatePatterns.defaultTwoDigitYearMax
+        ? formatInfo.localDateTimePatternParser.parsePattern(patternText)
+        : LocalDateTimePatterns.underlyingPattern(LocalDateTimePatterns.create(
+            patternText,
+            formatInfo,
+            localTemplateValue ?? LocalDateTimePatterns.defaultTemplateValue,
+            _twoDigitYearMax));
     return _LocalDateTimePatternAdapter(localResult);
   }
 }

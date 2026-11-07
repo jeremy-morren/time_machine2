@@ -32,19 +32,19 @@ List<Instant> Instants = (Iterable.generate(10, (i) => (i + 2000)))
 // different features.
 void Various() {
   // Names, some offsets, and first transition are all different.
-  var zone1 = (MtdtzBuilder()
-        ..Add(Instants[0], 1, 0, 'xx')
-        ..Add(Instants[2], 3, 0, '1b')
-        ..Add(Instants[4], 2, 1, '1c')
-        ..Add(Instants[6], 4, 0, '1d'))
-      .Build();
+  var zone1 = (MultiTransitionDateTimeZoneBuilder()
+        ..add(Instants[0], 1, 0, 'xx')
+        ..add(Instants[2], 3, 0, '1b')
+        ..add(Instants[4], 2, 1, '1c')
+        ..add(Instants[6], 4, 0, '1d'))
+      .build();
 
-  var zone2 = (MtdtzBuilder()
-        ..Add(Instants[1], 1, 0, 'xx')
-        ..Add(Instants[2], 3, 0, '2b')
-        ..Add(Instants[4], 1, 2, '2c')
-        ..Add(Instants[6], 5, 0, '2d'))
-      .Build();
+  var zone2 = (MultiTransitionDateTimeZoneBuilder()
+        ..add(Instants[1], 1, 0, 'xx')
+        ..add(Instants[2], 3, 0, '2b')
+        ..add(Instants[4], 1, 2, '2c')
+        ..add(Instants[6], 5, 0, '2d'))
+      .build();
 
   // Even though the first transition point is different, by default that's fine if
   // the start point is 'inside' both.
@@ -73,23 +73,23 @@ void Various() {
 }
 
 void ElidedTransitions() {
-  var zone1 = (MtdtzBuilder()
-        ..Add(Instants[3], 0, 0, 'a')
-        ..Add(Instants[4], 1, 2, 'b')
-        ..Add(Instants[5], 2, 1, 'b')
-        ..Add(Instants[6], 1, 0, 'd')
-        ..Add(Instants[7], 1, 0, 'e')
-        ..Add(Instants[8], 0, 0, 'x'))
-      .Build();
+  var zone1 = (MultiTransitionDateTimeZoneBuilder()
+        ..add(Instants[3], 0, 0, 'a')
+        ..add(Instants[4], 1, 2, 'b')
+        ..add(Instants[5], 2, 1, 'b')
+        ..add(Instants[6], 1, 0, 'd')
+        ..add(Instants[7], 1, 0, 'e')
+        ..add(Instants[8], 0, 0, 'x'))
+      .build();
 
-  var zone2 = (MtdtzBuilder()
-        ..Add(Instants[3], 0, 0, 'a')
-        ..Add(Instants[4], 3, 0, 'b')
+  var zone2 = (MultiTransitionDateTimeZoneBuilder()
+        ..add(Instants[3], 0, 0, 'a')
+        ..add(Instants[4], 3, 0, 'b')
         // Instants[5] isn't included here: wall offset is the same; components change in zone1
-        ..Add(Instants[6], 1, 0, 'd')
+        ..add(Instants[6], 1, 0, 'd')
         // Instants[7] isn't included here: offset components are the same; names change in zone1
-        ..Add(Instants[8], 0, 0, 'x'))
-      .Build();
+        ..add(Instants[8], 0, 0, 'x'))
+      .build();
 
   AssertEqual(zone1, zone2, Instant.minValue, Instant.maxValue,
       ZoneEqualityComparerOptions.onlyMatchWallOffset);
@@ -139,16 +139,16 @@ void ElidedTransitions_Degenerate() {
   // Transitions with *nothing* that we care about. (Normally
   // these wouldn't even be generated, but we could imagine some
   // sort of zone interval in the future which had another property...)
-  var zone1 = (MtdtzBuilder()
-        ..Add(Instants[3], 1, 0, 'a')
-        ..Add(Instants[4], 1, 0, 'a')
-        ..Add(Instants[5], 1, 0, 'a')
-        ..Add(Instants[6], 0))
-      .Build();
-  var zone2 = (MtdtzBuilder()
-        ..Add(Instants[3], 1, 0, 'a')
-        ..Add(Instants[6], 0))
-      .Build();
+  var zone1 = (MultiTransitionDateTimeZoneBuilder()
+        ..add(Instants[3], 1, 0, 'a')
+        ..add(Instants[4], 1, 0, 'a')
+        ..add(Instants[5], 1, 0, 'a')
+        ..add(Instants[6], 0))
+      .build();
+  var zone2 = (MultiTransitionDateTimeZoneBuilder()
+        ..add(Instants[3], 1, 0, 'a')
+        ..add(Instants[6], 0))
+      .build();
 
   // We can match *everything* except exact transitions...
   var match = ZoneEqualityComparerOptions.matchNames |

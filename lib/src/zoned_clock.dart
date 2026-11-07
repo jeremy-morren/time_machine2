@@ -23,6 +23,17 @@ class ZonedClock extends Clock {
     Preconditions.checkNotNull(_calendar, 'calendar');
   }
 
+  /// The clock used to provide the current instant.
+  Clock get clock => _clock;
+
+  /// The time zone used when converting the current instant into a
+  /// zone-sensitive value.
+  DateTimeZone get zone => _zone;
+
+  /// The calendar system used when converting the current instant into a
+  /// calendar-sensitive value.
+  CalendarSystem get calendar => _calendar;
+
   /// Returns the current instant provided by the underlying clock.
   @override
   Instant getCurrentInstant() => _clock.getCurrentInstant();

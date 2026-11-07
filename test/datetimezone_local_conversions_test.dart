@@ -52,8 +52,8 @@ void main() {
       GetOffsetFromLocal_ParisSpringTransition);
   test('MapLocalDateTime_UnambiguousDateReturnsUnambiguousMapping',
       MapLocalDateTime_UnambiguousDateReturnsUnambiguousMapping);
-  test('MapLocalDateTime_AmbiguousDateReturnsAmbigousMapping',
-      MapLocalDateTime_AmbiguousDateReturnsAmbigousMapping);
+  test('MapLocalDateTime_AmbiguousDateReturnsAmbiguousMapping',
+      MapLocalDateTime_AmbiguousDateReturnsAmbiguousMapping);
   test('MapLocalDateTime_SkippedDateReturnsSkippedMapping',
       MapLocalDateTime_SkippedDateReturnsSkippedMapping);
   parameterizedTest(
@@ -342,7 +342,7 @@ void MapLocalDateTime_UnambiguousDateReturnsUnambiguousMapping() {
   expect(1, mapping?.count);
 }
 
-void MapLocalDateTime_AmbiguousDateReturnsAmbigousMapping() {
+void MapLocalDateTime_AmbiguousDateReturnsAmbiguousMapping() {
   //2011-11-06 01:30:00 - falls during DST - EST conversion in America/New York timezone
   var ambiguousTime = LocalDateTime(2011, 11, 6, 1, 30, 0);
   var mapping = NewYork?.mapLocal(ambiguousTime);

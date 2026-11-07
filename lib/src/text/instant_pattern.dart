@@ -17,6 +17,9 @@ abstract class InstantPatterns {
   static IPattern<Instant> patternOf(InstantPattern instantPattern) =>
       instantPattern._pattern;
 
+  /// The default template value: the start of the year 2000 in UTC.
+  static final Instant defaultTemplateValue = Instant.utc(2000, 1, 1, 0, 0);
+
   static String format(
           Instant instant, String? patternText, Culture? culture) =>
       TimeMachineFormatInfo.getInstance(culture)
@@ -46,7 +49,21 @@ class InstantPattern implements IPattern<Instant> {
   /// Gets the pattern text for this pattern, as supplied on creation.
   final String patternText;
 
-  const InstantPattern._(this.patternText, this._pattern);
+  final TimeMachineFormatInfo _formatInfo;
+
+  /// The value used as a template for parsing: any field values unspecified
+  /// in the pattern are taken from the template, which is interpreted in UTC.
+  /// The default is the start of the year 2000 in UTC.
+  final Instant templateValue;
+
+  /// Maximum two-digit-year in the template to treat as the current century.
+  /// If the value parsed is higher than this, the result is adjusted to the
+  /// previous century. This value defaults to 30. To create a pattern with a
+  /// different value, use [withTwoDigitYearMax].
+  final int twoDigitYearMax;
+
+  const InstantPattern._(this.patternText, this._formatInfo, this.templateValue,
+      this.twoDigitYearMax, this._pattern);
 
   /// Parses the given text value according to the rules of this pattern.
   ///
@@ -87,11 +104,20 @@ class InstantPattern implements IPattern<Instant> {
   ///
   /// * [InvalidPatternError]: The pattern text was invalid.
   static InstantPattern _create(
-      String patternText, TimeMachineFormatInfo formatInfo) {
+      String patternText, TimeMachineFormatInfo formatInfo,
+      [Instant? templateValue,
+      int twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax]) {
     Preconditions.checkNotNull(patternText, 'patternText');
     Preconditions.checkNotNull(formatInfo, 'formatInfo');
-    var pattern = formatInfo.instantPatternParser.parsePattern(patternText);
-    return InstantPattern._(patternText, pattern);
+    templateValue ??= InstantPatterns.defaultTemplateValue;
+    // Use the 'fixed' parser for the common case of the default template value.
+    var pattern = templateValue == InstantPatterns.defaultTemplateValue &&
+            twoDigitYearMax == LocalDatePatterns.defaultTwoDigitYearMax
+        ? formatInfo.instantPatternParser.parsePattern(patternText)
+        : InstantPatternParser(templateValue, twoDigitYearMax)
+            .parsePattern(patternText, formatInfo);
+    return InstantPattern._(
+        patternText, formatInfo, templateValue, twoDigitYearMax, pattern);
   }
 
   /// Creates a pattern for the given pattern text and culture.
@@ -144,7 +170,7 @@ class InstantPattern implements IPattern<Instant> {
   ///
   /// Returns: A new pattern with the given localization information.
   InstantPattern _withFormatInfo(TimeMachineFormatInfo formatInfo) =>
-      _create(patternText, formatInfo);
+      _create(patternText, formatInfo, templateValue, twoDigitYearMax);
 
   /// Creates a pattern for the same original pattern text as this pattern, but with the specified
   /// culture.
@@ -154,4 +180,26 @@ class InstantPattern implements IPattern<Instant> {
   /// Returns: A new pattern with the given culture.
   InstantPattern withCulture(Culture culture) =>
       _withFormatInfo(TimeMachineFormatInfo.getFormatInfo(culture));
+
+  /// Creates a pattern like this one, but with the specified template value.
+  ///
+  /// * [newTemplateValue]: The template value for the new pattern, used to
+  ///   fill in unspecified fields. It is interpreted in UTC.
+  ///
+  /// Returns: A new pattern with the given template value.
+  InstantPattern withTemplateValue(Instant newTemplateValue) =>
+      _create(patternText, _formatInfo, newTemplateValue, twoDigitYearMax);
+
+  /// Creates a pattern like this one, but with a different [twoDigitYearMax]
+  /// value.
+  ///
+  /// * [twoDigitYearMax]: The value to use for [twoDigitYearMax] in the new
+  ///   pattern, in the range 0-99 inclusive.
+  ///
+  /// Returns: A new pattern with the specified maximum two-digit-year
+  /// value.
+  ///
+  /// * [RangeError]: [twoDigitYearMax] is outside the range 0-99.
+  InstantPattern withTwoDigitYearMax(int twoDigitYearMax) =>
+      _create(patternText, _formatInfo, templateValue, twoDigitYearMax);
 }

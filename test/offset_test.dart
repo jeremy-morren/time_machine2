@@ -11,6 +11,8 @@ void main() {
   test('Max', Max);
   test('Min', Min);
   test('DefaultConstructor', DefaultConstructor);
+  test('MinMaxValue', MinMaxValue);
+  test('TestToString', TestToString);
 }
 
 void Max() {
@@ -68,4 +70,19 @@ void FromTimeSpan_Simple()
 void DefaultConstructor() {
   var actual = Offset();
   expect(Offset.zero, actual);
+}
+
+// TestHelper.AssertMinMaxValue(Offset.MinValue, Offset.MaxValue)
+void MinMaxValue() {
+  expect(Offset.minValue, Offset.hours(-18));
+  expect(Offset.maxValue, Offset.hours(18));
+  expect(Offset.minValue < Offset.maxValue, isTrue);
+  expect(Offset.minValue.compareTo(Offset.maxValue), lessThan(0));
+  expect(() => Offset(Offset.minValue.inSeconds - 1), throwsRangeError);
+  expect(() => Offset(Offset.maxValue.inSeconds + 1), throwsRangeError);
+}
+
+void TestToString() {
+  var offset = Offset.hoursAndMinutes(5, 30);
+  expect(offset.toString(), offset.toString(null, null));
 }

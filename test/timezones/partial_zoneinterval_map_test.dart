@@ -40,10 +40,10 @@ void main() {
 }
 
 Future setup() async {
-  expectedZone = (MtdtzBuilder.withName(-2, 'Start')
-        ..Add(instants['C']!, 2, 1, "Middle")
-        ..Add(instants['G']!, 1, 0, "End"))
-      .Build();
+  expectedZone = (MultiTransitionDateTimeZoneBuilder.withName(-2, 'Start')
+        ..add(instants['C']!, 2, 1, "Middle")
+        ..add(instants['G']!, 1, 0, "End"))
+      .build();
 }
 
 // Arbitrary instants which are useful for the tests. They happen to be a year

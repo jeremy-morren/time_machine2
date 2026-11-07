@@ -24,6 +24,10 @@ void main() {
   test('GetZoneIntervals_IncludesStart', GetZoneIntervals_IncludesStart);
   test('GetZoneIntervals_ExcludesEnd', GetZoneIntervals_ExcludesEnd);
   test('GetZoneIntervals_Complex', GetZoneIntervals_Complex);
+  test('GetZoneIntervals_IntervalWithNoStart',
+      GetZoneIntervals_IntervalWithNoStart);
+  test(
+      'GetZoneIntervals_IntervalWithNoEnd', GetZoneIntervals_IntervalWithNoEnd);
   test('GetZoneIntervals_WithOptions_NoCoalescing',
       GetZoneIntervals_WithOptions_NoCoalescing);
   test('GetZoneIntervals_WithOptions_Coalescing',
@@ -35,7 +39,7 @@ void main() {
 // just <NodaTime.DateTimeZone+<GetZoneIntervalsImpl>d__0>
 
 final SingleTransitionDateTimeZone TestZone =
-    SingleTransitionDateTimeZone.around(Instant.utc(2000, 1, 1, 0, 0), -3, 4);
+    SingleTransitionDateTimeZone.hours(Instant.utc(2000, 1, 1, 0, 0), -3, 4);
 
 void GetZoneIntervals_EndBeforeStart() {
   // Assert.Throws<ArgumentOutOfRangeException>(() => DateTimeZone.Utc.GetZoneIntervals(new Instant.fromUnixTimeTicks(100L), new Instant.fromUnixTimeTicks(99L)));
@@ -75,36 +79,36 @@ void GetZoneIntervals_FixedZone() {
 }
 
 void GetZoneIntervals_SingleTransitionZone_IntervalCoversTransition() {
-  Instant start = TestZone.Transition - Time(days: 5);
-  Instant end = TestZone.Transition + Time(days: 5);
-  var expected = [TestZone.EarlyInterval, TestZone.LateInterval];
+  Instant start = TestZone.transition - Time(days: 5);
+  Instant end = TestZone.transition + Time(days: 5);
+  var expected = [TestZone.earlyInterval, TestZone.lateInterval];
   var actual = TestZone.getZoneIntervalsFromTo(start, end);
   // CollectionAssert.AreEqual(expected, actual.toList());
   expect(expected, actual.toList());
 }
 
 void GetZoneIntervals_SingleTransitionZone_IntervalDoesNotCoverTransition() {
-  Instant start = TestZone.Transition - Time(days: 10);
-  Instant end = TestZone.Transition - Time(days: 5);
-  var expected = [TestZone.EarlyInterval];
+  Instant start = TestZone.transition - Time(days: 10);
+  Instant end = TestZone.transition - Time(days: 5);
+  var expected = [TestZone.earlyInterval];
   var actual = TestZone.getZoneIntervalsFromTo(start, end);
   // CollectionAssert.AreEqual(expected, actual.toList());
   expect(expected, actual.toList());
 }
 
 void GetZoneIntervals_IncludesStart() {
-  Instant start = TestZone.Transition - Time.epsilon;
-  Instant end = TestZone.Transition + Time(days: 5);
-  var expected = [TestZone.EarlyInterval, TestZone.LateInterval];
+  Instant start = TestZone.transition - Time.epsilon;
+  Instant end = TestZone.transition + Time(days: 5);
+  var expected = [TestZone.earlyInterval, TestZone.lateInterval];
   var actual = TestZone.getZoneIntervalsFromTo(start, end);
   // CollectionAssert.AreEqual(expected, actual.toList());
   expect(expected, actual.toList());
 }
 
 void GetZoneIntervals_ExcludesEnd() {
-  Instant start = TestZone.Transition - Time(days: 10);
-  Instant end = TestZone.Transition;
-  var expected = [TestZone.EarlyInterval];
+  Instant start = TestZone.transition - Time(days: 10);
+  Instant end = TestZone.transition;
+  var expected = [TestZone.earlyInterval];
   var actual = TestZone.getZoneIntervalsFromTo(start, end);
   // CollectionAssert.AreEqual(expected, actual.toList());
   expect(expected, actual.toList());
@@ -135,6 +139,32 @@ Future GetZoneIntervals_Complex() async {
   expect(expected, actual?.toList());
 }
 
+Future GetZoneIntervals_IntervalWithNoStart() async {
+  var london = await DateTimeZoneProviders.defaultProvider!['Europe/London'];
+  // First transition is 1847-12-01T00:01:15Z; the next is in 1916.
+  var expected = [
+    london.getZoneInterval(Instant.utc(1847, 6, 1, 0, 0)),
+    london.getZoneInterval(Instant.utc(1848, 1, 1, 0, 0)),
+  ];
+  var interval = Interval(null, Instant.utc(1849, 3, 1, 0, 0));
+  var actual = london.getZoneIntervals(interval);
+  expect(actual.toList(), expected);
+}
+
+Future GetZoneIntervals_IntervalWithNoEnd() async {
+  var london = await DateTimeZoneProviders.defaultProvider!['Europe/London'];
+  var expected = [
+    london.getZoneInterval(Instant.utc(9998, 1, 1, 0, 0)),
+    london.getZoneInterval(Instant.utc(9998, 6, 1, 0, 0)),
+    london.getZoneInterval(Instant.utc(9999, 1, 1, 0, 0)),
+    london.getZoneInterval(Instant.utc(9999, 6, 1, 0, 0)),
+    london.getZoneInterval(Instant.utc(9999, 11, 1, 0, 0)),
+  ];
+  var interval = Interval(Instant.utc(9998, 1, 1, 0, 0), null);
+  var actual = london.getZoneIntervals(interval);
+  expect(actual.toList(), expected);
+}
+
 void GetZoneIntervals_WithOptions_NoCoalescing() {
   // We'll ask for 1999-2003, so there are three transitions within that.
   var transition1 = Instant.utc(2000, 1, 1, 0, 0);
@@ -142,12 +172,12 @@ void GetZoneIntervals_WithOptions_NoCoalescing() {
   var transition3 = Instant.utc(2002, 1, 1, 0, 0);
   // And one transition afterwards.
   var transition4 = Instant.utc(2004, 1, 1, 0, 0);
-  var builder = MtdtzBuilder.withName(0, '0+0')
-    ..Add(transition1, 1, 1, '1+1')
-    ..Add(transition2, 0, 2, '0+2')
-    ..Add(transition3, 0, 1, '0+1')
-    ..Add(transition4, 0, 0, '0+0');
-  var zone = builder.Build();
+  var builder = MultiTransitionDateTimeZoneBuilder.withName(0, '0+0')
+    ..add(transition1, 1, 1, '1+1')
+    ..add(transition2, 0, 2, '0+2')
+    ..add(transition3, 0, 1, '0+1')
+    ..add(transition4, 0, 0, '0+0');
+  var zone = builder.build();
 
   var interval =
       Interval(Instant.utc(1999, 1, 1, 0, 0), Instant.utc(2003, 1, 1, 0, 0));
@@ -168,12 +198,12 @@ void GetZoneIntervals_WithOptions_Coalescing() {
   var transition3 = Instant.utc(2002, 1, 1, 0, 0);
   // And one transition afterwards.
   var transition4 = Instant.utc(2004, 1, 1, 0, 0);
-  var builder = MtdtzBuilder.withName(0, '0+0')
-    ..Add(transition1, 1, 1, '1+1')
-    ..Add(transition2, 0, 2, "0+2")
-    ..Add(transition3, 0, 1, "0+1")
-    ..Add(transition4, 0, 0, "0+0");
-  var zone = builder.Build();
+  var builder = MultiTransitionDateTimeZoneBuilder.withName(0, '0+0')
+    ..add(transition1, 1, 1, '1+1')
+    ..add(transition2, 0, 2, "0+2")
+    ..add(transition3, 0, 1, "0+1")
+    ..add(transition4, 0, 0, "0+0");
+  var zone = builder.build();
 
   var interval =
       Interval(Instant.utc(1999, 1, 1, 0, 0), Instant.utc(2003, 1, 1, 0, 0));

@@ -382,48 +382,49 @@ void Addition_Duration() {
   expect(expected, start.add(duration));
   expect(expected, OffsetDateTime.plus(start, duration));
 
-  expect(start + Time(hours: hours), start.add(Time(hours: hours)));
-  expect(start + Time(hours: -hours), start.add(Time(hours: -hours)));
+  expect(start + Time(hours: hours), start.addHours(hours));
+  expect(start + Time(hours: -hours), start.addHours(-hours));
 
-  expect(start + Time(minutes: minutes), start.add(Time(minutes: minutes)));
-  expect(start + Time(minutes: -minutes), start.add(Time(minutes: -minutes)));
+  expect(start + Time(minutes: minutes), start.addMinutes(minutes));
+  expect(start + Time(minutes: -minutes), start.addMinutes(-minutes));
 
-  expect(start + Time(seconds: seconds), start.add(Time(seconds: seconds)));
-  expect(start + Time(seconds: -seconds), start.add(Time(seconds: -seconds)));
+  expect(start + Time(seconds: seconds), start.addSeconds(seconds));
+  expect(start + Time(seconds: -seconds), start.addSeconds(-seconds));
 
   expect(start + Time(milliseconds: milliseconds),
-      start.add(Time(milliseconds: milliseconds)));
+      start.addMilliseconds(milliseconds));
   expect(start + Time(milliseconds: -milliseconds),
-      start.add(Time(milliseconds: -milliseconds)));
+      start.addMilliseconds(-milliseconds));
 
-  expect(
-      start + Time(microseconds: ticks), start.add(Time(microseconds: ticks)));
-  expect(start + Time(microseconds: -ticks),
-      start.add(Time(microseconds: -ticks)));
+  // Noda Time's PlusTicks: Time Machine's finest unit above nanoseconds is
+  // the microsecond.
+  expect(start + Time(microseconds: ticks), start.addMicroseconds(ticks));
+  expect(start + Time(microseconds: -ticks), start.addMicroseconds(-ticks));
 
   expect(start + Time(nanoseconds: nanoseconds),
-      start.add(Time(nanoseconds: nanoseconds)));
+      start.addNanoseconds(nanoseconds));
   expect(start + Time(nanoseconds: -nanoseconds),
-      start.add(Time(nanoseconds: -nanoseconds)));
-  /*
-  expect(start + new Time(hours: hours), start.addHours(hours));
-  expect(start + new Time(hours: -hours), start.addHours(-hours));
+      start.addNanoseconds(-nanoseconds));
 
-  expect(start + new Time(minutes: minutes), start.addMinutes(minutes));
-  expect(start + new Time(minutes: -minutes), start.addMinutes(-minutes));
+  // Time Machine's subtract* methods are the add* methods with the value
+  // negated (Noda Time only has Plus*).
+  expect(start - Time(hours: hours), start.subtractHours(hours));
+  expect(start - Time(minutes: minutes), start.subtractMinutes(minutes));
+  expect(start - Time(seconds: seconds), start.subtractSeconds(seconds));
+  expect(start - Time(milliseconds: milliseconds),
+      start.subtractMilliseconds(milliseconds));
+  expect(start - Time(microseconds: ticks), start.subtractMicroseconds(ticks));
+  expect(start - Time(nanoseconds: nanoseconds),
+      start.subtractNanoseconds(nanoseconds));
+  expect(start.addHours(-hours), start.subtractHours(hours));
+  expect(start.addNanoseconds(-nanoseconds),
+      start.subtractNanoseconds(nanoseconds));
 
-  expect(start + new Time(seconds: seconds), start.addSeconds(seconds));
-  expect(start + new Time(seconds: -seconds), start.addSeconds(-seconds));
-
-  expect(start + new Time(milliseconds: milliseconds), start.addMilliseconds(milliseconds));
-  expect(start + new Time(milliseconds: -milliseconds), start.addMilliseconds(-milliseconds));
-
-  expect(start + new Time(microseconds: ticks), start.addMicroseconds(ticks));
-  expect(start + new Time(microseconds: -ticks), start.addMicroseconds(-ticks));
-
-  expect(start + new Time(nanoseconds: nanoseconds), start.addNanoseconds(nanoseconds));
-  expect(start + new Time(nanoseconds: -nanoseconds), start.addNanoseconds(-nanoseconds));
-  */
+  // The offset is preserved, and the local date/time moves with the elapsed
+  // time.
+  expect(start.addHours(24).offset, start.offset);
+  expect(
+      start.addHours(24).localDateTime, LocalDateTime(2014, 08, 15, 6, 51, 0));
 }
 
 void Subtraction_OffsetDateTime() {

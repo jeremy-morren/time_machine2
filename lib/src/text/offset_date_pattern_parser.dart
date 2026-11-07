@@ -7,6 +7,7 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 @internal
 class OffsetDatePatternParser implements IPatternParser<OffsetDate> {
   final OffsetDate _templateValue;
+  final int _twoDigitYearMax;
 
   static final Map<String /*char*/,
           CharacterHandler<OffsetDate, _OffsetDateParseBucket>>
@@ -51,7 +52,11 @@ class OffsetDatePatternParser implements IPatternParser<OffsetDate> {
         (value) => value.calendarDate)
   };
 
-  OffsetDatePatternParser(this._templateValue);
+  OffsetDatePatternParser(this._templateValue,
+      [this._twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax]) {
+    Preconditions.checkArgumentRange(
+        'twoDigitYearMax', _twoDigitYearMax, 0, 99);
+  }
 
   // Note: public to implement the interface. It does no harm, and it's simpler than using explicit
   // interface implementation.
@@ -78,8 +83,8 @@ class OffsetDatePatternParser implements IPatternParser<OffsetDate> {
     }
 
     var patternBuilder =
-        SteppedPatternBuilder<OffsetDate, _OffsetDateParseBucket>(
-            formatInfo, () => _OffsetDateParseBucket(_templateValue));
+        SteppedPatternBuilder<OffsetDate, _OffsetDateParseBucket>(formatInfo,
+            () => _OffsetDateParseBucket(_templateValue, _twoDigitYearMax));
     patternBuilder.parseCustomPattern(patternText, _patternCharacterHandlers);
     patternBuilder.validateUsedFields();
     // Need to reconstruct the template value from the bits...
@@ -101,9 +106,9 @@ class _OffsetDateParseBucket extends ParseBucket<OffsetDate> {
   final /*LocalDatePatternParser.*/ LocalDateParseBucket date;
   Offset offset;
 
-  _OffsetDateParseBucket(OffsetDate templateValue)
+  _OffsetDateParseBucket(OffsetDate templateValue, int twoDigitYearMax)
       : date = /*LocalDatePatternParser.*/
-            LocalDateParseBucket(templateValue.calendarDate),
+            LocalDateParseBucket(templateValue.calendarDate, twoDigitYearMax),
         offset = templateValue.offset;
 
   @override

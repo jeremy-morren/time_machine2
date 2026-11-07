@@ -4,9 +4,12 @@
 
 // Port of Noda Time's NodaTime.Test/TimeZones/TzdbDateTimeZoneSourceTest.cs.
 // Not ported: tests of .NET-only behaviour (BCL time zones, TimeZoneInfo
-// replacement, loading 1.x resources), ForId_Null (null-safe in Dart),
+// replacement as in LocalZoneIsNull), ForId_Null (null-safe in Dart) and
 // ForId_Unknown (this source falls back to UTC for unknown IDs; the provider
-// throws instead) and the zone location tests (zone locations aren't loaded).
+// throws instead). CanLoadNodaTimeResourceFromOnePointOneRelease loads a Noda
+// Time 1.1 .nzd file, which isn't Time Machine's format; the tests of
+// TzdbDateTimeZoneSource.fromBytes (Noda Time's FromStream) are in
+// tzdb_datetimezone_source_from_bytes_test.dart, as they read a file.
 import 'dart:async';
 
 import 'package:test/test.dart';
@@ -24,6 +27,11 @@ void main() {
   test('Aliases', Aliases);
   test('CanonicalIdMap_Contents', CanonicalIdMap_Contents);
   test('CanonicalIdMap_IsReadOnly', CanonicalIdMap_IsReadOnly);
+  test('ZoneLocations_ContainsFrance', ZoneLocations_ContainsFrance);
+  test('Zone1970Locations_ContainsBritain', Zone1970Locations_ContainsBritain);
+  test('ZoneLocations_ContainsResolute', ZoneLocations_ContainsResolute);
+  test('ZoneLocations_ZoneIdsAreValid', ZoneLocations_ZoneIdsAreValid);
+  test('Zone1970Locations_ZoneIdsAreValid', Zone1970Locations_ZoneIdsAreValid);
   test('TzdbVersion', TzdbVersion);
   test('FixedDateTimeZoneName', FixedDateTimeZoneName);
   test('VersionId', VersionId);
@@ -59,6 +67,9 @@ void main() {
       WindowsMappingContainsWindowsIdWithNoPrimaryTerritory);
   test('WindowsMappingContainsWindowsIdWithDuplicateTerritories',
       WindowsMappingContainsWindowsIdWithDuplicateTerritories);
+  test('ZoneLocationsContainsMissingId', ZoneLocationsContainsMissingId);
+  test(
+      'Zone1970LocationsContainsMissingId', Zone1970LocationsContainsMissingId);
   test('WindowsToTzdbIds', WindowsToTzdbIds);
   test('TzdbToWindowsIds', TzdbToWindowsIds);
   test('TzdbToWindowsIdDocumentationExamples',
@@ -109,6 +120,76 @@ void CanonicalIdMap_Contents() {
 void CanonicalIdMap_IsReadOnly() {
   var map = source.canonicalIdMap;
   expect(() => map['Foo'] = 'Bar', throwsUnsupportedError);
+}
+
+// Sample zone location checks to ensure we've serialized and deserialized correctly
+// Input line: FR	+4852+00220	Europe/Paris
+void ZoneLocations_ContainsFrance() {
+  var zoneLocations = source.zoneLocations!;
+  var france = zoneLocations.singleWhere((g) => g.countryName == 'France');
+  // Tolerance of about 2 seconds
+  expect(france.latitude, closeTo(48.86666, 0.00055));
+  expect(france.longitude, closeTo(2.3333, 0.00055));
+  expect(france.zoneId, 'Europe/Paris');
+  expect(france.countryCode, 'FR');
+  expect(france.comment, '');
+}
+
+// Sample zone location checks to ensure we've serialized and deserialized correctly
+// Input line: GB,GG,IM,JE	+513030-0000731	Europe/London
+void Zone1970Locations_ContainsBritain() {
+  var zoneLocations = source.zone1970Locations!;
+  var britain = zoneLocations.singleWhere((g) => g.zoneId == 'Europe/London');
+  // Tolerance of about 2 seconds
+  expect(britain.latitude, closeTo(51.5083, 0.00055));
+  expect(britain.longitude, closeTo(-0.1253, 0.00055));
+  expect(britain.zoneId, 'Europe/London');
+  expect(britain.countries, [
+    TzdbZone1970LocationCountry('Britain (UK)', 'GB'),
+    TzdbZone1970LocationCountry('Guernsey', 'GG'),
+    TzdbZone1970LocationCountry('Isle of Man', 'IM'),
+    TzdbZone1970LocationCountry('Jersey', 'JE'),
+  ]);
+  expect(britain.comment, '');
+}
+
+// Input line: CA	+744144-0944945	America/Resolute	Central - NU (Resolute)
+// (Note: prior to 2016b, this was "Central Time - Resolute, Nunavut".)
+// (Note: prior to 2014f, this was "Central Standard Time - Resolute, Nunavut".)
+void ZoneLocations_ContainsResolute() {
+  var zoneLocations = source.zoneLocations!;
+  var resolute =
+      zoneLocations.singleWhere((g) => g.zoneId == 'America/Resolute');
+  // Tolerance of about 2 seconds
+  expect(resolute.latitude, closeTo(74.69555, 0.00055));
+  expect(resolute.longitude, closeTo(-94.82916, 0.00055));
+  expect(resolute.countryName, 'Canada');
+  expect(resolute.countryCode, 'CA');
+  expect(resolute.comment, 'Central - NU (Resolute)');
+}
+
+/// Not in Noda Time (ValidateDefault checks the same): every zone location
+/// uses a zone ID in the source.
+void ZoneLocations_ZoneIdsAreValid() {
+  var zoneLocations = source.zoneLocations!;
+  expect(zoneLocations, isNotEmpty);
+  expect(
+      zoneLocations
+          .map((location) => location.zoneId)
+          .where((id) => !source.canonicalIdMap.containsKey(id)),
+      isEmpty);
+}
+
+/// Not in Noda Time (ValidateDefault checks the same): every zone 1970
+/// location uses a zone ID in the source, and it's a canonical ID.
+void Zone1970Locations_ZoneIdsAreValid() {
+  var zoneLocations = source.zone1970Locations!;
+  expect(zoneLocations, isNotEmpty);
+  expect(
+      zoneLocations
+          .map((location) => location.zoneId)
+          .where((id) => source.canonicalIdMap[id] != id),
+      isEmpty);
 }
 
 void TzdbVersion() {
@@ -261,6 +342,30 @@ void WindowsMappingContainsWindowsIdWithDuplicateTerritories() =>
       MapZone('windows-id1', 'CA', const ['zone2']),
       MapZone('windows-id1', 'CA', const ['zone3']),
     ]);
+
+final _sampleWindowsMapping =
+    WindowsZones('cldr-version', 'tzdb-version', 'windows-version', [
+  MapZone('windows-id', MapZone.primaryTerritory, const ['zone1']),
+  MapZone('windows-id', 'UK', const ['zone1']),
+]);
+
+void ZoneLocationsContainsMissingId() => expect(
+    () => TzdbDateTimeZoneSource.validateData(
+            _sampleCanonicalIdMap, _sampleWindowsMapping, zoneLocations: [
+          TzdbZoneLocation(0, 0, 'country', 'xx', 'zone4', 'comment')
+        ]),
+    throwsA(isA<InvalidDateTimeZoneSourceError>()));
+
+void Zone1970LocationsContainsMissingId() {
+  var country = TzdbZone1970LocationCountry('country', 'xx');
+  expect(
+      () => TzdbDateTimeZoneSource.validateData(
+              _sampleCanonicalIdMap, _sampleWindowsMapping,
+              zone1970Locations: [
+                TzdbZone1970Location(0, 0, [country], 'zone4', 'comment')
+              ]),
+      throwsA(isA<InvalidDateTimeZoneSourceError>()));
+}
 
 /// Canonical IDs: zone1 to zone6. Aliases, linked to the obvious corresponding
 /// IDs: link1, link2, link3a, link3b, link3c. Windows mappings:

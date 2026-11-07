@@ -24,6 +24,7 @@ void main() {
   test('Pyongyang', Pyongyang);
   test('Khartoum', Khartoum);
   test('Tbilisi', Tbilisi);
+  test('Japan', Japan);
 }
 
 Future setup() async {
@@ -76,4 +77,14 @@ Future Tbilisi() async {
   var interval = zone.getZoneInterval(summer1996);
   expect(LocalDateTime(1996, 3, 31, 1, 0, 0), interval.isoLocalStart);
   expect(LocalDateTime(1997, 10, 26, 0, 0, 0), interval.isoLocalEnd);
+}
+
+// As of 2018f, Japan's fallback transitions 1948-1951 are at "25:00" on the relevant Saturday.
+// We represent that as 1am on the relevant Sunday instead, because we don't support HourOfDay=24.
+Future Japan() async {
+  var zone = await tzdb['Asia/Tokyo'];
+  Instant summer1951 = Instant.utc(1951, 8, 1, 0, 0);
+  var interval = zone.getZoneInterval(summer1951);
+  expect(interval.isoLocalStart, LocalDateTime(1951, 5, 6, 1, 0, 0));
+  expect(interval.isoLocalEnd, LocalDateTime(1951, 9, 9, 1, 0, 0));
 }

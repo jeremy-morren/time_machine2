@@ -7,6 +7,7 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 @internal
 class ZonedDateTimePatternParser implements IPatternParser<ZonedDateTime> {
   final ZonedDateTime _templateValue;
+  final int _twoDigitYearMax;
   final DateTimeZoneProvider? _zoneProvider;
   final ZoneLocalMappingResolver? _resolver;
 
@@ -112,7 +113,11 @@ class ZonedDateTimePatternParser implements IPatternParser<ZonedDateTime> {
   };
 
   ZonedDateTimePatternParser(
-      this._templateValue, this._resolver, this._zoneProvider);
+      this._templateValue, this._resolver, this._zoneProvider,
+      [this._twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax]) {
+    Preconditions.checkArgumentRange(
+        'twoDigitYearMax', _twoDigitYearMax, 0, 99);
+  }
 
   // Note: public to implement the interface. It does no harm, and it's simpler than using explicit
   // interface implementation.
@@ -146,7 +151,7 @@ class ZonedDateTimePatternParser implements IPatternParser<ZonedDateTime> {
         SteppedPatternBuilder<ZonedDateTime, _ZonedDateTimeParseBucket>(
             formatInfo,
             () => _ZonedDateTimeParseBucket(
-                _templateValue, _resolver, _zoneProvider));
+                _templateValue, _resolver, _zoneProvider, _twoDigitYearMax));
     if (_zoneProvider == null || _resolver == null) {
       patternBuilder.setFormatOnly();
     }
@@ -193,10 +198,10 @@ class _ZonedDateTimeParseBucket extends ParseBucket<ZonedDateTime> {
   final ZoneLocalMappingResolver? _resolver;
   final DateTimeZoneProvider? _zoneProvider;
 
-  _ZonedDateTimeParseBucket(
-      ZonedDateTime templateValue, this._resolver, this._zoneProvider)
+  _ZonedDateTimeParseBucket(ZonedDateTime templateValue, this._resolver,
+      this._zoneProvider, int twoDigitYearMax)
       : date = /*LocalDatePatternParser.*/
-            LocalDateParseBucket(templateValue.calendarDate),
+            LocalDateParseBucket(templateValue.calendarDate, twoDigitYearMax),
         time = /*LocalTimePatternParser.*/
             LocalTimeParseBucket(templateValue.clockTime),
         _zone = templateValue.zone;

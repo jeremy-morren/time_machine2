@@ -91,6 +91,12 @@ void main() {
   test('Month_Valid', Month_Valid);
   test('Month_InvalidAdjustment', Month_InvalidAdjustment);
   test('IsoDayOfWeekAdjusters_Invalid', IsoDayOfWeekAdjusters_Invalid);
+  test('IsoDayOfWeekAdjusters_TooLarge', IsoDayOfWeekAdjusters_TooLarge);
+  test('IsoDayOfWeekAdjusters_TooSmall', IsoDayOfWeekAdjusters_TooSmall);
+  test('AddPeriod_Valid', AddPeriod_Valid);
+  // AddPeriod_Null: not applicable, as the period parameter isn't nullable.
+  test('AddPeriod_IncludingTimeUnits', AddPeriod_IncludingTimeUnits);
+  test('AddPeriod_ZeroTimeUnits', AddPeriod_ZeroTimeUnits);
 }
 
 void StartOfMonth() {
@@ -169,4 +175,45 @@ void IsoDayOfWeekAdjusters_Invalid() {
   expect(() => DateAdjusters.nextOrSame(invalid), throwsRangeError);
   expect(() => DateAdjusters.previous(invalid), throwsRangeError);
   expect(() => DateAdjusters.previousOrSame(invalid), throwsRangeError);
+}
+
+void IsoDayOfWeekAdjusters_TooLarge() {
+  // IsoDayOfWeek.Sunday + 1
+  var invalid = DayOfWeek(DayOfWeek.sunday.value + 1);
+  expect(() => DateAdjusters.next(invalid), throwsRangeError);
+  expect(() => DateAdjusters.nextOrSame(invalid), throwsRangeError);
+  expect(() => DateAdjusters.previous(invalid), throwsRangeError);
+  expect(() => DateAdjusters.previousOrSame(invalid), throwsRangeError);
+}
+
+void IsoDayOfWeekAdjusters_TooSmall() {
+  // IsoDayOfWeek.Monday - 1 (DayOfWeek.none)
+  var invalid = DayOfWeek(DayOfWeek.monday.value - 1);
+  expect(() => DateAdjusters.next(invalid), throwsRangeError);
+  expect(() => DateAdjusters.nextOrSame(invalid), throwsRangeError);
+  expect(() => DateAdjusters.previous(invalid), throwsRangeError);
+  expect(() => DateAdjusters.previousOrSame(invalid), throwsRangeError);
+}
+
+void AddPeriod_Valid() {
+  var period = const Period(months: 1) + const Period(days: 3);
+  var adjuster = DateAdjusters.addPeriod(period);
+  var start = LocalDate(2019, 5, 4);
+  expect(start.adjust(adjuster), LocalDate(2019, 6, 7));
+}
+
+void AddPeriod_IncludingTimeUnits() {
+  // Assert.Throws<ArgumentException>
+  expect(
+      () => DateAdjusters.addPeriod(
+          const Period(days: 1) + const Period(hours: 1)),
+      throwsArgumentError);
+}
+
+// Not in Noda Time: a period whose time units are all zero has no time
+// component, so is valid.
+void AddPeriod_ZeroTimeUnits() {
+  var period = const Period(days: 1, hours: 1) - const Period(hours: 1);
+  var adjuster = DateAdjusters.addPeriod(period);
+  expect(adjuster(LocalDate(2019, 12, 31)), LocalDate(2020, 1, 1));
 }

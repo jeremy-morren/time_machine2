@@ -7,6 +7,7 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 @internal
 class OffsetDateTimePatternParser implements IPatternParser<OffsetDateTime> {
   final OffsetDateTime _templateValue;
+  final int _twoDigitYearMax;
 
   static final Map<String /*char*/,
           CharacterHandler<OffsetDateTime, _OffsetDateTimeParseBucket>>
@@ -109,7 +110,11 @@ class OffsetDateTimePatternParser implements IPatternParser<OffsetDateTime> {
         (value) => value.localDateTime)
   };
 
-  OffsetDateTimePatternParser(this._templateValue);
+  OffsetDateTimePatternParser(this._templateValue,
+      [this._twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax]) {
+    Preconditions.checkArgumentRange(
+        'twoDigitYearMax', _twoDigitYearMax, 0, 99);
+  }
 
   // Note: public to implement the interface. It does no harm, and it's simpler than using explicit
   // interface implementation.
@@ -139,7 +144,8 @@ class OffsetDateTimePatternParser implements IPatternParser<OffsetDateTime> {
 
     var patternBuilder =
         SteppedPatternBuilder<OffsetDateTime, _OffsetDateTimeParseBucket>(
-            formatInfo, () => _OffsetDateTimeParseBucket(_templateValue));
+            formatInfo,
+            () => _OffsetDateTimeParseBucket(_templateValue, _twoDigitYearMax));
     patternBuilder.parseCustomPattern(patternText, _patternCharacterHandlers);
     patternBuilder.validateUsedFields();
     // Need to reconstruct the template value from the bits...
@@ -164,9 +170,9 @@ class _OffsetDateTimeParseBucket extends ParseBucket<OffsetDateTime> {
   final /*LocalTimePatternParser.*/ LocalTimeParseBucket time;
   Offset offset;
 
-  _OffsetDateTimeParseBucket(OffsetDateTime templateValue)
+  _OffsetDateTimeParseBucket(OffsetDateTime templateValue, int twoDigitYearMax)
       : date = /*LocalDatePatternParser.*/
-            LocalDateParseBucket(templateValue.calendarDate),
+            LocalDateParseBucket(templateValue.calendarDate, twoDigitYearMax),
         time = /*LocalTimePatternParser.*/
             LocalTimeParseBucket(templateValue.clockTime),
         offset = templateValue.offset;

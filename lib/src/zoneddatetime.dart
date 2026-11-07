@@ -387,6 +387,93 @@ class ZonedDateTime {
   ZonedDateTime subtract(Time time) =>
       ZonedDateTime(toInstant() - time, zone, calendar);
 
+  /// Returns the result of adding a number of hours to this zoned date and
+  /// time: elapsed time on the time line, so the local time may change by a
+  /// different amount if the offset changes. The time zone and calendar are
+  /// preserved.
+  ///
+  /// * [hours]: The number of hours to add.
+  ///
+  /// Returns: The result of adding the given number of hours.
+  ZonedDateTime addHours(int hours) => add(Time(hours: hours));
+
+  /// Returns the result of subtracting a number of hours from this zoned date
+  /// and time. See [addHours].
+  ZonedDateTime subtractHours(int hours) => subtract(Time(hours: hours));
+
+  /// Returns the result of adding a number of minutes to this zoned date and
+  /// time: elapsed time on the time line. The time zone and calendar are
+  /// preserved.
+  ///
+  /// * [minutes]: The number of minutes to add.
+  ///
+  /// Returns: The result of adding the given number of minutes.
+  ZonedDateTime addMinutes(int minutes) => add(Time(minutes: minutes));
+
+  /// Returns the result of subtracting a number of minutes from this zoned
+  /// date and time. See [addMinutes].
+  ZonedDateTime subtractMinutes(int minutes) =>
+      subtract(Time(minutes: minutes));
+
+  /// Returns the result of adding a number of seconds to this zoned date and
+  /// time: elapsed time on the time line. The time zone and calendar are
+  /// preserved.
+  ///
+  /// * [seconds]: The number of seconds to add.
+  ///
+  /// Returns: The result of adding the given number of seconds.
+  ZonedDateTime addSeconds(int seconds) => add(Time(seconds: seconds));
+
+  /// Returns the result of subtracting a number of seconds from this zoned
+  /// date and time. See [addSeconds].
+  ZonedDateTime subtractSeconds(int seconds) =>
+      subtract(Time(seconds: seconds));
+
+  /// Returns the result of adding a number of milliseconds to this zoned date
+  /// and time: elapsed time on the time line. The time zone and calendar are
+  /// preserved.
+  ///
+  /// * [milliseconds]: The number of milliseconds to add.
+  ///
+  /// Returns: The result of adding the given number of milliseconds.
+  ZonedDateTime addMilliseconds(int milliseconds) =>
+      add(Time(milliseconds: milliseconds));
+
+  /// Returns the result of subtracting a number of milliseconds from this
+  /// zoned date and time. See [addMilliseconds].
+  ZonedDateTime subtractMilliseconds(int milliseconds) =>
+      subtract(Time(milliseconds: milliseconds));
+
+  /// Returns the result of adding a number of microseconds to this zoned date
+  /// and time: elapsed time on the time line. The time zone and calendar are
+  /// preserved.
+  ///
+  /// * [microseconds]: The number of microseconds to add.
+  ///
+  /// Returns: The result of adding the given number of microseconds.
+  ZonedDateTime addMicroseconds(int microseconds) =>
+      add(Time(microseconds: microseconds));
+
+  /// Returns the result of subtracting a number of microseconds from this
+  /// zoned date and time. See [addMicroseconds].
+  ZonedDateTime subtractMicroseconds(int microseconds) =>
+      subtract(Time(microseconds: microseconds));
+
+  /// Returns the result of adding a number of nanoseconds to this zoned date
+  /// and time: elapsed time on the time line. The time zone and calendar are
+  /// preserved.
+  ///
+  /// * [nanoseconds]: The number of nanoseconds to add.
+  ///
+  /// Returns: The result of adding the given number of nanoseconds.
+  ZonedDateTime addNanoseconds(int nanoseconds) =>
+      add(Time(nanoseconds: nanoseconds));
+
+  /// Returns the result of subtracting a number of nanoseconds from this
+  /// zoned date and time. See [addNanoseconds].
+  ZonedDateTime subtractNanoseconds(int nanoseconds) =>
+      subtract(Time(nanoseconds: nanoseconds));
+
   /// Returns the result of subtracting another zoned date and time from this one, resulting in the elapsed duration
   /// between the two instants represented by the values.
   ///

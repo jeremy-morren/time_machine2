@@ -103,6 +103,39 @@ class Period {
   /// A period containing only zero-valued properties.
   static const Period zero = Period();
 
+  /// The period with the largest value of each unit: the largest 32-bit
+  /// integer for the date units ([years], [months], [weeks] and [days], as
+  /// in Noda Time), and the largest integer of the platform for the time
+  /// units (the largest 64-bit integer on the Dart VM, 2^53 on the web).
+  static final Period maxValue = Period(
+      years: Platform.int32MaxValue,
+      months: Platform.int32MaxValue,
+      weeks: Platform.int32MaxValue,
+      days: Platform.int32MaxValue,
+      hours: Platform.intMaxValue,
+      minutes: Platform.intMaxValue,
+      seconds: Platform.intMaxValue,
+      milliseconds: Platform.intMaxValue,
+      microseconds: Platform.intMaxValue,
+      nanoseconds: Platform.intMaxValue);
+
+  /// The period with the smallest (most negative) value of each unit: the
+  /// smallest 32-bit integer for the date units ([years], [months], [weeks]
+  /// and [days], as in Noda Time), and the smallest integer of the platform
+  /// for the time units (the smallest 64-bit integer on the Dart VM, -2^53 on
+  /// the web).
+  static final Period minValue = Period(
+      years: Platform.int32MinValue,
+      months: Platform.int32MinValue,
+      weeks: Platform.int32MinValue,
+      days: Platform.int32MinValue,
+      hours: Platform.intMinValue,
+      minutes: Platform.intMinValue,
+      seconds: Platform.intMinValue,
+      milliseconds: Platform.intMinValue,
+      microseconds: Platform.intMinValue,
+      nanoseconds: Platform.intMinValue);
+
   /// Returns an equality comparer which compares periods by first normalizing them - so 24 hours is deemed equal to 1 day, and so on.
   /// Note that as per the [normalize] method, years and months are unchanged by normalization - so 12 months does not
   /// equal 1 year.
@@ -246,6 +279,97 @@ class Period {
         milliseconds: milliseconds - other.milliseconds,
         microseconds: microseconds - other.microseconds,
         nanoseconds: nanoseconds - other.nanoseconds);
+  }
+
+  /// Implements the unary negation operator: each property value of the
+  /// result is the negation of the corresponding value in this period.
+  ///
+  /// Returns: The negation of this period.
+  Period operator -() => zero - this;
+
+  /// Adds two periods together, by simply adding the values for each
+  /// property. See [operator +].
+  static Period plus(Period left, Period right) => left + right;
+
+  /// Subtracts one period from another, by simply subtracting each property
+  /// value. See [operator -].
+  static Period minus(Period minuend, Period subtrahend) =>
+      minuend - subtrahend;
+
+  /// Adds [other] to this period, by simply adding the values for each
+  /// property. See [operator +].
+  Period add(Period other) => this + other;
+
+  /// Subtracts [other] from this period, by simply subtracting each property
+  /// value. See [operator -].
+  Period subtract(Period other) => this - other;
+
+  /// Returns the number of days between two [LocalDate] values.
+  ///
+  /// * [start]: Start date
+  /// * [end]: End date
+  ///
+  /// Returns: The number of days between the given dates: negative if [end]
+  /// is before [start].
+  ///
+  /// * [ArgumentError]: [start] and [end] use different calendars.
+  static int daysBetween(LocalDate start, LocalDate end) {
+    Preconditions.checkArgument(start.calendar == end.calendar, 'end',
+        'start and end must use the same calendar system');
+    return _daysBetween(start, end);
+  }
+
+  /// Returns the number of nanoseconds between two [LocalTime] values.
+  ///
+  /// If [end] is before [start], the returned value will be negative.
+  ///
+  /// * [start]: Start time
+  /// * [end]: End time
+  ///
+  /// Returns: The number of nanoseconds between the given times.
+  static int nanosecondsBetween(LocalTime start, LocalTime end) =>
+      end.timeSinceMidnight.inNanoseconds -
+      start.timeSinceMidnight.inNanoseconds;
+
+  /// Returns the period between a start and an end [YearMonth], using only
+  /// the given units.
+  ///
+  /// If [end] is before [start], each property in the returned period will
+  /// be negative. If the given set of units cannot exactly reach the end
+  /// point (e.g. finding the difference between February 2010 and March 2012
+  /// in years) the result will be such that adding it to [start] will give a
+  /// value between [start] and [end]. In other words, any rounding is
+  /// 'towards start'; this is true whether the resulting period is negative
+  /// or positive.
+  ///
+  /// * [start]: Start year and month
+  /// * [end]: End year and month
+  /// * [units]: Units to use for calculations: [PeriodUnits.years] and/or
+  ///   [PeriodUnits.months]; both if omitted.
+  ///
+  /// Returns: The period between the given year/month values, using the
+  /// given units.
+  ///
+  /// * [ArgumentError]: [units] is empty or contains anything other than
+  ///   [PeriodUnits.years] and/or [PeriodUnits.months].
+  /// * [ArgumentError]: [start] and [end] use different calendars.
+  static Period differenceBetweenYearMonths(YearMonth start, YearMonth end,
+      [PeriodUnits? units]) {
+    units ??= PeriodUnits.years | PeriodUnits.months;
+    Preconditions.checkArgument(
+        (units & (PeriodUnits.years | PeriodUnits.months)) == units,
+        'units',
+        'Units can only contain year and month units: $units');
+    Preconditions.checkArgument(
+        units != PeriodUnits.none, 'units', 'Units must not be empty');
+    Preconditions.checkArgument(start.calendar == end.calendar, 'end',
+        'start and end must use the same calendar system');
+
+    if (start == end) {
+      return zero;
+    }
+    return differenceBetweenDates(
+        IYearMonth.startDate(start), IYearMonth.startDate(end), units);
   }
 
   /// Returns the exact difference between two date/times or
@@ -405,7 +529,7 @@ class Period {
       microseconds =
           unitsBetween(PeriodUnits.microseconds, TimePeriodField.microseconds);
       nanoseconds =
-          unitsBetween(PeriodUnits.microseconds, TimePeriodField.nanoseconds);
+          unitsBetween(PeriodUnits.nanoseconds, TimePeriodField.nanoseconds);
     }
 
     return Period(

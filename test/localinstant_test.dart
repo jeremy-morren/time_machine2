@@ -32,6 +32,7 @@ void main() {
       customDescriptionBuilder: describeArguments);
   test('ToString_Extremes', ToString_Extremes);
   test('SafeMinus_NormalTime', SafeMinus_NormalTime);
+  test('IsValid', IsValid);
   parameterizedTest(
       'SafeMinus_NearStartOfTime',
       [
@@ -121,4 +122,11 @@ void SafeMinus_NearEndOfTime(
       : Instant.maxValue + Time(hours: finalOffset);
   var actual = start.safeMinus(Offset.hours(offsetToSubtract));
   expect(expected, actual);
+}
+
+void IsValid() {
+  expect(LocalInstant.beforeMinValue.isValid, isFalse);
+  expect(LocalInstant(Instant.minValue.timeSinceEpoch).isValid, isTrue);
+  expect(LocalInstant(Instant.maxValue.timeSinceEpoch).isValid, isTrue);
+  expect(LocalInstant.afterMaxValue.isValid, isFalse);
 }

@@ -34,6 +34,7 @@ void main() {
   test('PlusNanoseconds_Simple', PlusNanoseconds_Simple);
   test('PlusTicks_CrossingDay', PlusTicks_CrossingDay);
   test('Plus_FullPeriod', Plus_FullPeriod);
+  test('Minus_FullPeriod', Minus_FullPeriod);
   parameterizedTest(
       'Next',
       [
@@ -318,6 +319,29 @@ void Plus_FullPeriod() {
   expect(expected, actual,
       reason:
           "${expected.toString('yyyy-MM-dd HH:mm:ss.fffffffff')} != ${actual.toString('yyyy-MM-dd HH:mm:ss.fffffffff')}");
+}
+
+void Minus_FullPeriod() {
+  // Period deliberately chosen to require date rollover
+  LocalDateTime start = LocalDateTime(2011, 4, 2, 12, 15, 8);
+  var period = (PeriodBuilder()
+        ..years = 1
+        ..months = 2
+        ..weeks = 3
+        ..days = 4
+        ..hours = 15
+        ..minutes = 6
+        ..seconds = 7
+        ..milliseconds = 8
+        // Noda Time uses Ticks = 9 (900ns), and so expects ...991999089ns.
+        ..microseconds = 9
+        ..nanoseconds = 11)
+      .build();
+  var actual = start.subtract(period);
+  var expected = LocalDateTime(2010, 1, 7, 21, 9, 0).addNanoseconds(991990989);
+  expect(actual, expected,
+      reason:
+          "${expected.toString('uuuu-MM-dd HH:mm:ss.fffffffff')} != ${actual.toString('uuuu-MM-dd HH:mm:ss.fffffffff')}");
 }
 
 // Each test case gives a day-of-month in November 2011 and a target 'next day of week';

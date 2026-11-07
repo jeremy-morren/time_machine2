@@ -68,6 +68,8 @@ void main() {
   test('DefaultConstructor', DefaultConstructor);
   test('MinMax_DifferentCalendars_Throws', MinMax_DifferentCalendars_Throws);
   test('MinMax_SameCalendar', MinMax_SameCalendar);
+  test('MaxIsoValue', MaxIsoValue);
+  test('MinIsoValue', MinIsoValue);
 }
 
 Future setup() async {
@@ -490,6 +492,24 @@ void MinMax_SameCalendar() {
   expect(ldt1, LocalDateTime.max(ldt2, ldt1));
   expect(ldt2, LocalDateTime.min(ldt1, ldt2));
   expect(ldt2, LocalDateTime.min(ldt2, ldt1));
+}
+
+void MaxIsoValue() {
+  var value = LocalDateTime.maxIsoValue;
+  expect(value.calendar, CalendarSystem.iso);
+  expect(value,
+      LocalDateTime.localDateAtTime(LocalDate.maxIsoValue, LocalTime.maxValue));
+  // Noda Time: OverflowException
+  expect(() => value.addNanoseconds(1), throwsRangeError);
+}
+
+void MinIsoValue() {
+  var value = LocalDateTime.minIsoValue;
+  expect(value.calendar, CalendarSystem.iso);
+  expect(value,
+      LocalDateTime.localDateAtTime(LocalDate.minIsoValue, LocalTime.minValue));
+  // Noda Time: OverflowException
+  expect(() => value.addNanoseconds(-1), throwsRangeError);
 }
 
 //@Test()

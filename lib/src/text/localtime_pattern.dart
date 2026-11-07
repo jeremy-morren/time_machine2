@@ -11,6 +11,28 @@ abstract class LocalTimePatterns {
   /// from needing TimeFormatInfo.InvariantInfo...
   static final LocalTimePattern extendedIsoPatternImpl =
       LocalTimePattern.createWithInvariantCulture("HH':'mm':'ss;FFFFFFFFF");
+  static final LocalTimePattern longExtendedIsoPatternImpl =
+      LocalTimePattern.createWithInvariantCulture("HH':'mm':'ss;fffffffff");
+  static final LocalTimePattern generalIsoPatternImpl =
+      LocalTimePattern.createWithInvariantCulture("HH':'mm':'ss");
+  static final LocalTimePattern hourIsoPatternImpl =
+      LocalTimePattern.createWithInvariantCulture('HH');
+  static final LocalTimePattern hourMinuteIsoPatternImpl =
+      LocalTimePattern.createWithInvariantCulture("HH':'mm");
+  static final IPattern<LocalTime> variablePrecisionIsoPatternImpl =
+      (CompositePatternBuilder<LocalTime>()
+            ..add(extendedIsoPatternImpl, (time) => true)
+            ..add(
+                hourMinuteIsoPatternImpl,
+                (time) =>
+                    time.secondOfMinute == 0 && time.nanosecondOfSecond == 0)
+            ..add(
+                hourIsoPatternImpl,
+                (time) =>
+                    time.minuteOfHour == 0 &&
+                    time.secondOfMinute == 0 &&
+                    time.nanosecondOfSecond == 0))
+          .build();
 
   static String format(
           LocalTime localTime, String? patternText, Culture? culture) =>
@@ -36,6 +58,35 @@ class LocalTimePattern implements IPattern<LocalTime> {
   /// This corresponds to the text pattern "HH':'mm':'ss;FFFFFFFFF".
   static final LocalTimePattern extendedIso =
       LocalTimePatterns.extendedIsoPatternImpl;
+
+  /// An invariant local time pattern which is ISO-8601 compatible, providing
+  /// exactly 9 decimal places. This corresponds to the text pattern
+  /// `HH':'mm':'ss;fffffffff`.
+  static LocalTimePattern get longExtendedIso =>
+      LocalTimePatterns.longExtendedIsoPatternImpl;
+
+  /// An invariant local time pattern which is ISO-8601 compatible, with no
+  /// sub-second accuracy. This corresponds to the text pattern
+  /// `HH':'mm':'ss`.
+  static LocalTimePattern get generalIso =>
+      LocalTimePatterns.generalIsoPatternImpl;
+
+  /// An invariant local time pattern which is ISO-8601 compatible, providing
+  /// just the hour and minute. This corresponds to the text pattern
+  /// `HH':'mm`.
+  static LocalTimePattern get hourMinuteIso =>
+      LocalTimePatterns.hourMinuteIsoPatternImpl;
+
+  /// An invariant local time pattern which is ISO-8601 compatible, providing
+  /// just the hour. This corresponds to the text pattern `HH`.
+  static LocalTimePattern get hourIso => LocalTimePatterns.hourIsoPatternImpl;
+
+  /// An invariant local time pattern which is ISO-8601 compatible, and which
+  /// formats values to the shortest precision that represents them exactly:
+  /// just the hour (`HH`), the hour and minute (`HH':'mm`), or [extendedIso].
+  /// It parses any of those three formats.
+  static IPattern<LocalTime> get variablePrecisionIso =>
+      LocalTimePatterns.variablePrecisionIsoPatternImpl;
 
   static const String _defaultFormatPattern = 'T'; // Long
 

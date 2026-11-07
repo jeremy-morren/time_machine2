@@ -94,8 +94,14 @@ class OffsetDateTimePattern implements IPattern<OffsetDateTime> {
   /// in the pattern are taken from the template.
   final OffsetDateTime templateValue;
 
-  const OffsetDateTimePattern._(
-      this.patternText, this._formatInfo, this.templateValue, this._pattern);
+  /// Maximum two-digit-year in the template to treat as the current century.
+  /// If the value parsed is higher than this, the result is adjusted to the
+  /// previous century. This value defaults to 30. To create a pattern with a
+  /// different value, use [withTwoDigitYearMax].
+  final int twoDigitYearMax;
+
+  const OffsetDateTimePattern._(this.patternText, this._formatInfo,
+      this.templateValue, this.twoDigitYearMax, this._pattern);
 
   /// Parses the given text value according to the rules of this pattern.
   ///
@@ -137,13 +143,14 @@ class OffsetDateTimePattern implements IPattern<OffsetDateTime> {
   ///
   /// * [InvalidPatternError]: The pattern text was invalid.
   static OffsetDateTimePattern _create(String patternText,
-      TimeMachineFormatInfo formatInfo, OffsetDateTime templateValue) {
+      TimeMachineFormatInfo formatInfo, OffsetDateTime templateValue,
+      [int twoDigitYearMax = LocalDatePatterns.defaultTwoDigitYearMax]) {
     Preconditions.checkNotNull(patternText, 'patternText');
     Preconditions.checkNotNull(formatInfo, 'formatInfo');
-    var pattern = OffsetDateTimePatternParser(templateValue)
+    var pattern = OffsetDateTimePatternParser(templateValue, twoDigitYearMax)
         .parsePattern(patternText, formatInfo);
     return OffsetDateTimePattern._(
-        patternText, formatInfo, templateValue, pattern);
+        patternText, formatInfo, templateValue, twoDigitYearMax, pattern);
   }
 
   /// Creates a pattern for the given pattern text, culture, and template value.
@@ -202,7 +209,7 @@ class OffsetDateTimePattern implements IPattern<OffsetDateTime> {
   ///
   /// Returns: A new pattern with the given pattern text.
   OffsetDateTimePattern withPatternText(String patternText) =>
-      _create(patternText, _formatInfo, templateValue);
+      _create(patternText, _formatInfo, templateValue, twoDigitYearMax);
 
   /// Creates a pattern for the same original pattern text as this pattern, but with the specified
   /// localization information.
@@ -211,7 +218,7 @@ class OffsetDateTimePattern implements IPattern<OffsetDateTime> {
   ///
   /// Returns: A new pattern with the given localization information.
   OffsetDateTimePattern _withFormatInfo(TimeMachineFormatInfo formatInfo) =>
-      _create(patternText, formatInfo, templateValue);
+      _create(patternText, formatInfo, templateValue, twoDigitYearMax);
 
   /// Creates a pattern for the same original pattern text as this pattern, but with the specified
   /// culture.
@@ -229,7 +236,20 @@ class OffsetDateTimePattern implements IPattern<OffsetDateTime> {
   ///
   /// Returns: A new pattern with the given template value.
   OffsetDateTimePattern withTemplateValue(OffsetDateTime newTemplateValue) =>
-      _create(patternText, _formatInfo, newTemplateValue);
+      _create(patternText, _formatInfo, newTemplateValue, twoDigitYearMax);
+
+  /// Creates a pattern like this one, but with a different [twoDigitYearMax]
+  /// value.
+  ///
+  /// * [twoDigitYearMax]: The value to use for [twoDigitYearMax] in the new
+  ///   pattern, in the range 0-99 inclusive.
+  ///
+  /// Returns: A new pattern with the specified maximum two-digit-year
+  /// value.
+  ///
+  /// * [RangeError]: [twoDigitYearMax] is outside the range 0-99.
+  OffsetDateTimePattern withTwoDigitYearMax(int twoDigitYearMax) =>
+      _create(patternText, _formatInfo, templateValue, twoDigitYearMax);
 
   /// Creates a pattern like this one, but with the template value modified to use
   /// the specified calendar system.

@@ -24,8 +24,43 @@ void main() {
   test('BetweenLocalDateTimes_AcrossDays', BetweenLocalDateTimes_AcrossDays);
   test('BetweenLocalDateTimes_AcrossDays_MinutesAndSeconds',
       BetweenLocalDateTimes_AcrossDays_MinutesAndSeconds);
+  test('BetweenLocalDateTimes_StartIsLaterDayLaterTime',
+      BetweenLocalDateTimes_StartIsLaterDayLaterTime);
+  test('BetweenLocalDateTimes_StartIsLaterDayLaterTime_DaysOnly',
+      BetweenLocalDateTimes_StartIsLaterDayLaterTime_DaysOnly);
   test('BetweenLocalDateTimes_NotInt64Representable',
       BetweenLocalDateTimes_NotInt64Representable);
+  // Noda Time's cases add 123ns and use Ticks (100ns): Time Machine's
+  // equivalent unit is the microsecond, so the cases are adapted to add 123ns
+  // (less than a microsecond) and 1234ns. The values are (units,
+  // extraNanoseconds, expectedMicroseconds, expectedNanoseconds).
+  parameterizedTest(
+      'BetweenLocalDateTimes_NotInt64Representable_SubsecondUnits',
+      [
+        [PeriodUnits.hours | PeriodUnits.nanoseconds, 123, 0, 123],
+        [PeriodUnits.hours | PeriodUnits.microseconds, 123, 0, 0],
+        [
+          PeriodUnits.hours |
+              PeriodUnits.microseconds |
+              PeriodUnits.nanoseconds,
+          123,
+          0,
+          123
+        ],
+        [PeriodUnits.hours | PeriodUnits.microseconds, 1234, 1, 0],
+        [
+          PeriodUnits.hours |
+              PeriodUnits.microseconds |
+              PeriodUnits.nanoseconds,
+          1234,
+          1,
+          234
+        ],
+      ],
+      BetweenLocalDateTimes_NotInt64Representable_SubsecondUnits,
+      // PeriodUnits.toString only names single units.
+      customDescriptionBuilder: (_, __, values) =>
+          '[${DescribeUnits(values[0] as PeriodUnits)}, ${values.skip(1).join(', ')}]');
   test('BetweenLocalDates_InvalidUnits', BetweenLocalDates_InvalidUnits);
   test('BetweenLocalDates_DifferentCalendarSystems_Throws',
       BetweenLocalDates_DifferentCalendarSystems_Throws);
@@ -39,6 +74,32 @@ void main() {
       ],
       BetweenLocalDates_SingleUnit,
       customDescriptionBuilder: describeArguments);
+  test('DaysBetweenLocalDates_DifferentCalendarsThrows',
+      DaysBetweenLocalDates_DifferentCalendarsThrows);
+  test('DaysBetweenLocalDates_SameDatesReturnsZero',
+      DaysBetweenLocalDates_SameDatesReturnsZero);
+  parameterizedTest(
+      'DaysBetweenLocalDates',
+      [
+        ['2016-05-16', '2016-05-17', 1],
+        ['2020-06-15', '2020-06-18', 3],
+        ['2016-05-16', '2016-05-26', 10],
+        ['2020-06-15', '2021-06-19', 369],
+        ['2020-03-23', '2020-06-12', 81],
+      ],
+      DaysBetweenLocalDates,
+      customDescriptionBuilder: describeArguments);
+  parameterizedTest(
+      'DaysBetweenLocalDates_StartDateGreaterThanEndDate',
+      [
+        ['2016-05-16', '2016-05-15', -1],
+        ['2020-06-15', '2020-06-12', -3],
+        ['2016-05-16', '2016-05-06', -10],
+        ['2021-06-19', '2020-06-15', -369],
+        ['2020-05-16', '2019-05-16', -366],
+      ],
+      DaysBetweenLocalDates_StartDateGreaterThanEndDate,
+      customDescriptionBuilder: describeArguments);
   test('BetweenLocalDates_MovingForwardNoLeapYears_WithExactResults',
       BetweenLocalDates_MovingForwardNoLeapYears_WithExactResults);
   test('BetweenLocalDates_MovingForwardInLeapYear_WithExactResults',
@@ -51,8 +112,8 @@ void main() {
       BetweenLocalDates_MovingForward_WithJustMonths);
   test('BetweenLocalDates_MovingBackward_WithJustMonths',
       BetweenLocalDates_MovingBackward_WithJustMonths);
-  test('BetweenLocalDates_AssymetricForwardAndBackward',
-      BetweenLocalDates_AssymetricForwardAndBackward);
+  test('BetweenLocalDates_AsymmetricForwardAndBackward',
+      BetweenLocalDates_AsymmetricForwardAndBackward);
   test('BetweenLocalDates_EndOfMonth', BetweenLocalDates_EndOfMonth);
   test('BetweenLocalDates_OnLeapYear', BetweenLocalDates_OnLeapYear);
   test('BetweenLocalDates_AfterLeapYear', BetweenLocalDates_AfterLeapYear);
@@ -61,6 +122,31 @@ void main() {
       BetweenLocalDateTimes_OnLeapYearIslamic);
   test(
       'BetweenLocalDateTimes_InvalidUnits', BetweenLocalDateTimes_InvalidUnits);
+  parameterizedTest(
+      'NanosecondsBetweenLocalTimes',
+      [
+        [
+          LocalTime.minValue,
+          LocalTime.maxValue,
+          NanosecondOfDay(LocalTime.maxValue)
+        ].options(
+            customDescriptionBuilder: (_, __, ___) =>
+                'Nanoseconds between minValue and maxValue should be maximum nanosecondOfDay'),
+        [
+          LocalTime.maxValue,
+          LocalTime.minValue,
+          -NanosecondOfDay(LocalTime.maxValue)
+        ].options(
+            customDescriptionBuilder: (_, __, ___) =>
+                'Nanoseconds between maxValue and minValue should be negative maximum nanosecondOfDay'),
+        [LocalTime.minValue, LocalTime.minValue.addNanoseconds(1), 1].options(
+            customDescriptionBuilder: (_, __, ___) =>
+                'Nanoseconds between minValue and minValue_Plus_One should be 1'),
+        [LocalTime.minValue.addNanoseconds(1), LocalTime.minValue, -1].options(
+            customDescriptionBuilder: (_, __, ___) =>
+                'Nanoseconds between minValue_Plus_One and minValue should be negative 1'),
+      ],
+      NanosecondsBetweenLocalTimes);
   test('BetweenLocalTimes_InvalidUnits', BetweenLocalTimes_InvalidUnits);
   parameterizedTest(
       'BetweenLocalTimes_SingleUnit',
@@ -82,6 +168,7 @@ void main() {
       BetweenLocalTimes_MovingBackwards_WithJustHours);
   test(
       'Addition_WithDifferent_PeriodTypes', Addition_WithDifferent_PeriodTypes);
+  test('Addition_MaxAndMinValue', Addition_MaxAndMinValue);
   test(
       'Addition_With_IdenticalPeriodTypes', Addition_With_IdenticalPeriodTypes);
   test('Addition_DayCrossingMonthBoundary', Addition_DayCrossingMonthBoundary);
@@ -92,10 +179,13 @@ void main() {
       Subtraction_WithDifferent_PeriodTypes);
   test('Subtraction_With_IdenticalPeriodTypes',
       Subtraction_With_IdenticalPeriodTypes);
+  test('UnaryNegation', UnaryNegation);
+  // UnaryAddition: not applicable, as Dart has no unary plus operator.
   test('Equality_WhenEqual', Equality_WhenEqual);
   test('Equality_WithDifferentPeriodTypes_OnlyConsidersValues',
       Equality_WithDifferentPeriodTypes_OnlyConsidersValues);
   test('Equality_WhenUnequal', Equality_WhenUnequal);
+  test('EqualityOperators', EqualityOperators);
   parameterizedTest(
       'HasTimeComponent_SingleValued',
       [
@@ -175,6 +265,17 @@ void main() {
   test('Comparer_DurationablePeriods', Comparer_DurationablePeriods);
   test('Comparer_NonDurationablePeriods', Comparer_NonDurationablePeriods);
   parameterizedTest(
+      'Period_MaxAndMinValues_AllMembers',
+      [
+        [Period.maxValue, Platform.int32MaxValue, Platform.intMaxValue].options(
+            customDescriptionBuilder: (_, __, ___) =>
+                'All members should be MaxValue'),
+        [Period.minValue, Platform.int32MinValue, Platform.intMinValue].options(
+            customDescriptionBuilder: (_, __, ___) =>
+                'All members should be MinValue'),
+      ],
+      Period_MaxAndMinValues_AllMembers);
+  parameterizedTest(
       'Between_ExtremeValues', AllPeriodUnits, Between_ExtremeValues,
       customDescriptionBuilder: describeArguments);
   test('Between_ExtremeValues_Overflow', Between_ExtremeValues_Overflow);
@@ -203,6 +304,34 @@ void main() {
   test('Between_LocalDateTime_SameValue', Between_LocalDateTime_SameValue);
   test('Between_LocalDateTime_AwkwardTimeOfDayWithMultipleUnits',
       Between_LocalDateTime_AwkwardTimeOfDayWithMultipleUnits);
+  test('BetweenYearMonth_InvalidUnits', BetweenYearMonth_InvalidUnits);
+  test('BetweenYearMonth_DifferentCalendarSystems_Throws',
+      BetweenYearMonth_DifferentCalendarSystems_Throws);
+  parameterizedTest(
+      'BetweenYearMonth_SingleUnit',
+      [
+        ['2016-05', '2017-03', PeriodUnits.years, 0],
+        ['2016-05', '2016-05', PeriodUnits.years, 0],
+        ['2016-05', '2019-03', PeriodUnits.years, 2],
+        ['2016-05', '2019-05', PeriodUnits.years, 3],
+        ['2016-05', '2017-07', PeriodUnits.months, 14],
+        ['2016-05', '2017-05', PeriodUnits.months, 12],
+        ['2016-07', '2016-07', PeriodUnits.months, 0],
+      ],
+      BetweenYearMonth_SingleUnit,
+      customDescriptionBuilder: describeArguments);
+  parameterizedTest(
+      'BetweenYearMonth_BothUnits',
+      [
+        ['2017-05', '2017-05', 0, 0],
+        ['2016-05', '2017-05', 1, 0],
+        ['2016-05', '2017-06', 1, 1],
+        ['2016-05', '2018-10', 2, 5],
+        ['2016-05', '2017-04', 0, 11],
+        ['2013-05', '2017-04', 3, 11],
+      ],
+      BetweenYearMonth_BothUnits,
+      customDescriptionBuilder: describeArguments);
   test('FromNanoseconds', FromNanoseconds);
   test('AddPeriodToPeriod_NoOverflow', AddPeriodToPeriod_NoOverflow);
 }
@@ -303,6 +432,45 @@ void BetweenLocalDateTimes_NotInt64Representable() {
   expect(actual, expected);
 }
 
+void BetweenLocalDateTimes_StartIsLaterDayLaterTime() {
+  Period expected = const Period(days: -2) + const Period(hours: -2);
+  Period actual = Period.differenceBetweenDateTime(
+      LocalDateTime(2000, 1, 7, 10, 0, 0),
+      LocalDateTime(2000, 1, 5, 8, 0, 0),
+      PeriodUnits.days | PeriodUnits.hours);
+  expect(actual, expected);
+}
+
+void BetweenLocalDateTimes_StartIsLaterDayLaterTime_DaysOnly() {
+  Period expected = const Period(days: -2);
+  Period actual = Period.differenceBetweenDateTime(
+      LocalDateTime(2000, 1, 7, 10, 0, 0),
+      LocalDateTime(2000, 1, 5, 8, 0, 0),
+      PeriodUnits.days);
+  expect(actual, expected);
+}
+
+String DescribeUnits(PeriodUnits units) => PeriodUnits.values
+    .where((unit) => unit.value != 0 && (units & unit) == unit)
+    .join(' | ');
+
+void BetweenLocalDateTimes_NotInt64Representable_SubsecondUnits(
+    PeriodUnits units,
+    int extraNanoseconds,
+    int expectedMicroseconds,
+    int expectedNanoseconds) {
+  var start = LocalDateTime(2000, 1, 1, 0, 0, 0);
+  var end = LocalDateTime(2400, 1, 1, 0, 0, 0).addNanoseconds(extraNanoseconds);
+  var expected = (PeriodBuilder()
+        ..hours = 146097 * 24
+        ..microseconds = expectedMicroseconds
+        ..nanoseconds = expectedNanoseconds)
+      .build();
+
+  expect(Period.differenceBetweenDateTime(start, end, units), expected);
+  expect(Period.differenceBetweenDateTime(end, start, units), -expected);
+}
+
 void BetweenLocalDates_InvalidUnits() {
   expect(
       () => Period.differenceBetweenDates(
@@ -335,6 +503,35 @@ void BetweenLocalDates_SingleUnit(
   var actual = Period.differenceBetweenDates(start, end, units);
   var expected = (PeriodBuilder()..[units] = expectedValue).build();
   expect(expected, actual);
+}
+
+void DaysBetweenLocalDates_DifferentCalendarsThrows() {
+  var start = LocalDate(2020, 6, 13, CalendarSystem.iso);
+  var end = LocalDate(2020, 6, 15, CalendarSystem.julian);
+  expect(() => Period.daysBetween(start, end), throwsArgumentError);
+}
+
+void DaysBetweenLocalDates_SameDatesReturnsZero() {
+  var start = LocalDate(2020, 6, 13, CalendarSystem.iso);
+  var end = start;
+  var expected = 0;
+  var actual = Period.daysBetween(start, end);
+  expect(actual, expected);
+}
+
+void DaysBetweenLocalDates(String startText, String endText, int expected) {
+  var start = LocalDatePattern.iso.parse(startText).value;
+  var end = LocalDatePattern.iso.parse(endText).value;
+  var actual = Period.daysBetween(start, end);
+  expect(actual, expected);
+}
+
+void DaysBetweenLocalDates_StartDateGreaterThanEndDate(
+    String startText, String endText, int expected) {
+  var start = LocalDatePattern.iso.parse(startText).value;
+  var end = LocalDatePattern.iso.parse(endText).value;
+  var actual = Period.daysBetween(start, end);
+  expect(actual, expected);
 }
 
 void BetweenLocalDates_MovingForwardNoLeapYears_WithExactResults() {
@@ -382,7 +579,7 @@ void BetweenLocalDates_MovingBackward_WithJustMonths() {
   expect(expected, actual);
 }
 
-void BetweenLocalDates_AssymetricForwardAndBackward() {
+void BetweenLocalDates_AsymmetricForwardAndBackward() {
   // February 10th 2010
   LocalDate d1 = LocalDate(2010, 2, 10);
   // March 30th 2010
@@ -462,6 +659,14 @@ void BetweenLocalDateTimes_InvalidUnits() {
       throwsArgumentError);
 }
 
+int NanosecondOfDay(LocalTime time) => time.timeSinceMidnight.inNanoseconds;
+
+void NanosecondsBetweenLocalTimes(
+    LocalTime start, LocalTime end, int expected) {
+  var actual = Period.nanosecondsBetween(start, end);
+  expect(actual, expected);
+}
+
 void BetweenLocalTimes_InvalidUnits() {
   LocalTime t1 = LocalTime(10, 0, 0);
   LocalTime t2 = LocalTime(15, 30, 45,
@@ -536,11 +741,36 @@ void Addition_WithDifferent_PeriodTypes() {
   expect(20, sum.minutes);
 }
 
+void Addition_MaxAndMinValue() {
+  Period p1 = Period.maxValue;
+  Period p2 = Period.minValue;
+  Period sum = p1 + p2;
+  // The time units of maxValue and minValue are the platform's int limits:
+  // +/-2^53 on the web, where (unlike the Dart VM and .NET's long) the sum is 0.
+  var timeUnit = Platform.isVM ? -1 : 0;
+  expect(
+      sum,
+      Period(
+          years: -1,
+          months: -1,
+          weeks: -1,
+          days: -1,
+          hours: timeUnit,
+          minutes: timeUnit,
+          seconds: timeUnit,
+          milliseconds: timeUnit,
+          microseconds: timeUnit,
+          nanoseconds: timeUnit));
+}
+
 void Addition_With_IdenticalPeriodTypes() {
   Period p1 = const Period(hours: 3);
   Period p2 = const Period(hours: 2);
   Period sum = p1 + p2;
   expect(5, sum.hours);
+  // Period.Add(p1, p2)
+  expect(Period.plus(p1, p2), sum);
+  expect(p1.add(p2), sum);
 }
 
 void Addition_DayCrossingMonthBoundary() {
@@ -580,16 +810,52 @@ void Addition_YearMonthDay() {
 void Subtraction_WithDifferent_PeriodTypes() {
   Period p1 = const Period(hours: 3);
   Period p2 = const Period(minutes: 20);
-  Period sum = p1 - p2;
-  expect(3, sum.hours);
-  expect(-20, sum.minutes);
+  Period difference = p1 - p2;
+  expect(3, difference.hours);
+  expect(-20, difference.minutes);
+  // Period.Subtract(p1, p2)
+  expect(Period.minus(p1, p2), difference);
+  expect(p1.subtract(p2), difference);
 }
 
 void Subtraction_With_IdenticalPeriodTypes() {
   Period p1 = const Period(hours: 3);
   Period p2 = const Period(hours: 2);
-  Period sum = p1 - p2;
-  expect(1, sum.hours);
+  Period difference = p1 - p2;
+  expect(1, difference.hours);
+  // Period.Subtract(p1, p2)
+  expect(Period.minus(p1, p2), difference);
+  expect(p1.subtract(p2), difference);
+}
+
+void UnaryNegation() {
+  // Noda Time's Ticks are Time Machine's microseconds.
+  Period period = const Period(
+      years: 2,
+      months: 3,
+      weeks: 4,
+      days: 5,
+      hours: 6,
+      minutes: 7,
+      seconds: 8,
+      milliseconds: 9,
+      microseconds: 10,
+      nanoseconds: 11);
+  Period negation = -period;
+  expect(
+      negation,
+      const Period(
+          years: -2,
+          months: -3,
+          weeks: -4,
+          days: -5,
+          hours: -6,
+          minutes: -7,
+          seconds: -8,
+          milliseconds: -9,
+          microseconds: -10,
+          nanoseconds: -11));
+  expect(-negation, period);
 }
 
 void Equality_WhenEqual() {
@@ -610,6 +876,34 @@ void Equality_WhenUnequal() {
   expect(const Period(hours: 10).equals(const Period(hours: 20)), isFalse);
   expect(const Period(minutes: 15).equals(const Period(seconds: 15)), isFalse);
   expect(const Period(hours: 1).equals(const Period(minutes: 60)), isFalse);
+}
+
+void EqualityOperators() {
+  // Distinct (non-const) instances, as in Noda Time.
+  // ignore: prefer_const_constructors
+  Period val1 = Period(hours: 1);
+  // ignore: prefer_const_constructors
+  Period val2 = Period(hours: 1);
+  // ignore: prefer_const_constructors
+  Period val3 = Period(hours: 2);
+  Period? val4;
+  expect(val1 == val2, isTrue);
+  expect(val1 == val3, isFalse);
+  expect(val1 == val4, isFalse);
+  expect(val4 == val1, isFalse);
+  // ignore: unnecessary_null_comparison
+  expect(val4 == null, isTrue);
+  // ignore: unnecessary_null_comparison
+  expect(null == val4, isTrue);
+
+  expect(val1 != val2, isFalse);
+  expect(val1 != val3, isTrue);
+  expect(val1 != val4, isTrue);
+  expect(val4 != val1, isTrue);
+  // ignore: unnecessary_null_comparison
+  expect(val4 != null, isFalse);
+  // ignore: unnecessary_null_comparison
+  expect(null != val4, isFalse);
 }
 
 void HasTimeComponent_SingleValued(PeriodUnits unit, bool hasTimeComponent) {
@@ -1043,6 +1337,24 @@ void Comparer_NonDurationablePeriods() {
 }
 
 // [TestCaseSource(nameof(AllPeriodUnits))]
+/// Ensure that Period.maxValue and Period.minValue contain the max/min value
+/// assignable to each public property: a 32-bit int for the date units (as in
+/// Noda Time) and the platform's int for the time units (Noda Time's long).
+void Period_MaxAndMinValues_AllMembers(
+    Period period, int expectedIntValue, int expectedLongValue) {
+  // Noda Time uses reflection; these are all the int properties of Period.
+  expect(period.years, expectedIntValue);
+  expect(period.months, expectedIntValue);
+  expect(period.weeks, expectedIntValue);
+  expect(period.days, expectedIntValue);
+  expect(period.hours, expectedLongValue);
+  expect(period.minutes, expectedLongValue);
+  expect(period.seconds, expectedLongValue);
+  expect(period.milliseconds, expectedLongValue);
+  expect(period.microseconds, expectedLongValue);
+  expect(period.nanoseconds, expectedLongValue);
+}
+
 void Between_ExtremeValues(PeriodUnits units) {
   // We can't use None, and Nanoseconds will *correctly* overflow.
   if (units == PeriodUnits.none || units == PeriodUnits.nanoseconds) {
@@ -1116,6 +1428,68 @@ void BinaryRoundTrip()
       Utility.int64MinValue));
 }
 */
+
+void BetweenYearMonth_InvalidUnits() {
+  YearMonth yearMonth1 = YearMonth(2010, 1);
+  YearMonth yearMonth2 = YearMonth(2011, 3);
+  for (var units in [
+    const PeriodUnits(0),
+    const PeriodUnits(-1),
+    PeriodUnits.allTimeUnits,
+    PeriodUnits.days,
+    PeriodUnits.years | PeriodUnits.days,
+    PeriodUnits.years | PeriodUnits.weeks,
+    PeriodUnits.years | PeriodUnits.hours,
+  ]) {
+    expect(
+        () => Period.differenceBetweenYearMonths(yearMonth1, yearMonth2, units),
+        throwsArgumentError,
+        reason: '$units');
+  }
+}
+
+void BetweenYearMonth_DifferentCalendarSystems_Throws() {
+  YearMonth start = YearMonth(2017, 11, CalendarSystem.coptic);
+  YearMonth end = YearMonth(2017, 11, CalendarSystem.gregorian);
+  expect(() => Period.differenceBetweenYearMonths(start, end),
+      throwsArgumentError);
+}
+
+void BetweenYearMonth_SingleUnit(
+    String startText, String endText, PeriodUnits units, int expectedValue) {
+  var start = YearMonthPattern.iso.parse(startText).value;
+  var end = YearMonthPattern.iso.parse(endText).value;
+  var forward = Period.differenceBetweenYearMonths(start, end, units);
+  var expectedForward = (PeriodBuilder()..[units] = expectedValue).build();
+  expect(forward, expectedForward);
+  var backward = Period.differenceBetweenYearMonths(end, start, units);
+  var expectedBackward = (PeriodBuilder()..[units] = -expectedValue).build();
+  expect(backward, expectedBackward);
+}
+
+void BetweenYearMonth_BothUnits(
+    String startText, String endText, int expectedYears, int expectedMonths) {
+  var start = YearMonthPattern.iso.parse(startText).value;
+  var end = YearMonthPattern.iso.parse(endText).value;
+  var forward = Period.differenceBetweenYearMonths(
+      start, end, PeriodUnits.years | PeriodUnits.months);
+  var expectedForward = (PeriodBuilder()
+        ..[PeriodUnits.years] = expectedYears
+        ..[PeriodUnits.months] = expectedMonths)
+      .build();
+  expect(forward, expectedForward);
+  var forwardNoUnits = Period.differenceBetweenYearMonths(start, end);
+  expect(forwardNoUnits, expectedForward);
+  var backward = Period.differenceBetweenYearMonths(
+      end, start, PeriodUnits.years | PeriodUnits.months);
+  var expectedBackward = (PeriodBuilder()
+        ..[PeriodUnits.years] = -expectedYears
+        ..[PeriodUnits.months] = -expectedMonths)
+      .build();
+  expect(backward, expectedBackward);
+  var backwardNoUnits = Period.differenceBetweenYearMonths(end, start);
+  expect(backwardNoUnits, expectedBackward);
+}
 
 void FromNanoseconds() {
   var period = const Period(nanoseconds: 1234567890);

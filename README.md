@@ -45,7 +45,7 @@ You are benefitting the most from Time Machine if you want to
 * share data between users that work in different time zones
 * perform any arithmetic with dates and times without worrying about calendar logic, such as months with different number of days, varying day lengths due to DST transitions, etc.
 
-Time Machine is also useful for applications that only work with universal timestamps. Its `Instant` class provides nanosecond precision and fake clocks can be used during unit testing.
+Time Machine is also useful for applications that only work with universal timestamps. Its `Instant` class provides nanosecond precision and fake clocks (`FakeClock` in `package:time_machine2/testing.dart`, with fake time zones) can be used during unit testing.
 
 **Time Machine API**
 * Time - an amount of time with nanosecond precision

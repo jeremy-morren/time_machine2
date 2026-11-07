@@ -20,6 +20,8 @@ void main() {
   test('IsoLocalStartAndEnd_Infinite', IsoLocalStartAndEnd_Infinite);
   test('IsoLocalStartAndEnd_OutOfRange', IsoLocalStartAndEnd_OutOfRange);
   test('Equality', Equality);
+  test('EqualityOperators', EqualityOperators);
+  test('ZoneIntervalToString', ZoneIntervalToString);
 }
 
 final Instant SampleStart = Instant.utc(2011, 6, 3, 10, 15);
@@ -161,4 +163,38 @@ void Equality() {
         IZoneInterval.newZoneInterval(
             'name', SampleStart, SampleEnd, Offset.hours(1), Offset.hours(3))
       ]);
+}
+
+void EqualityOperators() {
+  ZoneInterval val1 = IZoneInterval.newZoneInterval(
+      'name', SampleStart, SampleEnd, Offset.hours(1), Offset.hours(2));
+  ZoneInterval val2 = IZoneInterval.newZoneInterval(
+      'name', SampleStart, SampleEnd, Offset.hours(1), Offset.hours(2));
+  ZoneInterval val3 = IZoneInterval.newZoneInterval(
+      'name2', SampleStart, SampleEnd, Offset.hours(1), Offset.hours(2));
+  // (Not a literal null, which the analyzer would know is null.)
+  ZoneInterval? val4 = _noZoneInterval();
+
+  expect(val1 == val2, isTrue);
+  expect(val1 == val3, isFalse);
+  expect(val1 == val4, isFalse);
+  expect(val4 == val1, isFalse);
+  expect(val4 == null, isTrue);
+  expect(null == val4, isTrue);
+
+  expect(val1 != val2, isFalse);
+  expect(val1 != val3, isTrue);
+  expect(val1 != val4, isTrue);
+  expect(val4 != val1, isTrue);
+  expect(val4 != null, isFalse);
+  expect(null != val4, isFalse);
+}
+
+ZoneInterval? _noZoneInterval() => null;
+
+void ZoneIntervalToString() {
+  // Noda Time sets the invariant culture; Time Machine's toString() doesn't
+  // depend on the culture.
+  expect(SampleInterval.toString(),
+      'TestTime: [2011-06-03T10:15:00Z, 2011-08-02T13:45:00Z) +09 (+01)');
 }

@@ -58,6 +58,25 @@ void main() {
       ToUnixTimeSeconds,
       customDescriptionBuilder: describeArguments);
   parameterizedTest(
+      'ToUnixTimeSecondsAndNanoseconds',
+      [
+        [-1500, -2, 500000000],
+        [-1001, -2, 999000000],
+        [-1000, -1, 0],
+        [-999, -1, 1000000],
+        [-500, -1, 500000000],
+        [0, 0, 0],
+        [500, 0, 500000000],
+        [999, 0, 999000000],
+        [1000, 1, 0],
+        [1001, 1, 1000000],
+        [1500, 1, 500000000],
+      ],
+      ToUnixTimeSecondsAndNanoseconds,
+      customDescriptionBuilder: describeArguments);
+  test('ToUnixTimeSecondsAndNanoseconds_ExtremeValues',
+      ToUnixTimeSecondsAndNanoseconds_ExtremeValues);
+  parameterizedTest(
       'ToUnixTimeMilliseconds',
       [
         [-15000, -2],
@@ -275,6 +294,37 @@ void FromUnixTimeSeconds_TooSmall() {
 void ToUnixTimeSeconds(int milliseconds, int expectedSeconds) {
   var instant = Instant.fromEpochMilliseconds(milliseconds);
   expect(instant.epochSeconds, expectedSeconds);
+}
+
+void ToUnixTimeSecondsAndNanoseconds(
+    int milliseconds, int expectedSeconds, int expectedNanoseconds) {
+  var instant = Instant.fromEpochMilliseconds(milliseconds);
+  var (seconds: actualSeconds, nanoseconds: actualNanoseconds) =
+      instant.epochSecondsAndNanoseconds;
+  expect(actualSeconds, expectedSeconds);
+  expect(actualNanoseconds, expectedNanoseconds);
+}
+
+// Not in Noda Time: the seconds and nanoseconds represent the extreme
+// instants exactly (Instant.epochNanoseconds can't on the web).
+void ToUnixTimeSecondsAndNanoseconds_ExtremeValues() {
+  var max = Instant.maxValue.epochSecondsAndNanoseconds;
+  expect(max.seconds, Instant.maxValue.epochSeconds);
+  expect(max.nanoseconds, 999999999);
+  expect(
+      Instant.fromEpochSeconds(max.seconds)
+          .add(Time(nanoseconds: max.nanoseconds)),
+      Instant.maxValue);
+
+  var min = Instant.minValue.epochSecondsAndNanoseconds;
+  expect(min.seconds, Instant.minValue.epochSeconds);
+  expect(min.nanoseconds, 0);
+  expect(Instant.fromEpochSeconds(min.seconds), Instant.minValue);
+
+  // One nanosecond before the epoch.
+  var beforeEpoch = Instant().subtract(Time.epsilon).epochSecondsAndNanoseconds;
+  expect(beforeEpoch.seconds, -1);
+  expect(beforeEpoch.nanoseconds, 999999999);
 }
 
 void ToUnixTimeMilliseconds(int ticks, int expectedMilliseconds) {
