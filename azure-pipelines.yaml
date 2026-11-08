@@ -475,7 +475,7 @@ jobs:
   # The same checks on an iOS Simulator.
   - job: iOS
     displayName: 'iOS Simulator'
-    timeoutInMinutes: 75
+    timeoutInMinutes: 60
     pool:
       vmImage: macOS-latest
     variables:
@@ -526,34 +526,16 @@ jobs:
             echo "##vso[task.logissue type=error]The boot step didn't set simulatorUdid"
             exit 1
           fi
-          flutter test integration_test --device-id "$SIMULATORUDID" \
+          # flutter test now and then misses the app's VM service and hangs
+          # before the tests start; the script spots that and runs them again.
+          ../../.github/scripts/flutter-test-ios-simulator.sh \
+            "$SIMULATORUDID" dev.timemachine2.systemSourceTestApp \
             --coverage --coverage-package time_machine2 \
             --file-reporter json:test-results/tests.json \
             --dart-define=TIME_MACHINE_EXPECT_SYSTEM_TIME_ZONE=$(timeZone)
-          echo
-          echo "##vso[task.setvariable variable=simulatorChecksPassed]true"
         displayName: System time zone checks on the Simulator
         workingDirectory: test_apps/system_source_flutter
-        # Now and then the app never starts after the Xcode build and the
-        # step hangs (a healthy run takes about 8 minutes); the next step
-        # reboots the Simulator and tries once more.
-        timeoutInMinutes: 20
-        continueOnError: true
-
-      - bash: |
-          set -e
-          xcrun simctl shutdown "$SIMULATORUDID" || true
-          xcrun simctl boot "$SIMULATORUDID"
-          xcrun simctl bootstatus "$SIMULATORUDID" -b
-          echo
-          flutter test integration_test --device-id "$SIMULATORUDID" \
-            --coverage --coverage-package time_machine2 \
-            --file-reporter json:test-results/tests.json \
-            --dart-define=TIME_MACHINE_EXPECT_SYSTEM_TIME_ZONE=$(timeZone)
-        displayName: System time zone checks on the Simulator (retry)
-        workingDirectory: test_apps/system_source_flutter
-        condition: and(succeededOrFailed(), ne(variables.simulatorChecksPassed, 'true'))
-        timeoutInMinutes: 20
+        timeoutInMinutes: 35
 
       - template: .azure-pipelines/templates/publish-results.yml
         parameters:
