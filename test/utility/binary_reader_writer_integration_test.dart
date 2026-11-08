@@ -3,6 +3,10 @@ import 'package:time_machine2/src/utility/binary_reader.dart';
 import 'package:time_machine2/src/utility/binary_writer.dart';
 import 'dart:typed_data';
 
+/// 0x1234567890ABCDEF, parsed: dart2js can't compile the literal, which isn't
+/// exact as a JavaScript number. Only used by tests that don't run on dart2js.
+final int int64Value = int.parse('1234567890ABCDEF', radix: 16);
+
 void main() {
   group('BinaryReader and BinaryWriter Integration', () {
     late List<int> output;
@@ -52,17 +56,19 @@ void main() {
       expect(reader.readBool(), isFalse);
     });
 
+    // The int64 tests need 64-bit integers, and writeInt64 uses
+    // ByteData.setInt64, which dart2js doesn't support.
     test('int64 roundtrip', () {
-      writer.writeInt64(0x1234567890ABCDEF);
+      writer.writeInt64(int64Value);
       writeAndRead();
-      expect(reader.readInt64(), equals(0x1234567890ABCDEF));
-    });
+      expect(reader.readInt64(), equals(int64Value));
+    }, testOn: '!js');
 
     test('int64 negative roundtrip', () {
-      writer.writeInt64(-0x1234567890ABCDEF);
+      writer.writeInt64(-int64Value);
       writeAndRead();
-      expect(reader.readInt64(), equals(-0x1234567890ABCDEF));
-    });
+      expect(reader.readInt64(), equals(-int64Value));
+    }, testOn: '!js');
 
     test('7BitEncodedInt roundtrip', () {
       writer.write7BitEncodedInt(0x1234);
@@ -82,11 +88,12 @@ void main() {
       expect(reader.readStringList(), equals(['Hello', 'World']));
     });
 
+    // Includes an int64, so not on dart2js either.
     test('complex roundtrip', () {
       writer.writeInt32(42);
       writer.writeBool(true);
       writer.writeString('Test');
-      writer.writeInt64(0x1234567890ABCDEF);
+      writer.writeInt64(int64Value);
       writer.writeStringList(['A', 'B', 'C']);
 
       writeAndRead();
@@ -94,8 +101,8 @@ void main() {
       expect(reader.readInt32(), equals(42));
       expect(reader.readBool(), isTrue);
       expect(reader.readString(), equals('Test'));
-      expect(reader.readInt64(), equals(0x1234567890ABCDEF));
+      expect(reader.readInt64(), equals(int64Value));
       expect(reader.readStringList(), equals(['A', 'B', 'C']));
-    });
+    }, testOn: '!js');
   });
 }

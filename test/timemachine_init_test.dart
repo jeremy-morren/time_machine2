@@ -18,7 +18,6 @@ Future<String> getTimeZone() async {
 }
 
 Future timezoneCanBeOverridden() async {
-  if (Platform.isWeb) return;
   await TimeMachineTest.initialize({'timeZone': await getTimeZone()});
   expect(DateTimeZone.local.id, 'Europe/Paris');
 }

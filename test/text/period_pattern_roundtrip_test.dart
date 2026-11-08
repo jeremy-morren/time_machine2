@@ -17,15 +17,28 @@ void main() {
     parameterizedTest(
         'ParseFailures', fixture.ParseFailureData, fixture.ParseFailures,
         customDescriptionBuilder: describeArguments);
-    parameterizedTest('Parse', fixture.ParseData.toList(), fixture.Parse,
-        customDescriptionBuilder: describeArguments);
-    parameterizedTest('Format', fixture.FormatData.toList(), fixture.Format,
+    parameterizedTest(
+        'Parse', fixture.ParseData.toList(), _skipInt64OnJs(fixture.Parse),
         customDescriptionBuilder: describeArguments);
     parameterizedTest(
-        'AppendFormat', fixture.FormatData.toList(), fixture.AppendFormat,
+        'Format', fixture.FormatData.toList(), _skipInt64OnJs(fixture.Format),
+        customDescriptionBuilder: describeArguments);
+    parameterizedTest('AppendFormat', fixture.FormatData.toList(),
+        _skipInt64OnJs(fixture.AppendFormat),
         customDescriptionBuilder: describeArguments);
   });
 }
+
+/// Runs [body], except for the int64 extremes on dart2js, where they can't be
+/// represented.
+void Function(Data) _skipInt64OnJs(void Function(Data) body) => (Data data) {
+      if (PeriodPatternRoundtripTest.Int64ExtremeData.contains(data) &&
+          skipUnless(!intsAreJsNumbers,
+              'Needs 64-bit integers: dart2js integers are exact only within ±2^53')) {
+        return;
+      }
+      body(data);
+    };
 
 class PeriodPatternRoundtripTest extends PatternTestBase<Period> {
   @internal
@@ -146,6 +159,13 @@ class PeriodPatternRoundtripTest extends PatternTestBase<Period> {
       ..text = 'PT1H-1M',
 
     // Max/min
+    ...Int64ExtremeData,
+  ];
+
+  /// Periods of the most and fewest hours an int64 holds. JavaScript numbers
+  /// are exact only within ±2^53, so these are skipped on dart2js.
+  @internal
+  static final List<Data> Int64ExtremeData = [
     Data(const Period(hours: Platform.int64MaxValue))
       ..text = 'PT9223372036854775807H',
     Data(const Period(hours: Platform.int64MinValue))

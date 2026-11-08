@@ -2,6 +2,10 @@ import 'package:test/test.dart';
 import 'package:time_machine2/src/utility/binary_reader.dart';
 import 'dart:typed_data';
 
+/// 0x1234567890ABCDEF, parsed: dart2js can't compile the literal, which isn't
+/// exact as a JavaScript number. Only used by tests that don't run on dart2js.
+final int int64Value = int.parse('1234567890ABCDEF', radix: 16);
+
 void main() {
   group('BinaryReader', () {
     late ByteData data;
@@ -40,16 +44,37 @@ void main() {
       expect(reader.readBool(), isFalse);
     });
 
+    // These need 64-bit integers, and dart2js doesn't support
+    // ByteData.setInt64.
     test('readInt64 reads correct value', () {
-      data = ByteData(8)..setInt64(0, 0x1234567890ABCDEF, Endian.little);
+      data = ByteData(8)..setInt64(0, int64Value, Endian.little);
       reader = BinaryReader(data);
-      expect(reader.readInt64(), equals(0x1234567890ABCDEF));
-    });
+      expect(reader.readInt64(), equals(int64Value));
+    }, testOn: '!js');
 
     test('readInt64 reads negative value', () {
-      data = ByteData(8)..setInt64(0, -0x1234567890ABCDEF, Endian.little);
+      data = ByteData(8)..setInt64(0, -int64Value, Endian.little);
       reader = BinaryReader(data);
-      expect(reader.readInt64(), equals(-0x1234567890ABCDEF));
+      expect(reader.readInt64(), equals(-int64Value));
+    }, testOn: '!js');
+
+    // readInt64 doesn't use ByteData.getInt64, so it works on dart2js for
+    // values JavaScript numbers hold exactly.
+    test('readInt64 reads a value within ±2^53', () {
+      data = Uint8List.fromList([0xEF, 0xCD, 0xAB, 0x78, 0x56, 0x34, 0x12, 0])
+          .buffer
+          .asByteData();
+      reader = BinaryReader(data);
+      expect(reader.readInt64(), equals(0x12345678ABCDEF));
+    });
+
+    test('readInt64 reads a negative value within ±2^53', () {
+      data =
+          Uint8List.fromList([0x11, 0x32, 0x54, 0x87, 0xA9, 0xCB, 0xED, 0xFF])
+              .buffer
+              .asByteData();
+      reader = BinaryReader(data);
+      expect(reader.readInt64(), equals(-0x12345678ABCDEF));
     });
 
     test('read7BitEncodedInt reads correct value for small numbers', () {

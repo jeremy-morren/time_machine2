@@ -18,6 +18,9 @@ class TimeMachine {
   static Future initialize(Map<String, dynamic> args) async {
     Platform.startWeb();
 
+    String? timeZoneOverride = args['timeZone'];
+    String? cultureOverride = args['culture'];
+
     // Map IO functions
     PlatformIO(config: args);
 
@@ -25,46 +28,47 @@ class TimeMachine {
     var tzdb = await DateTimeZoneProviders.tzdb;
     IDateTimeZoneProviders.defaultProvider = tzdb;
 
-    _readIntlObject();
+    var options = _readIntlObject();
 
     // Default TimeZone
-    var local = await tzdb[_timeZoneId];
-    tzdb.setSystemDefault(local.id);
+    var local = timeZoneOverride != null
+        ? await tzdb.getZoneOrNull(timeZoneOverride)
+        : await _figureOutTimeZone(tzdb, options?.timeZone);
+    tzdb.setSystemDefault(local!.id);
 
     // Default Culture
-    var cultureId = _locale;
+    var cultureId = cultureOverride ?? options?.locale ?? 'en-US';
     var culture = await Cultures.getCulture(cultureId);
+
+    // fall back to en-US if the browser's culture doesn't exist, as on the VM
+    culture ??= await Cultures.getCulture('en-US');
     ICultures.currentCulture = culture!;
   }
 
-  static late String _timeZoneId;
-  static late String _locale;
-  // ignore: unused_field
-  static late String _numberingSystem;
-  // ignore: unused_field
-  static late String _calendar;
-  // ignore: unused_field
-  static late String _yearFormat;
-  // ignore: unused_field
-  static late String _monthFormat;
-  // ignore: unused_field
-  static late String _dayFormat;
+  /// The zone `Intl.DateTimeFormat().resolvedOptions().timeZone` names, mapped
+  /// to a TZDB ID as the VM maps the system's zone ID (as Noda Time maps
+  /// `TimeZoneInfo.Local.Id`): so 'UTC' becomes 'Etc/UTC', as on the VM.
+  ///
+  /// If the browser reports no zone, or one TZDB doesn't know, this falls back
+  /// to a fixed zone with the browser's current offset, as the VM does.
+  static Future<DateTimeZone> _figureOutTimeZone(
+      DateTimeZoneProvider provider, String? systemId) async {
+    if (systemId != null) {
+      var id = IDateTimeZoneProviders.tzdbSource.mapSystemTimeZoneId(systemId);
+      if (id != null && provider.ids.contains(id)) return await provider[id];
+    }
+
+    return DateTimeZone.forOffset(
+        Offset(DateTime.now().timeZoneOffset.inSeconds));
+  }
 
   // {locale: en-US, numberingSystem: latn, calendar: gregory, timeZone: America/New_York, year: numeric, month: numeric, day: numeric}
-  static void _readIntlObject() {
+  static _ResolvedOptions? _readIntlObject() {
     try {
-      final dateTimeFormat = _DateTimeFormat();
-      final options = dateTimeFormat.resolvedOptions();
-
-      _locale = options.locale.toDart;
-      _timeZoneId = options.timeZone.toDart;
-      _numberingSystem = options.numberingSystem.toDart;
-      _calendar = options.calendar.toDart;
-      _yearFormat = options.year.toDart;
-      _monthFormat = options.month.toDart;
-      _dayFormat = options.day.toDart;
+      return _DateTimeFormat().resolvedOptions();
     } catch (e, s) {
       print('Failed to get platform local information.\n$e\n$s');
+      return null;
     }
   }
 }
@@ -75,12 +79,9 @@ extension type _DateTimeFormat._(JSObject _) implements JSObject {
   external _ResolvedOptions resolvedOptions();
 }
 
+/// The parts of `resolvedOptions()` used. Either may be missing (for example
+/// `timeZone` in older engines), so both are nullable.
 extension type _ResolvedOptions._(JSObject _) implements JSObject {
-  external JSString get locale;
-  external JSString get timeZone;
-  external JSString get numberingSystem;
-  external JSString get calendar;
-  external JSString get year;
-  external JSString get month;
-  external JSString get day;
+  external String? get locale;
+  external String? get timeZone;
 }

@@ -1,0 +1,18 @@
+override_platforms:
+  node:
+    settings:
+      # Defines globalThis.location, which dart2wasm's Uri.base needs (see the
+      # file): without it, any stack trace package:test formats on Node.js
+      # with dart2wasm crashes the suite.
+      arguments: --import=./test/support/node_location.mjs
+
+# Safari and Firefox are much slower than Chrome on the CI agents. A
+# browser loads each suite in an iframe, and same-origin iframes share the
+# page's main thread, so while a heavy suite runs (localdatetime_pattern_test
+# has thousands of cases) another can miss the 30-second load timeout. The
+# load timeout is the larger of 30 seconds and the suite's timeout.
+on_platform:
+  safari:
+    timeout: 4x
+  firefox:
+    timeout: 4x

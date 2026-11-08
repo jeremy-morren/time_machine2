@@ -18,8 +18,16 @@ abstract class HebrewScripturalCalculator {
   // invalid years, but still problematic in general).
   static const int _isHeshvanLongCacheBit = 1 << 0;
   static const int _isKislevShortCacheBit = 1 << 1;
-  // Number of bits to shift the elapsed days in order to get the cache value.
-  static const int _elapsedDaysCacheShift = 2;
+  // Number of values the two bits above can take: the cache value is the
+  // elapsed days multiplied by this, plus the bits. This uses arithmetic rather
+  // than shifts because on the web (dart2js) bitwise operators work on unsigned
+  // 32-bit values, which corrupts negative day values.
+  static const int _elapsedDaysCacheMultiplier = 4;
+
+  static int _cacheBits(int cache) => cache % _elapsedDaysCacheMultiplier;
+
+  static int _cacheDays(int cache) =>
+      (cache - _cacheBits(cache)) ~/ _elapsedDaysCacheMultiplier;
 
   // Cache of when each year starts (in  terms of absolute days). This is the heart of
   // the algorithm, so just caching this is highly effective.
@@ -33,8 +41,10 @@ abstract class HebrewScripturalCalculator {
   static YearMonthDay getYearMonthDay(int year, int dayOfYear) {
     // Work out everything about the year in one go.
     int cache = _getOrPopulateCache(year);
-    int heshvanLength = (cache & _isHeshvanLongCacheBit) != 0 ? 30 : 29;
-    int kislevLength = (cache & _isKislevShortCacheBit) != 0 ? 29 : 30;
+    int heshvanLength =
+        (_cacheBits(cache) & _isHeshvanLongCacheBit) != 0 ? 30 : 29;
+    int kislevLength =
+        (_cacheBits(cache) & _isKislevShortCacheBit) != 0 ? 29 : 30;
     bool isLeap = isLeapYear(year);
     int firstAdarLength = isLeap ? 30 : 29;
 
@@ -107,8 +117,10 @@ abstract class HebrewScripturalCalculator {
     // Work out everything about the year in one go. (Admittedly we don't always need it all... but for
     // anything other than Tishri and Heshvan, we at least need the length of Heshvan...)
     int cache = _getOrPopulateCache(year);
-    int heshvanLength = (cache & _isHeshvanLongCacheBit) != 0 ? 30 : 29;
-    int kislevLength = (cache & _isKislevShortCacheBit) != 0 ? 29 : 30;
+    int heshvanLength =
+        (_cacheBits(cache) & _isHeshvanLongCacheBit) != 0 ? 30 : 29;
+    int kislevLength =
+        (_cacheBits(cache) & _isKislevShortCacheBit) != 0 ? 29 : 30;
     bool isLeap = isLeapYear(year);
     int firstAdarLength = isLeap ? 30 : 29;
     int secondAdarLength = isLeap ? 29 : 0;
@@ -209,12 +221,12 @@ abstract class HebrewScripturalCalculator {
 
   static bool _isHeshvanLong(int year) {
     int cache = _getOrPopulateCache(year);
-    return (cache & _isHeshvanLongCacheBit) != 0;
+    return (_cacheBits(cache) & _isHeshvanLongCacheBit) != 0;
   }
 
   static bool _isKislevShort(int year) {
     int cache = _getOrPopulateCache(year);
-    return (cache & _isKislevShortCacheBit) != 0;
+    return (_cacheBits(cache) & _isKislevShortCacheBit) != 0;
   }
 
   /// <summary>
@@ -223,7 +235,7 @@ abstract class HebrewScripturalCalculator {
   /// </summary>
   static int elapsedDays(int year) {
     int cache = _getOrPopulateCache(year);
-    return cache >> _elapsedDaysCacheShift;
+    return _cacheDays(cache);
   }
 
   static int _elapsedDaysNoCache(int year) {
@@ -257,7 +269,7 @@ abstract class HebrewScripturalCalculator {
 
   /// <summary>
   /// Returns the cached 'elapsed day at start of year / IsHeshvanLong / IsKislevShort' combination,
-  /// populating the cache if necessary. Bits 2-24 are the 'elapsed days start of year'; bit 0 is
+  /// populating the cache if necessary. The value divided by 4 is the 'elapsed days start of year'; bit 0 is
   /// 'is Heshvan long'; bit 1 is "is Kislev short". If the year is out of the range for the cache,
   /// the value is populated but not cached.
   /// </summary>
@@ -288,7 +300,7 @@ abstract class HebrewScripturalCalculator {
       int cacheIndex = YearStartCacheEntry.getCacheIndex(nextYear);
       YearStartCacheEntry cacheEntry = _yearCache[cacheIndex];
       nextYearDays = cacheEntry.isValidForYear(nextYear)
-          ? cacheEntry.startOfYearDays >> _elapsedDaysCacheShift
+          ? _cacheDays(cacheEntry.startOfYearDays)
           : _elapsedDaysNoCache(nextYear);
     } else {
       nextYearDays = _elapsedDaysNoCache(year + 1);
@@ -296,8 +308,8 @@ abstract class HebrewScripturalCalculator {
     int daysInYear = nextYearDays - days;
     bool isHeshvanLong = daysInYear % 10 == 5;
     bool isKislevShort = daysInYear % 10 == 3;
-    return (days << _elapsedDaysCacheShift) |
-        (isHeshvanLong ? _isHeshvanLongCacheBit : 0) |
+    return days * _elapsedDaysCacheMultiplier +
+        (isHeshvanLong ? _isHeshvanLongCacheBit : 0) +
         (isKislevShort ? _isKislevShortCacheBit : 0);
   }
 

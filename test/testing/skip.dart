@@ -9,3 +9,10 @@ bool skipUnless(bool condition, String reason) {
   if (!condition) markTestSkipped(reason);
   return !condition;
 }
+
+/// Whether integers are JavaScript numbers, as when compiled with dart2js:
+/// exact only within ±2^53, where the VM and dart2wasm have 64-bit integers.
+/// (In a parameterized test, `testOn: '!js'` would skip every case.)
+// Evaluated at run time, so it's the compiled program's answer.
+// ignore: prefer_const_declarations
+final bool intsAreJsNumbers = identical(1, 1.0);

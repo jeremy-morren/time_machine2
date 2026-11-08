@@ -92,17 +92,12 @@ void ConstructLocalInstant_WithAllFields() {
   int bclDays = (bclMicroseconds ~/ TimeConstants.microsecondsPerDay);
   int bclMicrosecondOfDay = bclMicroseconds % TimeConstants.microsecondsPerDay;
   expect(bclDays, localAchievement.daysSinceEpoch);
-  if (Platform.isVM) {
-    expect(
-        bclMicrosecondOfDay,
-        localAchievement.nanosecondOfDay /
-            TimeConstants.nanosecondsPerMicrosecond);
-  } else {
-    expect(
-        bclMicrosecondOfDay / TimeConstants.microsecondsPerMillisecond,
-        localAchievement.nanosecondOfDay ~/
-            TimeConstants.nanosecondsPerMillisecond);
-  }
+  // DateTime keeps microseconds on the web too (and only DateTime arithmetic
+  // is involved in TimeOfGreatAchievement), so this holds everywhere.
+  expect(
+      bclMicrosecondOfDay,
+      localAchievement.nanosecondOfDay ~/
+          TimeConstants.nanosecondsPerMicrosecond);
 }
 
 void IsLeapYear() {

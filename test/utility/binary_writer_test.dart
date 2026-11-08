@@ -1,6 +1,10 @@
 import 'package:test/test.dart';
 import 'package:time_machine2/src/utility/binary_writer.dart';
 
+/// 0x1234567890ABCDEF, parsed: dart2js can't compile the literal, which isn't
+/// exact as a JavaScript number. Only used by tests that don't run on dart2js.
+final int int64Value = int.parse('1234567890ABCDEF', radix: 16);
+
 void main() {
   group('BinaryWriter', () {
     late List<int> output;
@@ -37,8 +41,10 @@ void main() {
       expect(output, equals([1, 0]));
     });
 
+    // These need 64-bit integers, and writeInt64 uses ByteData.setInt64,
+    // which dart2js doesn't support.
     test('writeInt64 writes correct bytes', () {
-      writer.writeInt64(0x1234567890ABCDEF);
+      writer.writeInt64(int64Value);
       expect(
           output,
           equals([
@@ -51,10 +57,10 @@ void main() {
             0x34,
             0x12
           ])); // Little endian
-    });
+    }, testOn: '!js');
 
     test('writeInt64 writes negative value', () {
-      writer.writeInt64(-0x1234567890ABCDEF);
+      writer.writeInt64(-int64Value);
       expect(
           output,
           equals([
@@ -67,7 +73,7 @@ void main() {
             0xCB,
             0xED
           ])); // Little endian
-    });
+    }, testOn: '!js');
 
     test('write7BitEncodedInt writes correct bytes for small numbers', () {
       writer.write7BitEncodedInt(0x7F);

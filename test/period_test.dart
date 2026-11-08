@@ -1048,6 +1048,14 @@ void Between_ExtremeValues(PeriodUnits units) {
   if (units == PeriodUnits.none || units == PeriodUnits.nanoseconds) {
     return;
   }
+  // About 6.3e17 microseconds: an int64, but beyond the ±2^53 integers
+  // JavaScript numbers hold exactly, so TimePeriodField.getUnitsInDuration
+  // (correctly) throws a RangeError on dart2js.
+  if (units == PeriodUnits.microseconds &&
+      skipUnless(!intsAreJsNumbers,
+          'Microseconds between the extreme values exceed ±2^53 on dart2js')) {
+    return;
+  }
   var minValue = LocalDate.minIsoValue.at(LocalTime.minValue);
   var maxValue = LocalDate.maxIsoValue.at(LocalTime.maxValue);
   Period.differenceBetweenDateTime(minValue, maxValue, units);

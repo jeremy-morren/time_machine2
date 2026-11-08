@@ -30,7 +30,10 @@ void main() {
       ],
       ZoneIdFromPath,
       customDescriptionBuilder: describeArguments);
-  test('UnixLocalZoneIsTheConfiguredId', UnixLocalZoneIsTheConfiguredId);
+  // Reads TZ and /etc/localtime with dart:io; on the web the local zone comes
+  // from Intl instead.
+  test('UnixLocalZoneIsTheConfiguredId', UnixLocalZoneIsTheConfiguredId,
+      testOn: 'vm');
 }
 
 void TzEnvironmentVariable() {
