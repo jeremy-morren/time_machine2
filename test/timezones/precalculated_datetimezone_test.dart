@@ -6,6 +6,7 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 import 'package:test/test.dart';
 
 import '../time_machine_testing.dart';
+import 'dtz_io_helper.dart';
 
 void main() {
   test('MinMaxOffsets', MinMaxOffsets);
@@ -43,6 +44,8 @@ void main() {
       Validation_NullTailZoneWithMiddleOfTimeFinalPeriod);
   test('Validation_NullTailZoneWithEotPeriodEnd',
       Validation_NullTailZoneWithEotPeriodEnd);
+  test('Serialization', Serialization);
+  test('Serialization_NullTailZone', Serialization_NullTailZone);
 }
 
 final ZoneInterval firstInterval = IZoneInterval.newZoneInterval(
@@ -330,18 +333,39 @@ void Validation_NullTailZoneWithEotPeriodEnd() {
   PrecalculatedDateTimeZone.validatePeriods(intervals, null);
 }
 
-//@Test()
-//void Serialization()
-//{
-//  var stream = new MemoryStream();
-//  var writer = new DateTimeZoneWriter(stream, null);
-//  TestZone.Write(writer);
-//  stream.Position = 0;
-//  var reloaded = PrecalculatedDateTimeZone.Read(new DateTimeZoneReader(stream, null), TestZone.Id);
-//
-//  // Check equivalence by finding zone intervals
-//  var interval = new Interval(new Instant.fromUtc(1990, 1, 1, 0, 0), new Instant.fromUtc(2010, 1, 1, 0, 0));
-//  var originalZoneIntervals = TestZone.GetZoneIntervals(interval, ZoneEqualityComparer.Options.StrictestMatch).ToList();
-//  var reloadedZoneIntervals = TestZone.GetZoneIntervals(interval, ZoneEqualityComparer.Options.StrictestMatch).ToList();
-//  Collectionexpect(originalZoneIntervals, reloadedZoneIntervals);
-//}
+void Serialization() {
+  var dio = DtzIoHelper.noStringPool();
+  TestZone.write(dio.writer);
+  var reloaded = PrecalculatedDateTimeZone.read(dio.reader, TestZone.id);
+  expect(dio.reader.hasMoreData, isFalse);
+
+  // Check equivalence by finding zone intervals
+  var interval =
+      Interval(Instant.utc(1990, 1, 1, 0, 0), Instant.utc(2010, 1, 1, 0, 0));
+  var originalZoneIntervals = TestZone.getZoneIntervalsOptions(
+          interval, ZoneEqualityComparerOptions.strictestMatch)
+      .toList();
+  var reloadedZoneIntervals = reloaded
+      .getZoneIntervalsOptions(
+          interval, ZoneEqualityComparerOptions.strictestMatch)
+      .toList();
+  expect(reloadedZoneIntervals, originalZoneIntervals);
+  expect(reloaded.id, TestZone.id);
+}
+
+void Serialization_NullTailZone() {
+  var zone = PrecalculatedDateTimeZone(
+      'Test',
+      [
+        firstInterval,
+        IZoneInterval.newZoneInterval('Last', firstInterval.end,
+            IInstant.afterMaxValue, Offset.hours(4), Offset.hours(1))
+      ],
+      null);
+  var dio = DtzIoHelper.noStringPool();
+  zone.write(dio.writer);
+  var reloaded = PrecalculatedDateTimeZone.read(dio.reader, zone.id);
+  expect(dio.reader.hasMoreData, isFalse);
+  expect(reloaded.getZoneIntervals(Interval(null, null)).toList(),
+      zone.getZoneIntervals(Interval(null, null)).toList());
+}

@@ -40,6 +40,75 @@ void main() {
   test('Tzdb_Indexer_AmericaLosAngeles', Tzdb_Indexer_AmericaLosAngeles);
   test('Tzdb_Ids_All', Tzdb_Ids_All);
   test('Tzdb_Indexer_AllIds', Tzdb_Indexer_AllIds);
+  test('InvalidSource_NullIdSequence', InvalidSource_NullIdSequence);
+  test('InvalidSource_ReturnsNullForAdvertisedId',
+      InvalidSource_ReturnsNullForAdvertisedId);
+  test('InvalidSource_ReturnsNullForAdvertisedId_Cached',
+      InvalidSource_ReturnsNullForAdvertisedId_Cached);
+  test('SystemDefault', SystemDefault);
+  test('SystemDefault_SourceReturnsNullId', SystemDefault_SourceReturnsNullId);
+  test('GetDateTimeZoneSync', GetDateTimeZoneSync);
+  test('GetDateTimeZoneSync_UnknownId', GetDateTimeZoneSync_UnknownId);
+}
+
+Future InvalidSource_NullIdSequence() async {
+  var source = NullReturningTestDateTimeZoneSource(['Test1', 'Test2'])
+    ..returnNullIds = true;
+  expect(DateTimeZoneCache.getCache(source),
+      willThrow<InvalidDateTimeZoneSourceError>());
+}
+
+Future InvalidSource_ReturnsNullForAdvertisedId() async {
+  var source = NullReturningTestDateTimeZoneSource(['foo', 'bar']);
+  var cache = await DateTimeZoneCache.getCache(source);
+  expect(
+      cache.getZoneOrNull('foo'), willThrow<InvalidDateTimeZoneSourceError>());
+  expect(source.LastRequestedId, 'foo');
+}
+
+Future InvalidSource_ReturnsNullForAdvertisedId_Cached() async {
+  var source = NullReturningTestDateTimeZoneSource(['foo', 'bar']);
+  var cache = await DateTimeZoneCache.getCache(source);
+  expect(() => cache.getCachedZoneOrNull('foo'),
+      throwsA(isA<InvalidDateTimeZoneSourceError>()));
+  expect(source.LastRequestedId, 'foo');
+}
+
+Future SystemDefault() async {
+  var source = TestDateTimeZoneSource(['Test1', 'map']);
+  var cache = await DateTimeZoneCache.getCache(source);
+  expect((await cache.getSystemDefault()).id, 'map');
+  expect(cache.getCachedSystemDefault().id, 'map');
+}
+
+Future SystemDefault_SourceReturnsNullId() async {
+  var source = NullReturningTestDateTimeZoneSource(['foo', 'bar']);
+  var cache = await DateTimeZoneCache.getCache(source);
+  expect(cache.getSystemDefault(), willThrow<DateTimeZoneNotFoundError>());
+  expect(() => cache.getCachedSystemDefault(),
+      throwsA(isA<DateTimeZoneNotFoundError>()));
+}
+
+Future GetDateTimeZoneSync() async {
+  var source = TestDateTimeZoneSource(['Test1', 'Test2']);
+  var cache = await DateTimeZoneCache.getCache(source);
+  var zone = cache.getDateTimeZoneSync('Test1');
+  expect(zone.id, 'Test1');
+  expect(source.LastRequestedId, 'Test1');
+  // Cached, so the source isn't asked again.
+  expect(identical(cache.getDateTimeZoneSync('Test1'), zone), isTrue);
+  expect(identical(await cache['Test1'], zone), isTrue);
+  // Fixed offset zones don't come from the source.
+  expect(cache.getDateTimeZoneSync('UTC+01'),
+      DateTimeZone.forOffset(Offset.hours(1)));
+}
+
+Future GetDateTimeZoneSync_UnknownId() async {
+  var source = TestDateTimeZoneSource(['Test1', 'Test2']);
+  var cache = await DateTimeZoneCache.getCache(source);
+  expect(() => cache.getDateTimeZoneSync('Unknown'),
+      throwsA(isA<DateTimeZoneNotFoundError>()));
+  expect(source.LastRequestedId, isNull);
 }
 
 Future setup() async {
@@ -56,22 +125,6 @@ Future setup() async {
 // {
 //   var source = TestDateTimeZoneSource(['Test1', "Test2"])..versionId = null;
 //   expect(DateTimeZoneCache.getCache(source), willThrow<InvalidDateTimeZoneSourceError>());
-// }
-
-// @Test()
-// Future InvalidSource_NullIdSequence() async
-// {
-//   List<String> ids;
-//   var source = TestDateTimeZoneSource(ids);
-//   expect(DateTimeZoneCache.getCache(source), willThrow<InvalidDateTimeZoneSourceError>());
-// }
-
-// @Test()
-// Future InvalidSource_ReturnsNullForAdvertisedId() async
-// {
-//   var source = NullReturningTestDateTimeZoneSource(['foo', "bar"]);
-//   var cache = await DateTimeZoneCache.getCache(source);
-//   expect(() => cache.getZoneOrNull('foo'), willThrow<InvalidDateTimeZoneSourceError>());
 // }
 
 // @Test()
@@ -280,22 +333,41 @@ class TestDateTimeZoneSource extends DateTimeZoneSource {
   }
 }
 
-// A test source that returns null from ForId and GetSystemDefaultId()
-// class NullReturningTestDateTimeZoneSource extends TestDateTimeZoneSource {
-//   NullReturningTestDateTimeZoneSource(List<String> ids) : super(ids);
+/// A test source that returns null from forId, forCachedId and
+/// systemDefaultId (and optionally getIds), breaking its contract.
+class NullReturningTestDateTimeZoneSource extends DateTimeZoneSource {
+  String? LastRequestedId;
+  final List<String> ids;
+  bool returnNullIds = false;
 
-//   @override Future<DateTimeZone?> forId(String id) {
-//     // Still remember what was requested.
-//     // ignore: unused_local_variable
-//     var _id = super.forId(id);
-//     return Future(() => null);
-//   }
+  NullReturningTestDateTimeZoneSource(this.ids);
 
-//   @override String? get systemDefaultId => null;
+  @override
+  Future<Iterable<String>>? getIds() =>
+      returnNullIds ? null : Future.value(ids);
 
-//   @override DateTimeZone? forCachedId(String id) {
-//     // ignore: unused_local_variable
-//     var _id = super.forCachedId(id);
-//     return null;
-//   }
-// }
+  @override
+  Future<DateTimeZone>? forId(String id) {
+    // Still remember what was requested.
+    LastRequestedId = id;
+    return null;
+  }
+
+  @override
+  DateTimeZone? forCachedId(String id) {
+    LastRequestedId = id;
+    return null;
+  }
+
+  @override
+  // ignore: overridden_fields
+  final String versionId = 'null-returning test version';
+
+  @override
+  String? get systemDefaultId => null;
+
+  @override
+  void setSystemDefaultId(String id) {
+    // NOP
+  }
+}

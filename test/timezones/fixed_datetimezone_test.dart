@@ -10,6 +10,7 @@ import 'package:test/test.dart';
 import 'package:time_machine2/time_machine2.dart';
 
 import '../time_machine_testing.dart';
+import 'dtz_io_helper.dart';
 
 late DateTimeZoneProvider tzdb;
 
@@ -31,9 +32,9 @@ Future main() async {
   test('For_Id_InvalidFixedOffset', For_Id_InvalidFixedOffset);
   test('ExplicitNameAppearsInZoneInterval', ExplicitNameAppearsInZoneInterval);
   test('ZoneIntervalNameDefaultsToZoneId', ZoneIntervalNameDefaultsToZoneId);
-  test('Read_NoNameInStream', Read_NoNameInStream, skip: 'unimplemented');
-  test('Read_WithNameInStream', Read_WithNameInStream, skip: 'unimplemented');
-  test('Roundtrip', Roundtrip, skip: 'unimplemented');
+  test('Read_NoNameInStream', Read_NoNameInStream);
+  test('Read_WithNameInStream', Read_WithNameInStream);
+  test('Roundtrip', Roundtrip);
   test('Equals', Equals);
 }
 
@@ -100,11 +101,10 @@ void ZoneIntervalNameDefaultsToZoneId() {
 }
 
 void Read_NoNameInStream() {
-  // var ioHelper = DtzIoHelper.CreateNoStringPool();
-  dynamic ioHelper;
+  var ioHelper = DtzIoHelper.noStringPool();
   var offset = Offset.hours(5);
-  ioHelper.Writer.WriteOffset(offset);
-  var zone = FixedDateTimeZone.read(ioHelper.Reader, 'id') as FixedDateTimeZone;
+  ioHelper.writer.writeOffset(offset);
+  var zone = FixedDateTimeZone.read(ioHelper.reader, 'id') as FixedDateTimeZone;
 
   expect('id', zone.id);
   expect(offset, zone.offset);
@@ -112,12 +112,11 @@ void Read_NoNameInStream() {
 }
 
 void Read_WithNameInStream() {
-  // var ioHelper = DtzIoHelper.CreateNoStringPool();
-  dynamic ioHelper;
+  var ioHelper = DtzIoHelper.noStringPool();
   var offset = Offset.hours(5);
-  ioHelper.Writer.WriteOffset(offset);
-  ioHelper.Writer.WriteString('name');
-  var zone = FixedDateTimeZone.read(ioHelper.Reader, 'id') as FixedDateTimeZone;
+  ioHelper.writer.writeOffset(offset);
+  ioHelper.writer.writeString('name');
+  var zone = FixedDateTimeZone.read(ioHelper.reader, 'id') as FixedDateTimeZone;
 
   expect('id', zone.id);
   expect(offset, zone.offset);
@@ -125,12 +124,11 @@ void Read_WithNameInStream() {
 }
 
 void Roundtrip() {
-  // var ioHelper = DtzIoHelper.CreateNoStringPool();
-  dynamic ioHelper;
+  var ioHelper = DtzIoHelper.noStringPool();
   var oldZone = FixedDateTimeZone('id', Offset.hours(4), "name");
-  oldZone.write(ioHelper.Writer);
+  oldZone.write(ioHelper.writer);
   var newZone =
-      FixedDateTimeZone.read(ioHelper.Reader, 'id') as FixedDateTimeZone;
+      FixedDateTimeZone.read(ioHelper.reader, 'id') as FixedDateTimeZone;
 
   expect(oldZone.id, newZone.id);
   expect(oldZone.offset, newZone.offset);

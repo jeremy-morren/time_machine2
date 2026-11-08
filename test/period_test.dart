@@ -1271,6 +1271,11 @@ void NormalizingEqualityComparer_PeriodToItself() {
   Period period = const Period(years: 1);
   expect(NormalizingPeriodEqualityComparer.instance.equals(period, period),
       isTrue);
+  // Period.NormalizingEqualityComparer is the Noda Time name for it.
+  expect(
+      identical(Period.NormalizingEqualityComparer,
+          NormalizingPeriodEqualityComparer.instance),
+      isTrue);
 }
 
 void NormalizingEqualityComparer_NonEqualAfterNormalization() {

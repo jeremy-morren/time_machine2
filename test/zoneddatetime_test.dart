@@ -42,6 +42,28 @@ void main() {
   test('ZonedDateTime_ToString_WithFormat', ZonedDateTime_ToString_WithFormat);
   test('LocalComparer', LocalComparer);
   test('InstantComparer', InstantComparer);
+  test('TimeUntilAndSince', TimeUntilAndSince);
+  test('ToStringDDC', ToStringDDC);
+}
+
+void TimeUntilAndSince() {
+  // Across the transition: 3 hours of local time, but 2 hours elapsed.
+  var start = ZonedDateTime.atStrictly(
+      LocalDateTime(2011, 6, 12, 23, 30, 0), SampleZone);
+  var end = ZonedDateTime.atStrictly(
+      LocalDateTime(2011, 6, 13, 2, 30, 0), SampleZone);
+  expect(start.timeUntil(end), Time(hours: 2));
+  expect(end.timeUntil(start), Time(hours: -2));
+  expect(end.timeSince(start), Time(hours: 2));
+  expect(ZonedDateTime.difference(end, start), Time(hours: 2));
+}
+
+void ToStringDDC() {
+  var value = ZonedDateTime.atStrictly(
+      LocalDateTime(2013, 7, 23, 13, 05, 20), SampleZone);
+  expect(value.toStringDDC(), value.toString());
+  expect(value.toStringDDC("uuuu-MM-dd'T'HH:mm", Culture.invariant),
+      value.toString("uuuu-MM-dd'T'HH:mm", Culture.invariant));
 }
 
 /// Changes from UTC+3 to UTC+4 at 1am local time on June 13th 2011.

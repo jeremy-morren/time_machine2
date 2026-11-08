@@ -125,8 +125,11 @@ abstract class Time implements Comparable<Time> {
   static final Time minValue = Time(days: ITime.minDays);
 
   factory Time._untrusted(int milliseconds, [int nanoseconds = 0]) {
+    // A negative time has a non-positive nanosecond interval (see below), so
+    // only a non-negative one can be used as it is.
     if (nanoseconds >= _minNano &&
-        nanoseconds < TimeConstants.nanosecondsPerMillisecond)
+        nanoseconds < TimeConstants.nanosecondsPerMillisecond &&
+        (milliseconds >= 0 || nanoseconds == 0))
       return MillisecondTime(milliseconds, nanoseconds);
 
     if (nanoseconds < _minNano) {

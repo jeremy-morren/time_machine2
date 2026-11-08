@@ -25,7 +25,7 @@ abstract class TestHelper {
   /// [equalValue]: The value equal to but not the same object as the base value.
   /// [unequalValue]: The value not equal to the base value.
   static void TestOperatorEquality<T>(T value, T equalValue, T unequalValue) =>
-      testOperatorEqualityFunction;
+      testOperatorEqualityFunction<T>(value, equalValue, unequalValue);
 
   /// Tests the equality (==), inequality (!=), less than (&lt;), greater than (&gt;), less than or equals (&lt;=),
   /// and greater than or equals (&gt;=) operators if they exist on the object.
@@ -36,7 +36,8 @@ abstract class TestHelper {
   /// [greaterValue]: The values greater than the base value, in ascending order.
   static void TestOperatorComparisonEquality<T>(
           T value, T equalValue, List<T> greaterValues) =>
-      testOperatorComparisonEqualityFunction;
+      testOperatorComparisonEqualityFunction<T>(
+          value, equalValue, greaterValues);
 
   /// Tests the less than (&lt;) and greater than (&gt;) operators if they exist on the object.
   ///
@@ -46,7 +47,7 @@ abstract class TestHelper {
   /// [greaterValue]: The values greater than the base value, in ascending order.
   static void TestOperatorComparison<T>(
           T value, T equalValue, List<T> greaterValues) =>
-      testOperatorComparisonFunction;
+      testOperatorComparisonFunction<T>(value, equalValue, greaterValues);
 
   /// Does nothing other than let us prove method or constructor calls don't throw.
   static void Consume<T>(T ignored) {}

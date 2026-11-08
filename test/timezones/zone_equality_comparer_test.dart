@@ -21,6 +21,77 @@ void main() {
   test('ElidedTransitions_Degenerate', ElidedTransitions_Degenerate);
   test('ReferenceComparison', ReferenceComparison);
   test('InvalidOptions', InvalidOptions);
+  test('Options_Operators', Options_Operators);
+  test('Options_ToStringAndParse', Options_ToStringAndParse);
+  test('Options_Union', Options_Union);
+}
+
+void Options_Operators() {
+  const names = ZoneEqualityComparerOptions.matchNames;
+  const offsets = ZoneEqualityComparerOptions.matchOffsetComponents;
+  expect(offsets < names, isTrue);
+  expect(names < offsets, isFalse);
+  expect(names <= names, isTrue);
+  expect(names <= offsets, isFalse);
+  expect(names > offsets, isTrue);
+  expect(offsets > names, isFalse);
+  expect(names >= names, isTrue);
+  expect(offsets >= names, isFalse);
+  expect(names - offsets, 1);
+  expect(names + offsets, 3);
+  expect(names | offsets, const ZoneEqualityComparerOptions(3));
+  expect(names | 1, const ZoneEqualityComparerOptions(3));
+  expect(ZoneEqualityComparerOptions.strictestMatch & names, names);
+  expect(ZoneEqualityComparerOptions.strictestMatch & 2, names);
+  expect(() => names | 'x', throwsArgumentError);
+  expect(() => names & 'x', throwsArgumentError);
+  expect(~names, ~2);
+  // An option is also equal to its numeric value.
+  // ignore: unrelated_type_equality_checks
+  expect(names == 2, isTrue);
+}
+
+void Options_ToStringAndParse() {
+  const all = [
+    ZoneEqualityComparerOptions.onlyMatchWallOffset,
+    ZoneEqualityComparerOptions.matchOffsetComponents,
+    ZoneEqualityComparerOptions.matchNames,
+    ZoneEqualityComparerOptions.matchAllTransitions,
+    ZoneEqualityComparerOptions.matchStartAndEndTransitions,
+    ZoneEqualityComparerOptions.strictestMatch,
+  ];
+  const names = [
+    'OnlyMatchWallOffset',
+    'MatchOffsetComponents',
+    'MatchNames',
+    'MatchAllTransitions',
+    'MatchStartAndEndTransitions',
+    'StrictestMatch',
+  ];
+  for (int i = 0; i < all.length; i++) {
+    expect(all[i].toString(), names[i]);
+    expect(all[i].parse(names[i].toUpperCase()), all[i]);
+  }
+  expect(
+      (ZoneEqualityComparerOptions.matchNames |
+              ZoneEqualityComparerOptions.matchAllTransitions)
+          .toString(),
+      'undefined');
+  expect(
+      ZoneEqualityComparerOptions.matchNames.parse('MatchEverything'), isNull);
+}
+
+void Options_Union() {
+  expect(ZoneEqualityComparerOptions.union(const []),
+      ZoneEqualityComparerOptions.onlyMatchWallOffset);
+  expect(
+      ZoneEqualityComparerOptions.union(const [
+        ZoneEqualityComparerOptions.matchOffsetComponents,
+        ZoneEqualityComparerOptions.matchNames,
+        ZoneEqualityComparerOptions.matchAllTransitions,
+        ZoneEqualityComparerOptions.matchStartAndEndTransitions,
+      ]),
+      ZoneEqualityComparerOptions.strictestMatch);
 }
 
 // Sample instants for use in tests. They're on January 1st 2000...2009, midnight UTC.

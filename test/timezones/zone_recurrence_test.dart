@@ -6,6 +6,7 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 import 'package:test/test.dart';
 
 import '../time_machine_testing.dart';
+import 'dtz_io_helper.dart';
 
 void main() {
   test('Next_BeforeFirstYear', Next_BeforeFirstYear);
@@ -24,6 +25,8 @@ void main() {
   test('NextOrFail_Fail', NextOrFail_Fail);
   test('PreviousOrSameOrFail_Fail', PreviousOrSameOrFail_Fail);
   test('IEquatable_Tests', IEquatable_Tests);
+  test('Serialization', Serialization);
+  test('Serialization_Infinite', Serialization_Infinite);
   test('December31st2400_MaxYear_UtcTransition',
       December31st2400_MaxYear_UtcTransition);
   test('December31st2400_AskAtNanoBeforeLastTransition',
@@ -195,24 +198,22 @@ void PreviousOrSameOrFail_Fail() {
       throwsStateError);
 }
 
-/* todo: serialization equivalent
-@Test()
-void Serialization()
-{
-  var dio = DtzIoHelper.CreateNoStringPool();
-  var yearOffset = new ZoneYearOffset(TransitionMode.utc, 10, 31, IsoDayOfWeek.wednesday.value, true, LocalTime.Midnight);
-  var expected = new ZoneRecurrence('bob', Offset.zero, yearOffset, 1971, 2009);
-  dio.TestZoneRecurrence(expected);
+void Serialization() {
+  var dio = DtzIoHelper.noStringPool();
+  var yearOffset = ZoneYearOffset(TransitionMode.utc, 10, 31,
+      DayOfWeek.wednesday.value, true, LocalTime.midnight);
+  var expected = ZoneRecurrence('bob', Offset.zero, yearOffset, 1971, 2009);
+  dio.testZoneRecurrence(expected);
 }
 
-@Test()
-void Serialization_Infinite()
-{
-  var dio = DtzIoHelper.CreateNoStringPool();
-  var yearOffset = new ZoneYearOffset(TransitionMode.utc, 10, 31, IsoDayOfWeek.wednesday.value, true, LocalTime.Midnight);
-  var expected = new ZoneRecurrence('bob', Offset.zero, yearOffset, Utility.int32MinValue, Utility.int32MaxValue);
-  dio.TestZoneRecurrence(expected);
-}*/
+void Serialization_Infinite() {
+  var dio = DtzIoHelper.noStringPool();
+  var yearOffset = ZoneYearOffset(TransitionMode.utc, 10, 31,
+      DayOfWeek.wednesday.value, true, LocalTime.midnight);
+  var expected = ZoneRecurrence('bob', Offset.zero, yearOffset,
+      Platform.int32MinValue, Platform.int32MaxValue);
+  dio.testZoneRecurrence(expected);
+}
 
 void IEquatable_Tests() {
   var yearOffset = ZoneYearOffset(TransitionMode.utc, 10, 31,

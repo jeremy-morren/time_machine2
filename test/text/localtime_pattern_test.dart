@@ -26,6 +26,16 @@ Future main() async {
     test('TemplateValue_DefaultsToMidnight',
         fixture.TemplateValue_DefaultsToMidnight);
     test('CreateWithCurrentCulture', fixture.CreateWithCurrentCulture);
+    test('CreateWithSpecificCulture', () {
+      var pattern = LocalTimePattern.createWithCulture(
+          'HH:mm', TestCultures.DotTimeSeparator);
+      expect(pattern.format(LocalTime(13, 45, 0)), '13.45');
+      expect(pattern.templateValue, LocalTime.midnight);
+      // With a template value for the fields the pattern doesn't have.
+      pattern = LocalTimePattern.createWithCulture(
+          'HH', TestCultures.DotTimeSeparator, LocalTime(1, 23, 45));
+      expect(pattern.parse('13').value, LocalTime(13, 23, 45));
+    });
     test('WithTemplateValue_PropertyFetch',
         fixture.WithTemplateValue_PropertyFetch);
     parameterizedTest(

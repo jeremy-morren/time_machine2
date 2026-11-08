@@ -7,7 +7,15 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 import 'package:test/test.dart';
 //import 'package:matcher/matcher.dart';
 
+import 'time_machine_testing.dart';
+
 void main() {
+  setUpAll(TimeMachineTest.initialize);
+
+  test('PeriodUntil', PeriodUntil);
+  test('Difference', Difference);
+  test('EqualsMethod', EqualsMethod);
+  test('CurrentClockTime', CurrentClockTime);
   test('MinValueEqualToMidnight', MinValueEqualToMidnight);
   test('MaxValue', MaxValue);
   test('ClockHourOfHalfDay', ClockHourOfHalfDay);
@@ -16,6 +24,41 @@ void main() {
   test('Min', Min);
   test('WithOffset', WithOffset);
   test('TestToString', TestToString);
+}
+
+void PeriodUntil() {
+  var start = LocalTime(10, 0, 0);
+  var end = LocalTime(12, 30, 15, ms: 5);
+  expect(start.periodUntil(end),
+      const Period(hours: 2, minutes: 30, seconds: 15, milliseconds: 5));
+  expect(end.periodUntil(start),
+      const Period(hours: -2, minutes: -30, seconds: -15, milliseconds: -5));
+  expect(start.periodUntil(start), Period.zero);
+}
+
+void Difference() {
+  var start = LocalTime(10, 0, 0);
+  var end = LocalTime(12, 30, 0);
+  // Like Noda Time's `end - start`.
+  expect(LocalTime.difference(end, start), const Period(hours: 2, minutes: 30));
+  expect(
+      LocalTime.difference(start, end), const Period(hours: -2, minutes: -30));
+}
+
+void EqualsMethod() {
+  expect(LocalTime(1, 2, 3).equals(LocalTime(1, 2, 3)), isTrue);
+  expect(LocalTime(1, 2, 3).equals(LocalTime(1, 2, 4)), isFalse);
+}
+
+void CurrentClockTime() {
+  var instant = Instant.utc(2020, 6, 1, 13, 45, 30);
+  var previous = Clock.current;
+  Clock.current = FakeClock(instant);
+  try {
+    expect(LocalTime.currentClockTime(), instant.inLocalZone().clockTime);
+  } finally {
+    Clock.current = previous;
+  }
 }
 
 void MinValueEqualToMidnight() {

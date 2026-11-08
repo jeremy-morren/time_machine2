@@ -24,24 +24,17 @@ void main() {
 }
 
 void LocalTimeProperties() {
-  /* // todo: equivalent?
-  LocalTime local = new LocalTime(5, 23, 45).PlusNanoseconds(987654321);
-  Offset offset = new Offset.fromHours(5);
+  // Noda Time compares every property the types have in common, by reflection.
+  LocalTime local = LocalTime(17, 23, 45).addNanoseconds(987654321);
+  Offset offset = Offset.hours(5);
 
-  OffsetTime od = new OffsetTime(local, offset);
-
-  var localTimeProperties = typeof(LocalTime)
-      .GetTypeInfo()
-      .DeclaredProperties
-      .ToDictionary((p) => p.Name);
-  var commonProperties = typeof(OffsetTime)
-      .GetTypeInfo()
-      .DeclaredProperties
-      .Where((p) => localTimeProperties.ContainsKey(p.Name));
-  for (var property in commonProperties) {
-    expect(localTimeProperties[property.Name].GetValue(local, null),
-        property.GetValue(od, null));
-  }*/
+  OffsetTime od = OffsetTime(local, offset);
+  expect(od.hourOfDay, local.hourOfDay);
+  expect(od.hourOf12HourClock, local.hourOf12HourClock);
+  expect(od.minuteOfHour, local.minuteOfHour);
+  expect(od.secondOfMinute, local.secondOfMinute);
+  expect(od.millisecondOfSecond, local.millisecondOfSecond);
+  expect(od.nanosecondOfSecond, local.nanosecondOfSecond);
 }
 
 void ComponentProperties() {

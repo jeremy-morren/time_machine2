@@ -6,9 +6,11 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 import 'package:test/test.dart';
 
 import '../time_machine_testing.dart';
+import 'dtz_io_helper.dart';
 
 void main() {
   test('MinMaxOffsets', MinMaxOffsets);
+  test('ReadWrite', ReadWrite);
   test('GetZoneInterval_Instant_Summer', GetZoneInterval_Instant_Summer);
   test('GetZoneInterval_Instant_Winter', GetZoneInterval_Instant_Winter);
   test('GetZoneInterval_Instant_StartOfFirstSummer',
@@ -263,20 +265,14 @@ void Equality() {
   TestHelper.TestEqualsClass(map1, map2, unequalMaps);
 }
 
-/* todo: ReadWrite compatible
-@Test()
-void ReadWrite()
-{
-  var map1 = new StandardDaylightAlternatingMap(new Offset.fromHours(1), Summer, Winter);
-  var stream = new MemoryStream();
-  var writer = new DateTimeZoneWriter(stream, null);
-  map1.Write(writer);
-  stream.Position = 0;
-
-  var reader = new DateTimeZoneReader(stream, null);
-  var map2 = StandardDaylightAlternatingMap.Read(reader);
-  expect(map1, map2);
-}*/
+void ReadWrite() {
+  var map1 = StandardDaylightAlternatingMap(Offset.hours(1), Summer, Winter);
+  var dio = DtzIoHelper.noStringPool();
+  map1.write(dio.writer);
+  var map2 = StandardDaylightAlternatingMap.read(dio.reader);
+  expect(map2, map1);
+  expect(dio.reader.hasMoreData, isFalse);
+}
 
 void Extremes() {
   ZoneRecurrence winter = ZoneRecurrence(

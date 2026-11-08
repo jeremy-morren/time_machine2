@@ -2,14 +2,53 @@
 // Portions of this work are Copyright 2018 The Noda Time Authors. All rights reserved.
 // Use of this source code is governed by the Apache License 2.0, as found in the LICENSE.txt file.
 
-import 'package:time_machine2/src/time_machine_internal.dart';
 import 'package:test/test.dart';
+import 'package:time_machine2/time_machine2.dart';
 
 import 'time_machine_testing.dart';
 
 void main() {
+  setUpAll(TimeMachineTest.initialize);
+
   test('GetCurrent', GetCurrent);
   test('Properties', Properties);
+  test('InZone_NoCalendar', InZone_NoCalendar);
+  test('InUtc', InUtc);
+  test('InTzdbSystemDefaultZone', InTzdbSystemDefaultZone);
+  test('CurrentDefaultsToSystemClock', CurrentDefaultsToSystemClock);
+}
+
+// ClockExtensionsTest
+
+void InZone_NoCalendar() {
+  var clock = FakeClock(TimeConstants.unixEpoch);
+  var zoned = clock.inZone(SampleZone);
+  expect(identical(zoned.clock, clock), isTrue);
+  expect(identical(zoned.zone, SampleZone), isTrue);
+  expect(identical(zoned.calendar, CalendarSystem.iso), isTrue);
+}
+
+void InUtc() {
+  var clock = FakeClock(TimeConstants.unixEpoch);
+  var zoned = clock.inUtc();
+  expect(identical(zoned.clock, clock), isTrue);
+  expect(identical(zoned.zone, DateTimeZone.utc), isTrue);
+  expect(identical(zoned.calendar, CalendarSystem.iso), isTrue);
+  expect(zoned.getCurrentLocalDateTime(), LocalDateTime(1970, 1, 1, 0, 0, 0));
+}
+
+Future InTzdbSystemDefaultZone() async {
+  var clock = FakeClock(TimeConstants.unixEpoch);
+  var zoned = await clock.inTzdbSystemDefaultZone();
+  var expectedZone =
+      await (await DateTimeZoneProviders.tzdb).getSystemDefault();
+  expect(identical(zoned.clock, clock), isTrue);
+  expect(zoned.zone, expectedZone);
+  expect(identical(zoned.calendar, CalendarSystem.iso), isTrue);
+}
+
+void CurrentDefaultsToSystemClock() {
+  expect(identical(Clock.current, SystemClock.instance), isTrue);
 }
 
 final DateTimeZone SampleZone =

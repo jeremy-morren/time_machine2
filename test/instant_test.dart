@@ -159,6 +159,79 @@ void main() {
       ],
       InstantEpochConstructors,
       customDescriptionBuilder: describeArguments);
+  test('Now', Now);
+  test('IsAfterIsBefore', IsAfterIsBefore);
+  test('StaticArithmetic', StaticArithmetic);
+  test('EpochNanosecondsAsBigInt', EpochNanosecondsAsBigInt);
+  test('EpochDayLocalTime', EpochDayLocalTime);
+  test('ToStringDDC', ToStringDDC);
+  test('FromDateTime', FromDateTime);
+}
+
+void Now() {
+  var instant = Instant.utc(2020, 6, 1, 13, 45, 30);
+  var previous = Clock.current;
+  Clock.current = FakeClock(instant);
+  try {
+    expect(Instant.now(), instant);
+    expect(LocalDateTime.now(), instant.inLocalZone().localDateTime);
+  } finally {
+    Clock.current = previous;
+  }
+}
+
+void IsAfterIsBefore() {
+  expect(threeMillion.isAfter(one), isTrue);
+  expect(one.isAfter(threeMillion), isFalse);
+  expect(one.isAfter(one), isFalse);
+  expect(one.isBefore(threeMillion), isTrue);
+  expect(threeMillion.isBefore(one), isFalse);
+  expect(one.isBefore(one), isFalse);
+}
+
+void StaticArithmetic() {
+  var time = Time(nanoseconds: 2999999);
+  expect(Instant.plus(one, time), threeMillion);
+  expect(Instant.minus(threeMillion, time), one);
+  // Like `end - start`, as for the other types' difference methods.
+  expect(Instant.difference(threeMillion, one), time);
+  expect(Instant.difference(one, threeMillion), -time);
+}
+
+void EpochNanosecondsAsBigInt() {
+  expect(one.canEpochNanosecondsBeInteger, isTrue);
+  expect(one.epochNanosecondsAsBigInt, BigInt.one);
+  expect(negativeFiftyMillion.epochNanosecondsAsBigInt, BigInt.from(-50000000));
+  // The extremes need more than 53 bits, so can't be integers everywhere.
+  expect(Instant.maxValue.canEpochNanosecondsBeInteger, isFalse);
+  expect(
+      Instant.maxValue.epochNanosecondsAsBigInt,
+      BigInt.from(Instant.maxValue.epochSeconds) * BigInt.from(1000000000) +
+          BigInt.from(999999999));
+}
+
+void EpochDayLocalTime() {
+  expect(Instant.utc(2011, 8, 18, 20, 53, 5).epochDayLocalTime,
+      LocalTime(20, 53, 5));
+  // Before the epoch, the time of day is still within the (earlier) day.
+  expect(
+      negativeFiftyMillion.epochDayLocalTime, LocalTime(23, 59, 59, ms: 950));
+}
+
+void ToStringDDC() {
+  var instant = Instant.utc(2011, 8, 18, 20, 53, 5);
+  expect(instant.toStringDDC(), instant.toString());
+  expect(instant.toStringDDC('uuuu-MM-dd'), instant.toString('uuuu-MM-dd'));
+}
+
+void FromDateTime() {
+  var expected = Instant.utc(2011, 08, 18, 20, 53);
+  expect(Instant.dateTime(DateTime.utc(2011, 08, 18, 20, 53)), expected);
+  // A local DateTime is the same point in time.
+  expect(
+      Instant.dateTime(DateTime.utc(2011, 08, 18, 20, 53).toLocal()), expected);
+  expect(Instant.dateTime(DateTime.utc(1966, 08, 18, 20, 53, 0, 5)),
+      Instant.utc(1966, 08, 18, 20, 53).add(Time(milliseconds: 5)));
 }
 
 final Instant one = IInstant.untrusted(Time(nanoseconds: 1));

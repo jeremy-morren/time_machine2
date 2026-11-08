@@ -18,6 +18,29 @@ void main() {
   test('PlusTicks_Long', PlusTicks_Long);
   test('With', With);
   test('PlusMinutes_WouldOverflowNaively', PlusMinutes_WouldOverflowNaively);
+  test('SubtractUnits', SubtractUnits);
+}
+
+/// The subtractXxx methods are the same as adding the negated value, so wrap
+/// around midnight in the same way.
+void SubtractUnits() {
+  LocalTime start = LocalTime(0, 0, 0, ns: 500);
+  expect(start.subtractHours(2), LocalTime(22, 0, 0, ns: 500));
+  expect(start.subtractHours(-2), LocalTime(2, 0, 0, ns: 500));
+  expect(start.subtractMinutes(90), LocalTime(22, 30, 0, ns: 500));
+  expect(start.subtractSeconds(90), LocalTime(23, 58, 30, ns: 500));
+  expect(start.subtractMilliseconds(1), LocalTime(23, 59, 59, ns: 999000500));
+  expect(start.subtractMicroseconds(1), LocalTime(23, 59, 59, ns: 999999500));
+  expect(start.subtractNanoseconds(501), LocalTime(23, 59, 59, ns: 999999999));
+  expect(start.subtractNanoseconds(500), LocalTime.midnight);
+  for (var amount in [0, 1, 25, -1000]) {
+    expect(start.subtractHours(amount), start.addHours(-amount));
+    expect(start.subtractMinutes(amount), start.addMinutes(-amount));
+    expect(start.subtractSeconds(amount), start.addSeconds(-amount));
+    expect(start.subtractMilliseconds(amount), start.addMilliseconds(-amount));
+    expect(start.subtractMicroseconds(amount), start.addMicroseconds(-amount));
+    expect(start.subtractNanoseconds(amount), start.addNanoseconds(-amount));
+  }
 }
 
 void PlusHours_Simple() {

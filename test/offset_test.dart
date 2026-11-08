@@ -13,6 +13,61 @@ void main() {
   test('DefaultConstructor', DefaultConstructor);
   test('MinMaxValue', MinMaxValue);
   test('TestToString', TestToString);
+  test('ToDuration', ToDuration);
+  test('ToTime', ToTime);
+  test('FromDuration_OutOfRange', FromDuration_OutOfRange);
+  test('FromDuration_Truncation', FromDuration_Truncation);
+  test('FromDuration_Simple', FromDuration_Simple);
+  test('FromTime_OutOfRange', FromTime_OutOfRange);
+  test('FromTime_Truncation', FromTime_Truncation);
+  test('FromTime_Simple', FromTime_Simple);
+}
+
+// Noda Time's ToTimeSpan and FromTimeSpan tests, for Dart's Duration and
+// for Time.
+
+void ToDuration() {
+  expect(Offset(1234).toDuration(), const Duration(seconds: 1234));
+  expect(Offset(-1234).toDuration(), const Duration(seconds: -1234));
+}
+
+void ToTime() {
+  expect(Offset(1234).toTime(), Time(seconds: 1234));
+  expect(Offset(-1234).toTime(), Time(seconds: -1234));
+}
+
+void FromDuration_OutOfRange() {
+  for (var hours in [-24, 24]) {
+    expect(() => Offset.duration(Duration(hours: hours)), throwsRangeError);
+  }
+}
+
+void FromDuration_Truncation() {
+  expect(Offset.duration(const Duration(milliseconds: 1000 + 200)), Offset(1));
+  expect(
+      Offset.duration(const Duration(milliseconds: -1000 - 200)), Offset(-1));
+}
+
+void FromDuration_Simple() {
+  expect(Offset.duration(const Duration(hours: 2)), Offset.hours(2));
+}
+
+void FromTime_OutOfRange() {
+  for (var hours in [-24, 24]) {
+    expect(() => Offset.time(Time(hours: hours)), throwsRangeError);
+  }
+}
+
+void FromTime_Truncation() {
+  expect(Offset.time(Time(milliseconds: 1000 + 200)), Offset(1));
+  // Truncated towards zero, as in Noda Time (not floored).
+  expect(Offset.time(Time(milliseconds: -1000 - 200)), Offset(-1));
+  expect(Offset.time(Time(nanoseconds: -1)), Offset.zero);
+}
+
+void FromTime_Simple() {
+  expect(Offset.time(Time(hours: 2)), Offset.hours(2));
+  expect(Offset.time(Time(hours: -18)), Offset.minValue);
 }
 
 void Max() {

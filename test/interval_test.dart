@@ -109,6 +109,13 @@ void Equals() {
       [Interval(TimeConstants.unixEpoch, SampleEnd)]);
   TestHelper.TestEqualsStruct(Interval(null, null), Interval(null, null),
       [Interval(TimeConstants.unixEpoch, SampleEnd)]);
+
+  // The IEquatable-style method.
+  var interval = Interval(SampleStart, SampleEnd);
+  expect(interval.equals(interval), isTrue);
+  expect(interval.equals(Interval(SampleStart, SampleEnd)), isTrue);
+  expect(interval.equals(Interval(null, SampleEnd)), isFalse);
+  expect(interval.equals(Interval(SampleStart, null)), isFalse);
 }
 
 void Operators() {

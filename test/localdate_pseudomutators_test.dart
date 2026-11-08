@@ -69,9 +69,7 @@ void main() {
         [8],
       ],
       Next_InvalidArgument,
-      customDescriptionBuilder: describeArguments,
-      skip:
-          'Never ran before #17 (no @Test): a Dart int is not a DayOfWeek, which C# casts');
+      customDescriptionBuilder: describeArguments);
   parameterizedTest(
       'Previous',
       [
@@ -96,10 +94,25 @@ void main() {
         [8],
       ],
       Previous_InvalidArgument,
-      customDescriptionBuilder: describeArguments,
-      skip:
-          'Never ran before #17 (no @Test): a Dart int is not a DayOfWeek, which C# casts');
+      customDescriptionBuilder: describeArguments);
   test('With', With);
+  test('SubtractUnits', SubtractUnits);
+}
+
+/// The subtractXxx methods are the same as adding the negated value.
+void SubtractUnits() {
+  LocalDate start = LocalDate(2012, 3, 31);
+  expect(start.subtractYears(1), LocalDate(2011, 3, 31));
+  // Truncated to the end of February.
+  expect(start.subtractMonths(1), LocalDate(2012, 2, 29));
+  expect(start.subtractWeeks(1), LocalDate(2012, 3, 24));
+  expect(start.subtractDays(31), LocalDate(2012, 2, 29));
+  for (var amount in [0, 1, -5]) {
+    expect(start.subtractYears(amount), start.addYears(-amount));
+    expect(start.subtractMonths(amount), start.addMonths(-amount));
+    expect(start.subtractWeeks(amount), start.addWeeks(-amount));
+    expect(start.subtractDays(amount), start.addDays(-amount));
+  }
 }
 
 void PlusYear_Simple() {
@@ -238,9 +251,10 @@ void Next(int dayOfMonth, DayOfWeek targetDayOfWeek, int expectedResult) {
   expect(target.dayOfMonth, expectedResult);
 }
 
-void Next_InvalidArgument(DayOfWeek targetDayOfWeek) {
+void Next_InvalidArgument(int targetDayOfWeek) {
   LocalDate start = LocalDate(2011, 1, 1);
-  expect(() => start.next(targetDayOfWeek), throwsRangeError);
+  // As C#'s cast of an int to IsoDayOfWeek.
+  expect(() => start.next(DayOfWeek(targetDayOfWeek)), throwsRangeError);
 }
 
 // Each test case gives a day-of-month in November 2011 and a target 'next day of week';
@@ -253,9 +267,10 @@ void Previous(int dayOfMonth, DayOfWeek targetDayOfWeek, int expectedResult) {
   expect(target.dayOfMonth, expectedResult);
 }
 
-void Previous_InvalidArgument(DayOfWeek targetDayOfWeek) {
+void Previous_InvalidArgument(int targetDayOfWeek) {
   LocalDate start = LocalDate(2011, 1, 1);
-  expect(() => start.previous(targetDayOfWeek), throwsRangeError);
+  // As C#'s cast of an int to IsoDayOfWeek.
+  expect(() => start.previous(DayOfWeek(targetDayOfWeek)), throwsRangeError);
 }
 
 // No tests for non-ISO-day-of-week calendars as we don't have any yet.

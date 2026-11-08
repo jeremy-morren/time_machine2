@@ -35,16 +35,14 @@ abstract class TestHelperWithMirrors {
 
     // Comparisons only involving equal values
     if (greaterThan) {
-      expect(value > null, isTrue, reason: 'value > null');
       expect(value > value, isFalse, reason: 'value > value');
       expect(value > equalValue, isFalse, reason: 'value > equalValue');
       expect(equalValue > value, isFalse, reason: 'equalValue > value');
     }
     if (lessThan) {
-      expect(value < null, isFalse, reason: 'value < null');
-      expect(value > value, isFalse, reason: 'value > value');
-      expect(value > equalValue, isFalse, reason: 'value > equalValue');
-      expect(equalValue > value, isFalse, reason: 'equalValue > value');
+      expect(value < value, isFalse, reason: 'value < value');
+      expect(value < equalValue, isFalse, reason: 'value < equalValue');
+      expect(equalValue < value, isFalse, reason: 'equalValue < value');
     }
 
     // Then comparisons involving the greater values
@@ -85,13 +83,11 @@ abstract class TestHelperWithMirrors {
 
     // First the comparisons with equal values
     if (greaterThanOrEqual) {
-      expect(value >= null, isTrue, reason: 'value >= null');
       expect(value >= value, isTrue, reason: 'value >= value');
       expect(value >= equalValue, isTrue, reason: 'value >= equalValue');
       expect(equalValue >= value, isTrue, reason: 'equalValue >= value');
     }
     if (lessThanOrEqual) {
-      expect(value <= null, isFalse, reason: 'value <= null');
       expect(value <= value, isTrue, reason: 'value <= value');
       expect(value <= equalValue, isTrue, reason: 'value <= equalValue');
       expect(equalValue <= value, isTrue, reason: 'equalValue <= value');

@@ -101,16 +101,10 @@ class LocalDate implements Comparable<LocalDate> {
   /// * [calendar]: The calendar system to convert into, defaults to ISO calendar
   ///
   /// Returns: A new [LocalDate] with the same values as the specified `DateTime`.
-  factory LocalDate.dateTime(DateTime dateTime, [CalendarSystem? calendar]) {
-    int days = Platform.isWeb
-        ? (dateTime.millisecondsSinceEpoch +
-                dateTime.timeZoneOffset.inMilliseconds) ~/
-            TimeConstants.millisecondsPerDay
-        : (dateTime.microsecondsSinceEpoch +
-                dateTime.timeZoneOffset.inMicroseconds) ~/
-            TimeConstants.microsecondsPerDay;
-    return LocalDate.fromEpochDay(days, calendar);
-  }
+  factory LocalDate.dateTime(DateTime dateTime, [CalendarSystem? calendar]) =>
+      // This rounds the number of days down, so a time of day before the
+      // Unix epoch doesn't move the date on (`~/` rounds towards zero).
+      LocalDateTime.dateTime(dateTime, calendar).calendarDate;
 
   /// Gets the calendar system associated with this local date.
   CalendarSystem get calendar =>

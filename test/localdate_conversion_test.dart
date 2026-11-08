@@ -11,6 +11,9 @@ void main() {
   test('WithOffset', WithOffset);
   test('ToDateTimeUnspecified', ToDateTimeUnspecified);
   test('WithCalendar_OutOfRange', WithCalendar_OutOfRange);
+  test('FromDateTime', FromDateTime);
+  test('FromDateTime_WithCalendar', FromDateTime_WithCalendar);
+  test('FromDateTime_BeforeEpoch', FromDateTime_BeforeEpoch);
 }
 
 void AtMidnight() {
@@ -41,30 +44,43 @@ void ToDateTimeUnspecified() {
   expect(bcl, noda.toDateTimeUnspecified());
 }
 
-//@Test()
-//void FromDateTime()
-//{
-//  var expected = new LocalDate(2011, 08, 18);
-//  for (DateTimeKind kind in Enum.GetValues(typeof(DateTimeKind)))
-//  {
-//  var bcl = new DateTime(2011, 08, 18, 20, 53, 0, kind);
-//  var actual = LocalDate.FromDateTime(bcl);
-//  expect(expected, actual);
-//  }
-//}
+// Noda Time's DateTimeKind loop is over UTC and local DateTimes here: the
+// date is the one the DateTime shows, without any time zone conversion.
+void FromDateTime() {
+  var expected = LocalDate(2011, 08, 18);
+  for (var dateTime in [
+    DateTime.utc(2011, 08, 18, 20, 53, 0),
+    DateTime(2011, 08, 18, 20, 53, 0)
+  ]) {
+    expect(LocalDate.dateTime(dateTime), expected);
+  }
+}
 
-//@Test()
-//void FromDateTime_WithCalendar()
-//{
-//  // Julian calendar is 13 days behind Gregorian calendar in the 21st century
-//  var expected = new LocalDate.forCalendar(2011, 08, 05, CalendarSystem.Julian);
-//  foreach (DateTimeKind kind in Enum.GetValues(typeof(DateTimeKind)))
-//  {
-//  var bcl = new DateTime(2011, 08, 18, 20, 53, 0, kind);
-//  var actual = LocalDate.FromDateTime(bcl, CalendarSystem.Julian);
-//  expect(expected, actual);
-//  }
-//}
+void FromDateTime_WithCalendar() {
+  // Julian calendar is 13 days behind Gregorian calendar in the 21st century
+  var expected = LocalDate(2011, 08, 05, CalendarSystem.julian);
+  for (var dateTime in [
+    DateTime.utc(2011, 08, 18, 20, 53, 0),
+    DateTime(2011, 08, 18, 20, 53, 0)
+  ]) {
+    expect(LocalDate.dateTime(dateTime, CalendarSystem.julian), expected);
+  }
+}
+
+void FromDateTime_BeforeEpoch() {
+  // The time of day must not move the date on: before the Unix epoch the
+  // number of days has to be rounded down, not towards zero.
+  for (var dateTime in [
+    DateTime.utc(1966, 08, 18, 20, 53, 0),
+    DateTime(1966, 08, 18, 20, 53, 0),
+    DateTime.utc(1969, 12, 31, 23, 59, 59, 999),
+  ]) {
+    expect(LocalDate.dateTime(dateTime),
+        LocalDate(dateTime.year, dateTime.month, dateTime.day));
+  }
+  expect(
+      LocalDate.dateTime(DateTime.utc(1966, 08, 18)), LocalDate(1966, 8, 18));
+}
 
 void WithCalendar_OutOfRange() {
   LocalDate start = LocalDate(1, 1, 1);

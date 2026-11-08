@@ -6,6 +6,7 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 import 'package:test/test.dart';
 
 import '../time_machine_testing.dart';
+import 'dtz_io_helper.dart';
 
 void main() {
   test('Construct_InvalidMonth_Exception', Construct_InvalidMonth_Exception);
@@ -45,6 +46,8 @@ void main() {
   test('GetOccurrenceForYear_WithAddDay_December31st9999',
       GetOccurrenceForYear_WithAddDay_December31st9999);
   test('IEquatable_Tests', IEquatable_Tests);
+  test('Serialization', Serialization);
+  test('StartOfYear', StartOfYear);
 }
 
 class BclDayOfWeek {
@@ -312,19 +315,31 @@ void GetOccurrenceForYear_WithAddDay_December31st9999() {
   expect(expected, actual);
 }
 
-/* todo: seralization equivalent
-@Test()
-void Serialization()
-{
-  var dio = DtzIoHelper.CreateNoStringPool();
-  var expected = new ZoneYearOffset(TransitionMode.utc, 10, 31, IsoDayOfWeek.wednesday.value, true,
-      new LocalTime(12, 34, 45, 678));
-  dio.TestZoneYearOffset(expected);
+void Serialization() {
+  var dio = DtzIoHelper.noStringPool();
+  var expected = ZoneYearOffset(TransitionMode.utc, 10, 31,
+      DayOfWeek.wednesday.value, true, LocalTime(12, 34, 45, ms: 678));
+  dio.testZoneYearOffset(expected);
 
-  dio.Reset();
-  expected = new ZoneYearOffset(TransitionMode.utc, 10, -31, IsoDayOfWeek.wednesday.value, true, LocalTime.Midnight);
-  dio.TestZoneYearOffset(expected);
-}*/
+  expected = ZoneYearOffset(TransitionMode.utc, 10, -31,
+      DayOfWeek.wednesday.value, true, LocalTime.midnight);
+  dio.testZoneYearOffset(expected);
+
+  // The other modes, and the 24:00 flag.
+  expected = ZoneYearOffset(TransitionMode.wall, 3, -1, DayOfWeek.sunday.value,
+      false, LocalTime(2, 0, 0), true);
+  dio.testZoneYearOffset(expected);
+  expected = ZoneYearOffset(
+      TransitionMode.standard, 2, 29, 0, false, LocalTime(23, 59, 59));
+  dio.testZoneYearOffset(expected);
+}
+
+void StartOfYear() {
+  var offset = ZoneYearOffset.StartOfYear;
+  expect(offset.mode, TransitionMode.wall);
+  expect(offset.getOccurrenceForYear(2000),
+      ILocalDateTime.toLocalInstant(LocalDateTime(2000, 1, 1, 0, 0, 0)));
+}
 
 void IEquatable_Tests() {
   var value = ZoneYearOffset(TransitionMode.utc, 10, 31,

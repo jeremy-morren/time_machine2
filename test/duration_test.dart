@@ -170,6 +170,211 @@ void main() {
   test('Max', Max);
   test('Min', Min);
   test('ComplexConstructor', ComplexConstructor);
+  test('WholeUnits_Positive', WholeUnits_Positive);
+  test('WholeUnits_Negative', WholeUnits_Negative);
+  test('IsNegative', IsNegative);
+  test('Abs', Abs);
+  test('StaticOperators', StaticOperators);
+  test('MultiplyAndDivide', MultiplyAndDivide);
+  parameterizedTest(
+      'DartDurationConversions',
+      [
+        [0],
+        [1],
+        [-1],
+        [999],
+        [-1500],
+        [TimeConstants.microsecondsPerDay + 1],
+        // Within 2^53 nanoseconds, for NanosecondTime on the web.
+        [-TimeConstants.microsecondsPerDay * 30 - 123456],
+      ],
+      DartDurationConversions,
+      customDescriptionBuilder: describeArguments);
+  parameterizedTest(
+      'NanosecondTime_MatchesMillisecondTime',
+      [
+        [0],
+        [1],
+        [-1],
+        [999999],
+        [1000000],
+        [-1000001],
+        [-1500],
+        [TimeConstants.nanosecondsPerDay * 3 + 5],
+        // 1 day, 1 hour, 1 minute, 1 second, 1 ms, 1 us and 1 ns.
+        [90061001001001],
+        [-90061001001001],
+      ],
+      NanosecondTime_MatchesMillisecondTime,
+      customDescriptionBuilder: describeArguments);
+  test('NanosecondTime_Operators', NanosecondTime_Operators);
+  test('NanosecondTime_CompareToLargeTime', NanosecondTime_CompareToLargeTime);
+  test('NegativeResult_IsNormalized', NegativeResult_IsNormalized);
+}
+
+/// However a negative time is computed, it must equal the same time created
+/// directly (each value has one representation).
+void NegativeResult_IsNormalized() {
+  var expected = Time(nanoseconds: -2999999);
+  var actual = Time(nanoseconds: 1) - Time(milliseconds: 3);
+  expect(actual, expected);
+  expect(actual.hashCode, expected.hashCode);
+  expect(actual.inMilliseconds, -2);
+  expect(actual.inNanoseconds, -2999999);
+  expect(Time(milliseconds: -3) + Time(nanoseconds: 1), expected);
+  expect(-Time(nanoseconds: 2999999), expected);
+}
+
+/// 1 day, 2 hours, 3 minutes, 4 seconds, 5 ms, 6 us and 7 ns.
+final Time _sample = Time(
+    days: 1,
+    hours: 2,
+    minutes: 3,
+    seconds: 4,
+    milliseconds: 5,
+    microseconds: 6,
+    nanoseconds: 7);
+
+void WholeUnits_Positive() {
+  expect(_sample.inDays, 1);
+  expect(_sample.inHours, 26);
+  expect(_sample.inMinutes, 26 * 60 + 3);
+  expect(_sample.inSeconds, (26 * 60 + 3) * 60 + 4);
+  expect(_sample.inMilliseconds, ((26 * 60 + 3) * 60 + 4) * 1000 + 5);
+  expect(
+      _sample.inMicroseconds, (((26 * 60 + 3) * 60 + 4) * 1000 + 5) * 1000 + 6);
+  expect(_sample.inNanoseconds,
+      ((((26 * 60 + 3) * 60 + 4) * 1000 + 5) * 1000 + 6) * 1000 + 7);
+}
+
+void WholeUnits_Negative() {
+  // Whole units are truncated towards zero, as for Dart's Duration.
+  var negative = -_sample;
+  expect(negative.inDays, -1);
+  expect(negative.inHours, -26);
+  expect(negative.inMinutes, -(26 * 60 + 3));
+  expect(negative.inSeconds, -((26 * 60 + 3) * 60 + 4));
+  expect(negative.inMilliseconds, -(((26 * 60 + 3) * 60 + 4) * 1000 + 5));
+  expect(negative.inMicroseconds,
+      -((((26 * 60 + 3) * 60 + 4) * 1000 + 5) * 1000 + 6));
+  expect(negative.inNanoseconds,
+      -(((((26 * 60 + 3) * 60 + 4) * 1000 + 5) * 1000 + 6) * 1000 + 7));
+}
+
+void IsNegative() {
+  expect(Time.zero.isNegative, isFalse);
+  expect(Time.epsilon.isNegative, isFalse);
+  expect((-Time.epsilon).isNegative, isTrue);
+  expect(Time(milliseconds: -1).isNegative, isTrue);
+  expect(Time(milliseconds: 1, nanoseconds: -1).isNegative, isFalse);
+  expect(Time.minValue.isNegative, isTrue);
+  expect(Time.maxValue.isNegative, isFalse);
+}
+
+void Abs() {
+  // The argument is unused.
+  expect(_sample.abs(Time.zero), _sample);
+  expect((-_sample).abs(Time.zero), _sample);
+  expect((-Time.epsilon).abs(Time.zero), Time.epsilon);
+  expect(Time.zero.abs(Time.zero), Time.zero);
+}
+
+void StaticOperators() {
+  var x = Time(seconds: 5);
+  var y = Time(milliseconds: 1500);
+  expect(Time.plus(x, y), Time(milliseconds: 6500));
+  expect(Time.minus(x, y), Time(milliseconds: 3500));
+  expect(Time.minus(y, x), Time(milliseconds: -3500));
+}
+
+void MultiplyAndDivide() {
+  var time = Time(seconds: 3);
+  expect(time.multiply(2), time * 2);
+  expect(time.multiply(2), Time(seconds: 6));
+  expect(time.divide(2), time / 2);
+  expect(time.divide(2), Time(milliseconds: 1500));
+  // Dividing by a number less than one multiplies by its reciprocal.
+  expect(time.divide(0.5), Time(seconds: 6));
+}
+
+void DartDurationConversions(int microseconds) {
+  var duration = Duration(microseconds: microseconds);
+  var time = Time(microseconds: microseconds);
+  expect(Time.duration(duration), time);
+  expect(time.toDuration, duration);
+  expect(NanosecondTime(microseconds * 1000).toDuration, duration);
+}
+
+/// [NanosecondTime] (used by [LocalTime]) must behave the same as the
+/// [MillisecondTime] which [Time]'s constructors produce.
+void NanosecondTime_MatchesMillisecondTime(int nanoseconds) {
+  var nano = NanosecondTime(nanoseconds);
+  var milli = Time(nanoseconds: nanoseconds);
+  expect(milli, isA<MillisecondTime>());
+
+  expect(nano, milli);
+  expect(milli, nano);
+  expect(nano.hashCode, milli.hashCode);
+  expect(nano.compareTo(milli), 0);
+  expect(milli.compareTo(nano), 0);
+
+  expect(nano.hourOfDay, milli.hourOfDay);
+  expect(nano.minuteOfHour, milli.minuteOfHour);
+  expect(nano.secondOfMinute, milli.secondOfMinute);
+  expect(nano.millisecondOfSecond, milli.millisecondOfSecond);
+  expect(nano.microsecondOfSecond, milli.microsecondOfSecond);
+  expect(nano.nanosecondOfSecond, milli.nanosecondOfSecond);
+
+  expect(nano.inDays, milli.inDays);
+  expect(nano.inHours, milli.inHours);
+  expect(nano.inMinutes, milli.inMinutes);
+  expect(nano.inSeconds, milli.inSeconds);
+  expect(nano.inMilliseconds, milli.inMilliseconds);
+  expect(nano.inMicroseconds, milli.inMicroseconds);
+  expect(nano.inNanoseconds, nanoseconds);
+  expect(nano.inNanosecondsAsBigInt, BigInt.from(nanoseconds));
+  expect(nano.inNanosecondsAsBigInt, milli.inNanosecondsAsBigInt);
+
+  // The totals are computed differently, so may differ in the last bit.
+  Matcher near(double expected) => closeTo(expected, expected.abs() * 1e-12);
+  expect(nano.totalDays, near(milli.totalDays));
+  expect(nano.totalHours, near(milli.totalHours));
+  expect(nano.totalMinutes, near(milli.totalMinutes));
+  expect(nano.totalSeconds, near(milli.totalSeconds));
+  expect(nano.totalMilliseconds, near(milli.totalMilliseconds));
+  expect(nano.totalMicroseconds, near(milli.totalMicroseconds));
+  expect(nano.totalNanoseconds, milli.totalNanoseconds);
+
+  expect(nano.isNegative, milli.isNegative);
+  expect(nano.abs(Time.zero), milli.abs(Time.zero));
+  expect(-nano, -milli);
+  expect(nano.toDuration, milli.toDuration);
+}
+
+void NanosecondTime_Operators() {
+  var smaller = NanosecondTime(100);
+  var equal = Time(nanoseconds: 100);
+  var greater = Time(nanoseconds: 101);
+  expect(smaller < greater, isTrue);
+  expect(smaller < equal, isFalse);
+  expect(smaller <= equal, isTrue);
+  expect(smaller <= Time(nanoseconds: 99), isFalse);
+  expect(smaller > Time(nanoseconds: 99), isTrue);
+  expect(smaller > equal, isFalse);
+  expect(smaller >= equal, isTrue);
+  expect(smaller >= greater, isFalse);
+  expect(ITime.plusSmallNanoseconds(smaller, 5), Time(nanoseconds: 105));
+  expect(ITime.plusSmallNanoseconds(smaller, -200), Time(nanoseconds: -100));
+}
+
+void NanosecondTime_CompareToLargeTime() {
+  // Time.maxValue and Time.minValue have too many nanoseconds for an int on
+  // every platform, so the comparison can't be done in nanoseconds.
+  var time = NanosecondTime(5);
+  expect(Time.maxValue.canNanosecondsBeInteger, isFalse);
+  expect(time.compareTo(Time.maxValue), lessThan(0));
+  expect(time.compareTo(Time.minValue), greaterThan(0));
+  expect(time == Time.maxValue, isFalse);
 }
 
 /// Using the default constructor is equivalent to Span.Zero.

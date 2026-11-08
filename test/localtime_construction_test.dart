@@ -81,6 +81,41 @@ void main() {
       FromNanosecondsSinceMidnight_RangeChecks);
   test('SinceMidnight_Valid', SinceMidnight_Valid);
   test('SinceMidnight_RangeChecks', SinceMidnight_RangeChecks);
+  test('SubsecondArguments', SubsecondArguments);
+  test('SubsecondArguments_MoreThanOne', SubsecondArguments_MoreThanOne);
+  test('SubsecondArguments_Invalid', SubsecondArguments_Invalid);
+  test('Noon', Noon);
+}
+
+void SubsecondArguments() {
+  var time = LocalTime(1, 2, 3, us: 456789);
+  expect(time.millisecondOfSecond, 456);
+  expect(time.microsecondOfSecond, 456789);
+  expect(time.nanosecondOfSecond, 456789000);
+  time = LocalTime(1, 2, 3, ns: 456789123);
+  expect(time.millisecondOfSecond, 456);
+  expect(time.microsecondOfSecond, 456789);
+  expect(time.nanosecondOfSecond, 456789123);
+  time = LocalTime(1, 2, 3, ms: 456);
+  expect(time.microsecondOfSecond, 456000);
+}
+
+void SubsecondArguments_MoreThanOne() {
+  // Only one of ms, us and ns may be specified.
+  expect(() => LocalTime(0, 0, 0, ms: 1, us: 1), throwsArgumentError);
+  expect(() => LocalTime(0, 0, 0, ms: 1, ns: 1), throwsArgumentError);
+  expect(() => LocalTime(0, 0, 0, us: 1, ns: 1), throwsArgumentError);
+}
+
+void SubsecondArguments_Invalid() {
+  expect(() => LocalTime(0, 0, 0, us: -1), throwsRangeError);
+  expect(() => LocalTime(0, 0, 0, us: TimeConstants.microsecondsPerSecond),
+      throwsRangeError);
+}
+
+void Noon() {
+  expect(LocalTime.noon, LocalTime(12, 0, 0));
+  expect(LocalTime.noon.hourOf12HourClock, 12);
 }
 
 void InvalidConstructionToMinute(int hour, int minute) {

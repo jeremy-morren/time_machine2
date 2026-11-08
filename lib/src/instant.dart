@@ -187,7 +187,7 @@ class Instant implements Comparable<Instant> {
   static Instant min(Instant x, Instant y) => x < y ? x : y;
   static Instant plus(Instant x, Time y) => x.add(y);
   static Instant minus(Instant x, Time y) => x.subtract(y);
-  static Time difference(Instant start, Instant end) => start.timeSince(end);
+  static Time difference(Instant end, Instant start) => end.timeSince(start);
 
   // @override toString() => TextShim.toStringInstant(this); // '${_span.totalSeconds} seconds since epoch.';
   @override

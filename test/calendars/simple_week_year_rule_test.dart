@@ -285,6 +285,9 @@ void WeekYearDifferentToYear(int year, int month, int day, int weekYear,
 void GetWeeksInWeekYear(int weekYear, int expectedResult) {
   expect(expectedResult,
       WeekYearRules.iso.getWeeksInWeekYear(weekYear, CalendarSystem.iso));
+  // The extension method uses the ISO calendar.
+  expect(expectedResult,
+      WeekYearRuleExtensions.getWeeksInWeekYear(WeekYearRules.iso, weekYear));
 }
 
 // Ported from LocalDateTest.BasicProperties

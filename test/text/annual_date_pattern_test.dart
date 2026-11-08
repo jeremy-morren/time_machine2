@@ -47,7 +47,45 @@ void main() {
     parameterizedTest(
         'AppendFormat', fixture.FormatData.toList(), fixture.AppendFormat,
         customDescriptionBuilder: describeArguments);
+    test('Iso', Iso);
+    test('Format_BclSupport', Format_BclSupport);
+    test('Create_WithFormatInfo', Create_WithFormatInfo);
   });
+}
+
+void Iso() {
+  var pattern = AnnualDatePattern.iso;
+  expect(pattern.patternText, "MM'-'dd");
+  expect(pattern.format(AnnualDate(6, 9)), '06-09');
+  expect(pattern.parse('12-31').value, AnnualDate(12, 31));
+}
+
+/// The equivalent of Noda Time's AnnualDatePattern.BclSupport.Format, used
+/// for ToString with an optional pattern.
+void Format_BclSupport() {
+  var date = AnnualDate(6, 9);
+  // No pattern: ISO.
+  expect(AnnualDatePatterns.format(date, null, Culture.invariant), '06-09');
+  expect(AnnualDatePatterns.format(date, 'dd MM', Culture.invariant), '09 06');
+  expect(
+      AnnualDatePatterns.format(date, 'MMMM d', Culture.invariant), 'June 9');
+}
+
+void Create_WithFormatInfo() {
+  var formatInfo = TimeMachineFormatInfo.invariantInfo;
+  var pattern = AnnualDatePatterns.create(
+      'MM/dd', formatInfo, AnnualDatePatterns.defaultTemplateValue);
+  expect(pattern.patternText, 'MM/dd');
+  expect(pattern.templateValue, AnnualDate(1, 1));
+  expect(pattern.format(AnnualDate(8, 23)), '08/23');
+  expect(
+      AnnualDatePatterns.underlyingPattern(pattern).format(AnnualDate(8, 23)),
+      '08/23');
+
+  // A different template value fills in the fields the pattern doesn't have.
+  pattern = AnnualDatePatterns.create('MM', formatInfo, AnnualDate(5, 3));
+  expect(pattern.templateValue, AnnualDate(5, 3));
+  expect(pattern.parse('08').value, AnnualDate(8, 3));
 }
 
 class AnnualDatePatternTest extends PatternTestBase<AnnualDate> {

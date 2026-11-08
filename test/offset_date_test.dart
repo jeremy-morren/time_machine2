@@ -22,23 +22,19 @@ void main() {
 }
 
 void LocalDateProperties() {
-// todo: determine equivalent of this test
-//  LocalDate local = new LocalDate.forCalendar(2012, 6, 19, CalendarSystem.Julian);
-//  Offset offset = new Offset.fromHours(5);
-//
-//  OffsetDate od = new OffsetDate(local, offset);
-//
-//  var localDateProperties = typeof(LocalDate).GetTypeInfo()
-//      .DeclaredProperties
-//      .ToDictionary(p => p.Name);
-//  var commonProperties = typeof(OffsetDate).GetTypeInfo()
-//      .DeclaredProperties
-//      .Where(p => localDateProperties.ContainsKey(p.Name));
-//for (var property in commonProperties)
-//  {
-//  expect(localDateProperties[property.Name].GetValue(local, null),
-//  property.GetValue(od, null));
-//  }
+  // Noda Time compares every property the types have in common, by reflection.
+  LocalDate local = LocalDate(2012, 6, 19, CalendarSystem.julian);
+  Offset offset = Offset.hours(5);
+
+  OffsetDate od = OffsetDate(local, offset);
+  expect(od.calendar, local.calendar);
+  expect(od.year, local.year);
+  expect(od.monthOfYear, local.monthOfYear);
+  expect(od.dayOfMonth, local.dayOfMonth);
+  expect(od.dayOfWeek, local.dayOfWeek);
+  expect(od.yearOfEra, local.yearOfEra);
+  expect(od.era, local.era);
+  expect(od.dayOfYear, local.dayOfYear);
 }
 
 void ComponentProperties() {

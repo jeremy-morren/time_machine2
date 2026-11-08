@@ -35,6 +35,7 @@ void main() {
   test('PlusTicks_CrossingDay', PlusTicks_CrossingDay);
   test('Plus_FullPeriod', Plus_FullPeriod);
   test('Minus_FullPeriod', Minus_FullPeriod);
+  test('SubtractUnits', SubtractUnits);
   parameterizedTest(
       'Next',
       [
@@ -319,6 +320,38 @@ void Plus_FullPeriod() {
   expect(expected, actual,
       reason:
           "${expected.toString('yyyy-MM-dd HH:mm:ss.fffffffff')} != ${actual.toString('yyyy-MM-dd HH:mm:ss.fffffffff')}");
+}
+
+/// The subtractXxx methods are the same as adding the negated value.
+void SubtractUnits() {
+  LocalDateTime start = LocalDateTime(2012, 3, 1, 0, 0, 0, ns: 500);
+  expect(start.subtractYears(1), LocalDateTime(2011, 3, 1, 0, 0, 0, ns: 500));
+  expect(start.subtractMonths(1), LocalDateTime(2012, 2, 1, 0, 0, 0, ns: 500));
+  expect(start.subtractWeeks(1), LocalDateTime(2012, 2, 23, 0, 0, 0, ns: 500));
+  expect(start.subtractDays(1), LocalDateTime(2012, 2, 29, 0, 0, 0, ns: 500));
+  expect(start.subtractHours(1), LocalDateTime(2012, 2, 29, 23, 0, 0, ns: 500));
+  expect(
+      start.subtractMinutes(1), LocalDateTime(2012, 2, 29, 23, 59, 0, ns: 500));
+  expect(start.subtractSeconds(1),
+      LocalDateTime(2012, 2, 29, 23, 59, 59, ns: 500));
+  expect(start.subtractMilliseconds(1),
+      LocalDateTime(2012, 2, 29, 23, 59, 59, ns: 999000500));
+  expect(start.subtractMicroseconds(1),
+      LocalDateTime(2012, 2, 29, 23, 59, 59, ns: 999999500));
+  expect(start.subtractNanoseconds(501),
+      LocalDateTime(2012, 2, 29, 23, 59, 59, ns: 999999999));
+  for (var amount in [0, 1, -5]) {
+    expect(start.subtractYears(amount), start.addYears(-amount));
+    expect(start.subtractMonths(amount), start.addMonths(-amount));
+    expect(start.subtractWeeks(amount), start.addWeeks(-amount));
+    expect(start.subtractDays(amount), start.addDays(-amount));
+    expect(start.subtractHours(amount), start.addHours(-amount));
+    expect(start.subtractMinutes(amount), start.addMinutes(-amount));
+    expect(start.subtractSeconds(amount), start.addSeconds(-amount));
+    expect(start.subtractMilliseconds(amount), start.addMilliseconds(-amount));
+    expect(start.subtractMicroseconds(amount), start.addMicroseconds(-amount));
+    expect(start.subtractNanoseconds(amount), start.addNanoseconds(-amount));
+  }
 }
 
 void Minus_FullPeriod() {

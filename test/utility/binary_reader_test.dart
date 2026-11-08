@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import 'package:time_machine2/src/utility/binary_reader.dart';
+import 'package:time_machine2/src/time_machine_internal.dart';
 import 'dart:typed_data';
 
 /// 0x1234567890ABCDEF, parsed: dart2js can't compile the literal, which isn't
@@ -10,6 +10,27 @@ void main() {
   group('BinaryReader', () {
     late ByteData data;
     late BinaryReader reader;
+
+    test('readOffsetSeconds reads a 7-bit encoded offset', () {
+      // 3600 = 0x0E10: low 7 bits 0x10 with the continuation bit, then 0x1C.
+      data = ByteData.sublistView(Uint8List.fromList([0x90, 0x1C]));
+      reader = BinaryReader(data);
+      expect(reader.readOffsetSeconds(), Offset.hours(1));
+      expect(reader.hasMoreData, isFalse);
+    });
+
+    test('readOffsetSeconds2 reads an Int32 offset', () {
+      data = ByteData(4)..setInt32(0, -3600, Endian.little);
+      reader = BinaryReader(data);
+      expect(reader.readOffsetSeconds2(), Offset.hours(-1));
+    });
+
+    test('read7BitEncodedInt rejects more than five bytes', () {
+      data = ByteData.sublistView(
+          Uint8List.fromList([0x80, 0x80, 0x80, 0x80, 0x80, 0x01]));
+      reader = BinaryReader(data);
+      expect(() => reader.read7BitEncodedInt(), throwsStateError);
+    });
 
     test('readInt32 reads correct value', () {
       data = ByteData(4)..setInt32(0, 0x12345678, Endian.little);

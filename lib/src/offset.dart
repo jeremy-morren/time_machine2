@@ -302,7 +302,7 @@ class Offset implements Comparable<Offset> {
   ///
   /// [RangeError]: The given time span falls outside the range of +/- 18 hours.
   factory Offset.time(Time time) {
-    int seconds = time.totalSeconds.floor();
+    int seconds = time.inSeconds;
     Preconditions.checkArgumentRange('time', seconds, _minSeconds, _maxSeconds);
     return Offset(seconds);
   }

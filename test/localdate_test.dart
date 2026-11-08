@@ -7,11 +7,62 @@ import 'package:time_machine2/src/time_machine_internal.dart';
 import 'package:test/test.dart';
 // import 'package:matcher/matcher.dart';
 
+import 'time_machine_testing.dart';
+
 void main() {
+  setUpAll(TimeMachineTest.initialize);
+
   test('DefaultConstructor', DefaultConstructor);
   test('CombinationWithTime', CombinationWithTime);
   test('MaxIsoValue', MaxIsoValue);
   test('MinIsoValue', MinIsoValue);
+  test('PeriodUntil', PeriodUntil);
+  test('Today', Today);
+  test('Today_WithCalendar', Today_WithCalendar);
+  test('YearMonthDayCalendar', YearMonthDayCalendar_Internal);
+}
+
+void PeriodUntil() {
+  var start = LocalDate(2011, 3, 5);
+  var end = LocalDate(2012, 2, 4);
+  expect(start.periodUntil(end), const Period(months: 10, days: 30));
+  expect(start.periodUntil(end), Period.differenceBetweenDates(start, end));
+  expect(end.periodUntil(start), Period.differenceBetweenDates(end, start));
+}
+
+/// Runs [body] with [Clock.current] fixed at [instant].
+void _withClock(Instant instant, void Function() body) {
+  var previous = Clock.current;
+  Clock.current = FakeClock(instant);
+  try {
+    body();
+  } finally {
+    Clock.current = previous;
+  }
+}
+
+void Today() {
+  var instant = Instant.utc(2020, 6, 1, 13, 45, 30);
+  _withClock(instant, () {
+    expect(LocalDate.today(), instant.inLocalZone().calendarDate);
+  });
+}
+
+void Today_WithCalendar() {
+  var instant = Instant.utc(2020, 6, 1, 13, 45, 30);
+  _withClock(instant, () {
+    var today = LocalDate.today(CalendarSystem.julian);
+    expect(today.calendar, CalendarSystem.julian);
+    expect(today,
+        instant.inLocalZone().calendarDate.withCalendar(CalendarSystem.julian));
+  });
+}
+
+void YearMonthDayCalendar_Internal() {
+  var date = LocalDate(2014, 3, 28, CalendarSystem.julian);
+  var ymdc = ILocalDate.yearMonthDayCalendar(date);
+  expect(ymdc.toYearMonthDay(), const YearMonthDay(2014, 3, 28));
+  expect(ymdc.calendarOrdinal, CalendarOrdinal.julian);
 }
 
 /// Using the default constructor is equivalent to January 1st 1970, UTC, ISO calendar

@@ -17,6 +17,18 @@ void main() {
     final fixture = LocalDatePatternTest();
     test('WithCalendar', fixture.WithCalendar);
     test('CreateWithCurrentCulture', fixture.CreateWithCurrentCulture);
+    test('CreateWithSpecificCulture', () {
+      var date = LocalDate(2017, 8, 23);
+      var pattern = LocalDatePattern.createWithCulture('d', TestCultures.FrFr);
+      expect(pattern.format(date), '23/08/2017');
+      pattern = LocalDatePattern.createWithCulture('d', TestCultures.FrCa);
+      expect(pattern.format(date), '2017-08-23');
+      // With a template value for the fields the pattern doesn't have.
+      pattern = LocalDatePattern.createWithCulture(
+          'MM-dd', TestCultures.FrCa, LocalDate(2001, 1, 1));
+      expect(pattern.templateValue, LocalDate(2001, 1, 1));
+      expect(pattern.parse('08-23').value, LocalDate(2001, 8, 23));
+    });
     parameterizedTest(
         'WithTwoDigitYearMax',
         [

@@ -19,6 +19,18 @@ void main() {
         'ParsePartial', fixture.ParseData.toList(), fixture.ParsePartial,
         customDescriptionBuilder: describeArguments);
     test('CreateWithCurrentCulture', fixture.CreateWithCurrentCulture);
+    test('CreateWithSpecificCulture', () {
+      var pattern = OffsetPattern.createWithCulture(
+          'H:mm', TestCultures.DotTimeSeparator);
+      expect(pattern.format(Offset.hoursAndMinutes(1, 30)), '1.30');
+    });
+    test('GeneralInvariantWithZ', () {
+      var pattern = OffsetPattern.generalInvariantWithZ;
+      expect(pattern.format(Offset.zero), 'Z');
+      expect(pattern.format(Offset.hours(5)), '+05');
+      expect(pattern.parse('Z').value, Offset.zero);
+      expect(OffsetPattern.generalInvariant.format(Offset.zero), '+00');
+    });
     parameterizedTest(
         'InvalidPatterns', fixture.InvalidPatternData, fixture.InvalidPatterns,
         customDescriptionBuilder: describeArguments);
