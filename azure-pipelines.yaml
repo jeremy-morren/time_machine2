@@ -106,8 +106,10 @@ jobs:
           expected: Africa/Casablanca
           standardName: ''
           daylightName: ''
-          knownOffsetDifference: "Windows' data has Morocco at UTC+0 outside Ramadan; TZDB (and Morocco) use UTC+1"
-          excludeTests: LocalZoneMatchesSystemOffset   # same Windows/TZDB data difference
+          # Windows and TZDB disagreed (UTC+0 vs UTC+1 outside Ramadan) until
+          # TZDB 2026f, in which Morocco returns to UTC+0 on 2026-09-20.
+          knownOffsetDifference: ''
+          excludeTests: ''
         # Guess by transitions. (Mid-Atlantic, which CLDR doesn't map, can't be
         # tested: Windows has retired it and tzutil refuses to set it.)
         Pacific_DstDisabled:
