@@ -329,7 +329,13 @@ jobs:
           xcrun simctl bootstatus "$udid" -b
           echo "udid=$udid" >> "$GITHUB_OUTPUT"
 
+      # The app occasionally hangs after launching on the Simulator (the test
+      # never starts), so a hang times out and the checks run once more on a
+      # rebooted Simulator. A failure on the second attempt fails the job.
       - name: 🍎 Run system time zone checks on the Simulator
+        id: checks
+        timeout-minutes: 20
+        continue-on-error: true
         working-directory: test_apps/system_source_flutter
         run: >
           flutter test integration_test
@@ -337,6 +343,21 @@ jobs:
           --reporter expanded
           --file-reporter json:${{ github.workspace }}/test-results/system-source.json
           --dart-define=TIME_MACHINE_EXPECT_SYSTEM_TIME_ZONE=${{ env.TIME_ZONE }}
+
+      - name: 🍎 Run system time zone checks on the Simulator (retry)
+        if: steps.checks.outcome == 'failure'
+        timeout-minutes: 20
+        working-directory: test_apps/system_source_flutter
+        run: |
+          udid=${{ steps.simulator.outputs.udid }}
+          xcrun simctl shutdown "$udid" || true
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b
+          flutter test integration_test \
+            --device-id "$udid" \
+            --reporter expanded \
+            --file-reporter json:${{ github.workspace }}/test-results/system-source.json \
+            --dart-define=TIME_MACHINE_EXPECT_SYSTEM_TIME_ZONE=${{ env.TIME_ZONE }}
 
       - name: 📝 Add test results to job summary
         if: ${{ !cancelled() }}
